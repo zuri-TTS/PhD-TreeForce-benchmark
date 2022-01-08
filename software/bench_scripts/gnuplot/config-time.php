@@ -12,7 +12,9 @@ return [
             echo "\"$group\" $r $c\n";
         }
     },
-    'plot' => function (array $val): void {
-        echo "plot '{$val['data.file.name']}' u 2:xtic(1) ls 1 fs pattern 0, '' u 3 fs pattern 3 ls 1";
+    'plot' => function (Plot $plot): void {
+        $plot_lines = $plot->getPlotYLines();
+        $val = $plot->getPlotVariables();
+        echo "plot $plot_lines\\\n, '{$val['data.file.name']}' u 2:xtic(1) ls 1 fs pattern 0, '' u 3 fs pattern 3 ls 1";
     }
 ];

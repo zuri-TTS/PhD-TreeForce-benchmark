@@ -2,7 +2,6 @@
 return [
     'id' => 'time',
     'process' => 'all',
-    'terminal.size' => '1500,500',
     'template.path' => __DIR__ . '/templates/all.plot.php',
     'data.plot' => function (array $val): void {
         echo "measure real cpu\n";
@@ -14,17 +13,10 @@ return [
             echo "\"$group\" $r $c\n";
         }
     },
-    'plot' => function (array $val): void {
+    'plot' => function (Plot $plot): void {
+        $plot_lines = $plot->getPlotYLines();
+        $val = $plot->getPlotVariables();
         $ls = 1;
-
-        $yMax = $val['time.real.max'];
-        $yNbLine = log10($yMax);
-
-        for ($i = 0, $m = 1; $i < $yNbLine; $i ++) {
-            $lines[] = "$m ls 0";
-            $m *= 10;
-        }
-        $lines = implode(",\\\n", $lines);
 
         foreach ($val['files'] as $f) {
             $fname = $f['file.name'];
@@ -34,6 +26,6 @@ return [
             EOD;
             $ls ++;
         }
-        echo "plot $lines, \\\n", implode(',', $tmp), "\n";
+        echo "plot $plot_lines\\\n,", implode(',', $tmp), "\n";
     }
 ];

@@ -7,7 +7,7 @@ function getVal(array $a, $default, string ...$key)
     foreach ($key as $k) {
         if (! isset($a[$k])) {
             $path = implode(' ', $key);
-            fputs(STDERR, "'$path' is ot a valid array path\n");
+            fputs(STDERR, "'$path' is not a valid array path\n");
             return $default;
         }
         $p = $a[$k];

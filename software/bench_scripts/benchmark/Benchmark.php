@@ -181,6 +181,18 @@ class Benchmark
             \substr($this->config['java.properties']['query.native'] ?? '', $basePathEndOffset)
         ]);
         $csvFile->fputcsv([
+            'querying.each',
+            \substr($this->config['java.properties']['querying.each'] ?? '', $basePathEndOffset)
+        ]);
+        $csvFile->fputcsv([
+            'querying.display.answers',
+            \substr($this->config['java.properties']['querying.display.answers'] ?? '', $basePathEndOffset)
+        ]);
+        $csvFile->fputcsv([
+            'inhibitBatchStreamTime',
+            $this->config['java.properties']['inhibitBatchStreamTime'] ?? ''
+        ]);
+        $csvFile->fputcsv([
             'leaf.checkTerminal',
             $this->config['java.properties']['leaf.checkTerminal'] ?? ''
         ]);
