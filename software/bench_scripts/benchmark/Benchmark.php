@@ -64,7 +64,6 @@ class Benchmark
     private function writeJavaProperties(array $incVar)
     {
         $s = "";
-        
 
         foreach ($this->config['java.properties'] + $incVar as $k => $v) {
             $s .= "$k: $v\n";
@@ -151,6 +150,7 @@ class Benchmark
 
     private function writeBenchConfigToCSV(SplFileObject $csvFile)
     {
+        $jprop = $this->config['java.properties'];
         $basePathEndOffset = \strlen($this->config['java.properties']['base.path']) + 1;
         $csvFile->fputcsv([
             'bench'
@@ -170,39 +170,39 @@ class Benchmark
         ]);
         $csvFile->fputcsv([
             'rules',
-            \substr($this->config['java.properties']['rules'] ?? '', $basePathEndOffset)
+            \substr($jprop['rules'] ?? '', $basePathEndOffset)
         ]);
         $csvFile->fputcsv([
             'summary',
-            \substr($this->config['java.properties']['summary'] ?? '', $basePathEndOffset)
+            \substr($jprop['summary'] ?? '', $basePathEndOffset)
         ]);
         $csvFile->fputcsv([
             'query.native',
-            \substr($this->config['java.properties']['query.native'] ?? '', $basePathEndOffset)
+            \substr($jprop['query.native'] ?? '', $basePathEndOffset)
         ]);
         $csvFile->fputcsv([
             'querying.each',
-            \substr($this->config['java.properties']['querying.each'] ?? '', $basePathEndOffset)
+            $jprop['querying.each'] ?? ''
         ]);
         $csvFile->fputcsv([
             'querying.display.answers',
-            \substr($this->config['java.properties']['querying.display.answers'] ?? '', $basePathEndOffset)
+            $jprop['querying.display.answers'] ?? ''
         ]);
         $csvFile->fputcsv([
             'inhibitBatchStreamTime',
-            $this->config['java.properties']['inhibitBatchStreamTime'] ?? ''
+            $jprop['inhibitBatchStreamTime'] ?? ''
         ]);
         $csvFile->fputcsv([
             'leaf.checkTerminal',
-            $this->config['java.properties']['leaf.checkTerminal'] ?? ''
+            $jprop['leaf.checkTerminal'] ?? ''
         ]);
         $csvFile->fputcsv([
             'query.batchSize',
-            $this->config['java.properties']['query.batchSize'] ?? ''
+            $jprop['query.batchSize'] ?? ''
         ]);
         $csvFile->fputcsv([
             'data.batchSize',
-            $this->config['java.properties']['data.batchSize'] ?? ''
+            $jprop['data.batchSize'] ?? ''
         ]);
     }
 

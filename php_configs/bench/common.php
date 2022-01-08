@@ -24,6 +24,7 @@ return [
         'data.batchSize' => 100,
         'leaf.checkTerminal' => 'n',
         'querying.each' => 'n',
+        'inhibitBatchStreamTime' => 'y',
         'querying.display.answers' => 'n',
         'querying.output.pattern' => '${output.path}/${query.name}_%s.txt',
         'query' => '${queries.dir}/${query.name}',
