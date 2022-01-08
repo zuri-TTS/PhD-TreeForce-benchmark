@@ -1,0 +1,20 @@
+site(
+	people.person(
+		profile(
+			interest."@category",
+			gender,
+			age,
+			education,
+			"@income"
+		),
+		name,
+		address(
+			street,
+			city,
+			country
+		),
+		emailaddress,
+		homepage,
+		creditcard
+	)
+)
