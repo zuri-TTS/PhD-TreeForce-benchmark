@@ -23,7 +23,7 @@ return [
     'plot.w.space' => 300,
     'plot.h.space' => 100,
     'plot.rmargin' => 10,
-    'plot.lmargin' => 100,
+    'plot.lmargin' => 130,
     'plot.bmargin' => 130,
 
     'plot.x' => - 1,
