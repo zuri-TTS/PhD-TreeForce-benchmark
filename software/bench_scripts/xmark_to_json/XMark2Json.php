@@ -19,10 +19,10 @@ class XMark2Json
 
     private array $jsonPostProcesses;
 
-    public function __construct(string $dataSet)
+    public function __construct(string $dataSetGroup)
     {
         $basePath = getBenchmarkBasePath();
-        $dataSetPath = "$basePath/benchmark/data/$dataSet";
+        $dataSetPath = "$basePath/benchmark/data/$dataSetGroup";
 
         if (! is_dir($dataSetPath))
             throw new \Exception("Test set '$dataSetPath' does not exists");
@@ -30,8 +30,9 @@ class XMark2Json
         $this->dataSetPath = $dataSetPath;
         $this->outputPath = "$this->dataSetPath/data";
         $configPath = "$dataSetPath/config.php";
-        $this->dataSet = $dataSet;
+        $this->dataSet = $dataSetGroup;
         $this->config = include $configPath;
+        $this->unwind = include __DIR__ . '/unwind.php';
     }
 
     public function getSeed(): int
@@ -44,32 +45,65 @@ class XMark2Json
         return $this->dataSet;
     }
 
-    public function convert()
+    private function setPostProcesses(array $dataSets)
     {
-        $this->unwind = include __DIR__ . '/unwind.php';
-        $files = self::getFilesFromUnwind($this->unwind);
+        $pos = \array_search('original', $dataSets, true);
 
-        $outDirs = \scandirNoPoints("$this->dataSetPath/rules");
-        $this->jsonPostProcesses = \array_combine( //
-        $outDirs, //
-        \array_map(fn ($d) => (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this), $outDirs) //
+        if (false !== $pos) {
+            $this->jsonPostProcesses['original'] = fn ($data) => $data;
+            unset($dataSets[$pos]);
+        }
+
+        $this->jsonPostProcesses += \array_combine( //
+        $dataSets, //
+        \array_map(fn ($d) => (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this), $dataSets) //
         );
-        $this->jsonPostProcesses['original'] = fn ($data) => $data;
-        $outDirs[] = 'original';
+    }
 
-        foreach ($outDirs as $dir) {
-            $dir = "$this->outputPath/$dir";
+    public function convert($dataSets = null)
+    {
+        if (null !== $dataSets) {
+            $dataSets = (array) $dataSets;
 
-            if (! \is_dir($dir))
-                \mkdir($dir, 0777, true);
-            else {
-                foreach (\glob("$dir/*.json") as $f) {
-                    \is_file($f) && unlink($f);
-                }
+            foreach ($dataSets as $dataSet) {
+                if ('original' === $dataSet)
+                    continue;
+
+                $path = "$this->dataSetPath/rules/$dataSet";
+
+                if (! \is_dir($path))
+                    throw new \Exception("Rule '$path' does not exists");
             }
+        } else {
+            $dataSets = \scandirNoPoints("$this->dataSetPath/rules");
+            $dataSets[] = 'original';
+        }
+        $this->setPostProcesses($dataSets);
+        $this->_convertGroup($dataSets);
+    }
+
+    private function _convertGroup(array $dataSets)
+    {
+        echo "Processing $this->dataSet [", implode(',', $dataSets), "]\n";
+
+        foreach ($dataSets as $dataSet) {
+            $this->cleanOutDir($dataSet);
         }
         $xmarkFilePath = "$this->dataSetPath/xmark.xml";
-        $this->read(\XMLReader::open($xmarkFilePath), $outDirs);
+        $this->read(\XMLReader::open($xmarkFilePath), $dataSets);
+    }
+
+    private function cleanOutDir(string $dataSet)
+    {
+        $dataSetOutPath = "$this->outputPath/$dataSet";
+
+        if (! \is_dir($dataSetOutPath))
+            \mkdir($dataSetOutPath, 0777, true);
+        else {
+            foreach (\glob("$dataSetOutPath/*.json") as $f) {
+                \is_file($f) && unlink($f);
+            }
+        }
     }
 
     private function reachUnwind(string $path): ?string
@@ -100,6 +134,7 @@ class XMark2Json
                     if (null === $u)
                         break;
 
+                    echo "Unwinding $u\n";
                     $this->files = \array_combine( //
                     $outDirsName, //
                     \array_map(fn ($d) => new \SplFileObject(self::getFileFromUnwind($u, "$this->outputPath/$d"), 'w'), $outDirsName) //
