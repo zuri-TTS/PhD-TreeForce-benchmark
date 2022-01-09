@@ -1,0 +1,70 @@
+#people 2
+
+'q_people_1'=?x? --> 'people'=?x?
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 2
+
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#@id 2
+
+'q_@id_1'=?x? --> '@id'=?x?
+'q_@id_0'=?x? --> '@id'=?x?
+
+#emph 2
+
+'q_emph_1'=?x? --> 'emph'=?x?
+'q_emph_0'=?x? --> 'emph'=?x?
+
+#bold 2
+
+'q_bold_1'=?x? --> 'bold'=?x?
+'q_bold_0'=?x? --> 'bold'=?x?
+
+#closed_auctions 2
+
+'q_closed_auctions_1'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+
+#closed_auction 2
+
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#regions 2
+
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#africa 2
+
+'q_africa_1'=?x? --> 'africa'=?x?
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#item 2
+
+'q_item_1'=?x? --> 'item'=?x?
+'q_item_0'=?x? --> 'item'=?x?
+
+#address 2
+
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
+
+#city 2
+
+'q_city_1'=?x? --> 'city'=?x?
+'q_city_0'=?x? --> 'city'=?x?
+
+#emailaddress 2
+
+'q_emailaddress_1'=?x? --> 'emailaddress'=?x?
+'q_emailaddress_0'=?x? --> 'emailaddress'=?x?
+
+#homepage 2
+
+'q_homepage_1'=?x? --> 'homepage'=?x?
+'q_homepage_0'=?x? --> 'homepage'=?x?
+
