@@ -1,5 +1,4 @@
 <?php
-include_once __DIR__ . '/../benchmark/functions.php';
 
 function nextExecution(array &$argv, string $config): array
 {

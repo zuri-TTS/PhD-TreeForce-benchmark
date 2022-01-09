@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../classes/DateIntervalFractions.php';
-require_once __DIR__ . '/functions.php';
 
 class Benchmark
 {
@@ -340,8 +339,8 @@ class Benchmark
             if ($cold)
                 $config['bench.cold.function']();
 
-//             if ($nbMeasures === 0)
-//                 $incVars['querying_config_print'] = 'y';
+            // if ($nbMeasures === 0)
+            // $incVars['querying_config_print'] = 'y';
 
             echo $confMeasure['nb'] - $nbMeasures, "/", $confMeasure['nb'], "\n";
 

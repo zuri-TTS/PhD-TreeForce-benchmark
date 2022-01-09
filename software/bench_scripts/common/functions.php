@@ -1,5 +1,39 @@
 <?php
 
+function parseArgv($argv): array
+{
+    $ret = [];
+    foreach ($argv as $arg) {
+
+        if ($arg[0] === '+' || $arg[0] === '-') {
+            $name = \substr($arg, 1);
+            $ret[$name] = $arg[0] === '+';
+        } else if (false === strpos($arg, '=')) {
+            $ret[] = $arg;
+        } else {
+            [
+                $name,
+                $val
+            ] = explode('=', $arg, 2);
+            $ret[$name] = $val;
+        }
+    }
+    return $ret;
+}
+
+function argShift(array &$args, string $key, $default = null)
+{
+    if(count($args) == 0)
+        return $default;
+    if (\array_key_exists($key, $args)) {
+        $v = $args[$key];
+        unset($args[$key]);
+    } else
+        $v = \array_shift($args);
+
+    return $v;
+}
+
 function getVal(array $a, $default, string ...$key)
 {
     $p = $a;

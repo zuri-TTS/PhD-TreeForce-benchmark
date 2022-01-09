@@ -3,7 +3,7 @@ return [
 
     'font.size' => 12,
 
-    // Canvas
+    // Terminal (png)
     'w' => - 1,
     'h' => - 1,
     'h.space' => 50,
@@ -14,7 +14,7 @@ return [
     'bar.nb' => 2,
     'bar.gap.factor' => 1,
 
-    // Terminal (png)
+    // Plot
     'plot.header.h' => 60,
     'plot.w' => - 1,
     'plot.h' => - 1,

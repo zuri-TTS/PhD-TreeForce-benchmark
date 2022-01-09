@@ -1,6 +1,7 @@
 <?php
 include_once __DIR__ . '/gnuplot/functions.php';
 include_once __DIR__ . '/gnuplot/Plot.php';
+require_once __DIR__ . '/common/functions.php';
 
 array_shift($argv);
 

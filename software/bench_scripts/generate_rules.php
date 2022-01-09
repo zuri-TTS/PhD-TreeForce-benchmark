@@ -1,29 +1,11 @@
 <?php
 array_shift($argv);
-$configFile = array_shift($argv);
 
-include __DIR__ . '/generate_rules/functions.php';
+include __DIR__ . '/common/functions.php';
+include __DIR__ . '/generate_rules/ModelGen.php';
 
-if (empty($configFile))
-    $configs = include __DIR__ . '/generate_rules/config.php';
-else
-    $configs = include $configFile;
+$modelPath = \array_shift($argv);
+$args = \parseArgv($argv);
 
-$configDefault = $configs['default'] ?? [];
-unset($configs['default']);
-
-// If not a multiple configuration
-if (! isset($configs[0]))
-    $configs = [
-        $configs
-    ];
-
-$baseDir = $config['baseDir'] ?? \getcwd();
-
-if(!\chdir($baseDir))
-    exit(1);
-
-foreach ($configs as $config) {
-    $config += $configDefault;
-    generateRules($config);
-}
+$generator = new ModelGen($modelPath, $args);
+$generator->generate() && $generator->generateRules();
