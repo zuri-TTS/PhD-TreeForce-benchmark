@@ -1,5 +1,13 @@
 <?php
 
+function scandirNoPoints(string $path)
+{
+    return \array_diff(\scandir($path), [
+        '.',
+        '..'
+    ]);
+}
+
 function parseArgv($argv): array
 {
     $ret = [];
@@ -23,7 +31,7 @@ function parseArgv($argv): array
 
 function argShift(array &$args, string $key, $default = null)
 {
-    if(count($args) == 0)
+    if (count($args) == 0)
         return $default;
     if (\array_key_exists($key, $args)) {
         $v = $args[$key];
@@ -75,4 +83,11 @@ function get_include_contents(string $filename, array $variables, string $unique
 function getBenchmarkBasePath(): string
 {
     return \realpath(__DIR__ . "/../../..");
+}
+
+function getDataSetGroups():array
+{
+    $basePath = \getBenchmarkBasePath();
+    $dataSetGroupBasePath = "$basePath/benchmark/data/";
+    return \scandirNoPoints($dataSetGroupBasePath);
 }
