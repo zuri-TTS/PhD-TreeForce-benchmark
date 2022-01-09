@@ -100,10 +100,3 @@ function getBenchmarkBasePath(): string
 {
     return \realpath(__DIR__ . "/../../..");
 }
-
-function getDataSetGroups():array
-{
-    $basePath = \getBenchmarkBasePath();
-    $dataSetGroupBasePath = "$basePath/benchmark/data/";
-    return \scandirNoPoints($dataSetGroupBasePath);
-}

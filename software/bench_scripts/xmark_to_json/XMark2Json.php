@@ -3,11 +3,7 @@
 class XMark2Json
 {
 
-    private string $outputPath;
-
-    private string $dataSetPath;
-
-    private string $dataSet;
+    private DataSet $dataSet;
 
     private array $config;
 
@@ -17,20 +13,19 @@ class XMark2Json
 
     private array $files;
 
-    private array $jsonPostProcesses;
+    private array $filesData;
 
-    public function __construct(string $dataSetGroup)
+    public function __construct(DataSet $dataSet)
     {
         $basePath = getBenchmarkBasePath();
-        $dataSetPath = "$basePath/benchmark/data/$dataSetGroup";
 
-        if (! is_dir($dataSetPath))
-            throw new \Exception("Test set '$dataSetPath' does not exists");
-
-        $this->dataSetPath = $dataSetPath;
-        $this->outputPath = "$this->dataSetPath/data";
+        if (!empty($error = $dataSet->allNotExists())){
+            $error = implode(',', $error);
+            throw new \Exception("Group set '$error' does not exists");
+        }
+        $dataSetPath = $dataSet->groupPath();
         $configPath = "$dataSetPath/config.php";
-        $this->dataSet = $dataSetGroup;
+        $this->dataSet = $dataSet;
         $this->config = include $configPath;
         $this->unwind = include __DIR__ . '/unwind.php';
     }
@@ -40,49 +35,38 @@ class XMark2Json
         return $this->config['seed'];
     }
 
-    public function getDataSet(): string
+    public function getDataSet(): DataSet
     {
         return $this->dataSet;
     }
 
-    private function setPostProcesses(array $dataSets)
+    private function setPostProcesses()
     {
-        $pos = \array_search('original', $dataSets, true);
+        $rules = $this->dataSet->getRules();
+        $pos = \array_search(DataSet::originalDataSet, $rules, true);
+        $this->filesData = [];
 
         if (false !== $pos) {
-            $this->jsonPostProcesses['original'] = fn ($data) => $data;
-            unset($dataSets[$pos]);
+            $this->filesData[DataSet::originalDataSet] = [
+                'randomize' => fn ($data) => $data,
+                'path' => $this->dataSet->dataSetPath(DataSet::originalDataSet)
+            ];
+            unset($rules[$pos]);
         }
 
-        $this->jsonPostProcesses += \array_combine( //
-        $dataSets, //
-        \array_map(fn ($d) => (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this), $dataSets) //
+        $this->filesData += \array_combine( //
+        $rules, //
+        \array_map(fn ($d) => [
+            'randomize' => (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this),
+            'path' => $this->dataSet->dataSetPath($d)
+        ], $rules) //
         );
     }
 
-    public function convert($dataSets = null)
+    public function convert()
     {
-        if (null !== $dataSets) {
-            $dataSets = (array) $dataSets;
-            $this->checkDataSetsExists($dataSets);
-        } else {
-            $dataSets = $this->getAllDataSets();
-        }
-        $this->setPostProcesses($dataSets);
-        $this->_convertGroup($dataSets);
-    }
-
-    private function checkDataSetsExists(array $dataSets): void
-    {
-        foreach ($dataSets as $dataSet) {
-            if ('original' === $dataSet)
-                continue;
-
-            $path = "$this->dataSetPath/rules/$dataSet";
-
-            if (! \is_dir($path))
-                throw new \Exception("Rule '$path' does not exists");
-        }
+        $this->setPostProcesses();
+        $this->_convertGroup();
     }
 
     private function getAllDataSets()
@@ -92,50 +76,44 @@ class XMark2Json
         return $dataSets;
     }
 
-    private function _convertGroup(array $dataSets)
+    private function _convertGroup()
     {
-        echo "Processing $this->dataSet [", implode(',', $dataSets), "]\n";
+        echo "Processing {$this->dataSet->getGroup()} [", implode(',', $this->dataSet->getRules()), "]\n";
 
-        $this->clean($dataSets);
-        $xmarkFilePath = "$this->dataSetPath/xmark.xml";
-        $this->read(\XMLReader::open($xmarkFilePath), $dataSets);
-    }
-
-    private function parseDataSets($dataSets = null, bool $checkExists = true): array
-    {
-        if (null === $dataSets)
-            return $this->getAllDataSets();
-        else {
-            $dataSets = (array) $dataSets;
-            $checkExists && $this->checkDataSetsExists($dataSets);
-            return $dataSets;
-        }
+        $this->clean();
+        $xmarkFilePath = "{$this->dataSet->groupPath()}/xmark.xml";
+        $this->read(\XMLReader::open($xmarkFilePath));
     }
 
     public function delete($dataSets = null)
     {
-        $dataSets = $this->parseDataSets($dataSets, false);
+        $rules = $this->dataSet->getRules();
 
-        foreach ($dataSets as $dataSet)
-            $this->_clean($dataSet);
-
-        foreach ($dataSets as $dataSet)
-            rmdir("$this->dataSetPath/data/$dataSet");
+        foreach ($rules as $dataSet) {
+            $this->dataSet->setRules($dataSet);
+            $this->_clean();
+            rmdir($this->dataSet->dataSetPath());
+        }
+        $this->dataSet->setRules($rules);
     }
 
-    public function clean($dataSets = null)
+    public function clean()
     {
-        $dataSets = $this->parseDataSets($dataSets);
+        $rules = $this->dataSet->getRules();
 
-        foreach ($dataSets as $dataSet)
-            $this->_clean($dataSet);
+        foreach ($rules as $dataSet) {
+            $this->dataSet->setRules($dataSet);
+            $this->_clean();
+        }
+        $this->dataSet->setRules($rules);
     }
 
-    private function _clean(string $dataSet)
+    private function _clean()
     {
-        echo "Cleaning $this->dataSet/$dataSet\n";
+        $dataSetId = $this->dataSet->getId();
+        echo "Cleaning $dataSetId\n";
 
-        $dataSetOutPath = "$this->outputPath/$dataSet";
+        $dataSetOutPath = $this->dataSet->dataSetPath();
 
         if (! \is_dir($dataSetOutPath))
             \mkdir($dataSetOutPath, 0777, true);
@@ -157,10 +135,12 @@ class XMark2Json
         return \count($ret) === 1 ? $ret[0] : null;
     }
 
-    private function read(XMLReader $reader, array $outDirsName)
+    private function read(XMLReader $reader): void
     {
         $path = &$this->path;
         $path = [];
+        $outputPath = $this->dataSet->rulesPath();
+        $dataSets = $this->dataSet->getRules();
 
         while ($reader->read()) {
             switch ($reader->nodeType) {
@@ -176,13 +156,14 @@ class XMark2Json
 
                     echo "Unwinding $u\n";
                     $this->files = \array_combine( //
-                    $outDirsName, //
-                    \array_map(fn ($d) => new \SplFileObject(self::getFileFromUnwind($u, "$this->outputPath/$d"), 'w'), $outDirsName) //
-                    );
+                    $dataSets, //
+                    \array_map(fn ($d) => new \SplFileObject(self::getFileFromUnwind($u, $this->filesData[$d]['path']), 'w'), $dataSets));
+
                     $reader->read();
                     $u_a = explode('.', $u);
                     $this->unwind($reader, $u_a);
 
+                    // Close files
                     \array_walk($this->files, function (&$f) {
                         $f = null;
                     });
@@ -256,7 +237,7 @@ class XMark2Json
             ]
         ]);
         foreach ($this->files as $d => $file)
-            $file->fwrite(self::toJsonString($data, $this->jsonPostProcesses[$d]) . "\n");
+            $file->fwrite(self::toJsonString($data, $this->filesData[$d]['randomize']) . "\n");
     }
 
     // ========================================================================
@@ -290,9 +271,9 @@ class XMark2Json
         return $ret;
     }
 
-    public function getRelabellings(string $ruleModel)
+    public function getRelabellings(string $rulesPath)
     {
-        $rules = "$this->dataSetPath/rules/$ruleModel/querying.txt";
+        $rules = $this->dataSet->rulesPath($rulesPath) . "/querying.txt";
 
         if (! is_file($rules)) {
             echo "Warning: rule file $rules does not exists\n";
@@ -307,6 +288,7 @@ class XMark2Json
     {
         if (! empty($baseDir))
             $baseDir .= '/';
+
         return "$baseDir$unwind.json";
     }
 

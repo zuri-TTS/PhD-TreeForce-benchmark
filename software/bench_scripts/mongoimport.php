@@ -1,61 +1,46 @@
 <?php
 include_once __DIR__ . '/common/functions.php';
+include_once __DIR__ . '/classes/DataSet.php';
 
 \array_shift($argv);
 
-function importGroup(string $dataSetGroup)
-{
-    $basePath = \getBenchmarkBasePath();
-    $dataSetGroupPath = "$basePath/benchmark/data/$dataSetGroup";
 
-    if (! \is_dir($dataSetGroupPath))
-        throw new \Exception("The dataSet $dataSetGroupPath does not exists");
-
-    $dataSets = \scandirNoPoints("$dataSetGroupPath/data");
-
-    foreach ($dataSets as $dataSet)
-        import($dataSetGroup, $dataSet);
+if (\count($argv) == 0) {
+    echo "Import ALL dataSets to MongoDB\n\n";
+    $argv = DataSet::getAllGroups();
 }
 
-function import(string $dataSetGroup, string $dataSet)
+function import(DataSet $dataSet): void
 {
-    echo "\nImporting $dataSetGroup/data/$dataSet\n";
-    $basePath = \getBenchmarkBasePath();
-    $path = "$basePath/benchmark/data/$dataSetGroup/data/$dataSet";
+    if (! empty($error = $dataSet->allNotExists())) {
+        $error = implode(',', $error);
+        throw new \Exception("DataSet '$error' does not exists");
+    }
 
-    if (! \is_dir($path))
-        throw new \Exception("The dataSet $path does not exists");
+    echo "\nImporting {$dataSet->getId()}\n";
 
-    \chdir($path);
-    $collectionName = "{$dataSetGroup}_$dataSet";
-    $jsonFiles = \glob("*.json");
+    foreach ($dataSet->getRules() as $rulesDir) {
+        $path = $dataSet->dataSetPath($rulesDir);
+        \chdir($path);
+        $collectionName = "{$dataSet->getGroup()}_$rulesDir";
+        $jsonFiles = \glob("*.json");
 
-    echo "\nDeleting treeforce.$collectionName from MongoDB\n";
+        echo "\nDeleting treeforce.$collectionName from MongoDB\n";
 
-    $cmd = "echo '' | mongoimport -d treeforce -c '$collectionName' --drop\n";
-    echo \shell_exec($cmd);
+        $cmd = "echo '' | mongoimport -d treeforce -c '$collectionName' --drop\n";
+        echo \shell_exec($cmd);
 
-    foreach ($jsonFiles as $json) {
-        echo "Importing $json\n";
-        echo \shell_exec("cat '$json' | mongoimport -d treeforce -c '$collectionName'");
+        foreach ($jsonFiles as $json) {
+            echo "Importing $json\n";
+            echo \shell_exec("cat '$json' | mongoimport -d treeforce -c '$collectionName'");
+        }
     }
 }
 
 $wdir = \getcwd();
 
-if (\count($argv) == 0) {
-    echo "Importing ALL dataSets\n\n";
-    $argv = getDataSetGroups();
-}
-
-while (null !== ($dataSetGroup = \array_shift($argv))) {
-
-    $tmp = \explode('/', $dataSetGroup);
-
-    if (\count($tmp) === 2)
-        import(...$tmp);
-    else
-        importGroup($dataSetGroup);
+while (null !== ($dataSetId = \array_shift($argv))) {
+    import(new DataSet($dataSetId));
 
     // Just reset at the end
     \chdir($wdir);
