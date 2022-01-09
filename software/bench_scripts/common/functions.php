@@ -42,12 +42,19 @@ function argShift(array &$args, string $key, $default = null)
 {
     if (count($args) == 0)
         return $default;
+
     if (\array_key_exists($key, $args)) {
         $v = $args[$key];
         unset($args[$key]);
-    } else
-        $v = \array_shift($args);
+    } else {
+        $keys = \array_values(\array_filter(\array_keys($args), 'is_int'));
 
+        if (empty($keys))
+            return $default;
+
+        $v = $args[$keys[0]];
+        unset($args[$keys[0]]);
+    }
     return $v;
 }
 
