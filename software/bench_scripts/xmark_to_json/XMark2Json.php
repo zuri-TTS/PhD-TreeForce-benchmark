@@ -17,12 +17,9 @@ class XMark2Json
 
     public function __construct(DataSet $dataSet)
     {
-        $basePath = getBenchmarkBasePath();
+        checkDataSetExists($dataSet);
 
-        if (!empty($error = $dataSet->allNotExists())){
-            $error = implode(',', $error);
-            throw new \Exception("Group set '$error' does not exists");
-        }
+        $basePath = getBenchmarkBasePath();
         $dataSetPath = $dataSet->groupPath();
         $configPath = "$dataSetPath/config.php";
         $this->dataSet = $dataSet;
@@ -92,7 +89,7 @@ class XMark2Json
         foreach ($rules as $dataSet) {
             $this->dataSet->setRules($dataSet);
             $this->_clean();
-            rmdir($this->dataSet->dataSetPath());
+            @rmdir($this->dataSet->dataSetPath());
         }
         $this->dataSet->setRules($rules);
     }

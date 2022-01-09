@@ -1,5 +1,5 @@
 <?php
-$basePath = \realpath(__DIR__ . "/../..");
+$basePath = getBenchmarkBasePath();
 
 $measuresNb = 6;
 $measuresForget = 1;

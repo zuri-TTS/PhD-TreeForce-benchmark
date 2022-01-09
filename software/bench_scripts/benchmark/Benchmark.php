@@ -382,13 +382,15 @@ class Benchmark
     {
         $queryFiles = $this->getFiles();
         $queries = $queryFiles['queries'];
+        $dataSet = $this->config['dataSet'];
 
         // Build the command
         echo $this->cmd, "\n\n";
 
         foreach ($queries as $query) {
             echo "==================================\n";
-            echo $query, "\n\n";
+            echo "<{$dataSet->getId()}>\n";
+            echo "$query\n\n";
 
             $queryFile = $query;
             $measures = $this->executeMeasures($query);

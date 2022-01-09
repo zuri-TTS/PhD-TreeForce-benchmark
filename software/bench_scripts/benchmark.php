@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/benchmark/Benchmark.php';
-require_once __DIR__ . '/benchmark/php_config/makeConfig.php';
+require_once __DIR__ . '/benchmark/config/makeConfig.php';
 require_once __DIR__ . '/common/functions.php';
+include_once __DIR__ . '/classes/DataSet.php';
 
 \array_shift($argv);
 
@@ -10,32 +11,40 @@ if (empty($argv)) {
     exit(1);
 }
 
-$confDef = [
+$cmdArgsDef = [
+    // 'data' => null,
+    // 'rules' => null,
     'summary' => "key",
-    'rules' => true,
     'each' => false,
     'native' => '',
     'cmd' => 'querying',
-    'data' => 'noised',
     'doonce' => false,
     'cold' => false
 ];
 
-$dataSet = \array_shift($argv);
-$dataSetDirPath = getBenchmarkBasePath() . "/benchmark/data/$dataSet";
+while (! empty($argv)) {
+    $cmdParsed = \parseArgvShift($argv, ';') + $cmdArgsDef;
+    $dataSets = \array_filter($cmdParsed, 'is_int', ARRAY_FILTER_USE_KEY);
 
-if (! is_dir($dataSetDirPath)) {
-    fputs(STDERR, "Test set '$dataSetDirPath' does not exists");
-    exit(1);
+    if (\count($dataSets) == 0) {
+        echo "Test ALL dataSets\n\n";
+        $dataSets = DataSet::getAllGroups();
+    }
+
+    while (null !== ($dataSetId = \array_shift($dataSets))) {
+        $dataSet = new DataSet($dataSetId);
+        $rules = $dataSet->getRules();
+        checkDataSetExists($dataSet);
+
+        foreach ($dataSet->getRules() as $rulesDir) {
+            $dataSet->setRules($rulesDir);
+            $config = makeConfig($dataSet, $cmdParsed);
+            $bench = new \Benchmark($config);
+
+            if ($cmdParsed['doonce'])
+                $bench->executeOnce();
+            else
+                $bench->doTheBenchmark();
+        }
+    }
 }
-$cmdArg = \parseArgv($argv) + $confDef;
-$cmdArg['dataSet'] = $dataSet;
-
-$config = makeConfig($cmdArg);
-$bench = new \Benchmark($config);
-
-if ($cmdArg['doonce'])
-    $bench->executeOnce();
-else
-    $bench->doTheBenchmark();
-        

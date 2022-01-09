@@ -12,11 +12,7 @@ if (\count($argv) == 0) {
 
 function import(DataSet $dataSet): void
 {
-    if (! empty($error = $dataSet->allNotExists())) {
-        $error = implode(',', $error);
-        throw new \Exception("DataSet '$error' does not exists");
-    }
-
+    checkDataSetExists($dataSet);
     echo "\nImporting {$dataSet->getId()}\n";
 
     foreach ($dataSet->getRules() as $rulesDir) {

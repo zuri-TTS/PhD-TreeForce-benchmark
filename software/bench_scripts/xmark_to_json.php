@@ -9,14 +9,14 @@ $cmdArgsDef = [
     'clean' => false
 ];
 
-if (\count($argv) == 0) {
-    echo "Convert ALL dataSets to json\n\n";
-    $argv = DataSet::getAllGroups();
-}
-
 while (! empty($argv)) {
     $cmdParsed = \parseArgvShift($argv, ';') + $cmdArgsDef;
     $dataSets = \array_filter($cmdParsed, 'is_int', ARRAY_FILTER_USE_KEY);
+
+    if (\count($dataSets) == 0) {
+        echo "Convert ALL dataSets to json\n\n";
+        $dataSets = DataSet::getAllGroups();
+    }
 
     while (null !== ($dataSetId = \array_shift($dataSets))) {
         echo "\n";

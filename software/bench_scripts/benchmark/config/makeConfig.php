@@ -5,6 +5,8 @@ function selectJavaProperties(array $cmdArg)
     $ret = [];
 
     foreach ($cmdArg as $k => $v) {
+        if(!is_string($k))
+            continue;
         if ($k[0] !== 'P')
             continue;
 
@@ -13,56 +15,51 @@ function selectJavaProperties(array $cmdArg)
     return $ret;
 }
 
-function makeConfig(array $cmdArg) //
+function makeConfig(DataSet $dataSet, array $cmdArg) //
 {
-    if ($cmdArg['data'] === 'original') {
-        $dataType = 'original';
+    $group = $dataSet->getGroup();
+    $rules = $dataSet->getRules()[0];
+
+    if ($rules === 'original') {
         $hasRules = false;
         $summaryType = "";
         $native = '';
     } else {
-        $dataType = 'noised';
-        $hasRules = $cmdArg['rules'];
+        $hasRules = true;
         $summaryType = ! empty($hasRules) ? $cmdArg['summary'] : "";
         $native = $cmdArg['native'] ?? '';
     }
-    $dataSet = $cmdArg['dataSet'].'/'.$dataType;
+
     $cmd = $cmdArg['cmd'];
     $cold = $cmdArg['cold'];
-    // $checkTerminalLeaf = $cmdArg['db.checkTerminal'];
     $executeEach = $cmdArg['each'] ?? false;
-    $data = "$dataSet/${cmdArg['data']}";
 
     $hasSummary = ! empty($summaryType);
     $hasNative = ! empty($native);
 
     $common = (include __DIR__ . '/common.php');
-    $basePath = $common['java.properties']['base.path'];
+    $basePath = getBenchmarkBasePath();
 
-    $dataSet = rtrim($dataSet, '/');
-
-    $outputPath = "${common['bench.output.base.path']}/$dataSet";
-    $dbCollection = str_replace('/', '_', $dataSet);
-    $dataBasePath = "$basePath/benchmark/data/$dataSet";
+    $dbCollection = $dataSet->getGroup() . '_' . $dataSet->getRules()[0];
+    $dataBasePath = $dataSet->dataSetPath();
 
     $outDir = $common['bench.output.dir'];
 
     if ($executeEach)
         $outDir = "each-$outDir";
 
-    $outDir = "$cmd-$outDir";
+    $outDir = "$rules-$cmd-$outDir";
 
     if ($hasNative)
         $outDir .= "+native-$native";
     if ($hasRules)
-        $outDir .= "+rules";
+        $outDir .= "+rules-$rules";
     if ($hasSummary)
         $outDir .= "+summary-$summaryType";
-    // if (! $dbCheckTerminalLeaf)
-    // $outDir .= "+noTermLeaf";
     if ($cold)
         $outDir .= '+cold';
-
+        
+    $outputPath = "${common['bench.output.base.path']}/$group";
     $summaryFileName = "summary-$summaryType.txt";
 
     $common['bench.output.dir'] = $outDir;
@@ -73,7 +70,8 @@ function makeConfig(array $cmdArg) //
     $ret = array_merge_recursive($common, [
         'app.cmd' => $cmd,
         'bench.query.native.pattern' => $hasNative ? "$dataBasePath/queries/%s_each-native-$native.txt" : '',
-        'bench.cold' => $cold
+        'bench.cold' => $cold,
+        'dataSet' => $dataSet
     ]);
     $ret['java.properties'] = array_merge($ret['java.properties'], [
         'db.collection' => $dbCollection,
@@ -87,7 +85,7 @@ function makeConfig(array $cmdArg) //
 
     if ($hasRules)
         $ret['java.properties'] = array_merge($ret['java.properties'], [
-            'rules' => "$dataBasePath/rules",
+            'rules' => $dataSet->rulesPath(),
             'summary' => $hasSummary ? "$dataBasePath/$summaryFileName" : null
         ]);
     return $ret;

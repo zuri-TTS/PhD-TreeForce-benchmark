@@ -100,3 +100,11 @@ function getBenchmarkBasePath(): string
 {
     return \realpath(__DIR__ . "/../../..");
 }
+
+function checkDataSetExists(DataSet $dataSet):void
+{
+    if (! empty($error = $dataSet->allNotExists())) {
+        $error = implode(',', $error);
+        throw new \Exception("DataSet '$error' does not exists");
+    }
+}
