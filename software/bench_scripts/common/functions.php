@@ -8,15 +8,24 @@ function scandirNoPoints(string $path)
     ]);
 }
 
-function parseArgv($argv): array
+function parseArgv(array $argv): array
+{
+    return parseArgvShift($argv);
+}
+
+function parseArgvShift(array &$argv, string $endArg = ''): array
 {
     $ret = [];
-    foreach ($argv as $arg) {
+    while (null !== ($arg = \array_shift($argv))) {
 
         if ($arg[0] === '+' || $arg[0] === '-') {
             $name = \substr($arg, 1);
             $ret[$name] = $arg[0] === '+';
         } else if (false === strpos($arg, '=')) {
+
+            if ($arg === $endArg)
+                break;
+
             $ret[] = $arg;
         } else {
             [

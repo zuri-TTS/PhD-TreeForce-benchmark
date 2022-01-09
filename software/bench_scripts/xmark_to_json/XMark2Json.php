@@ -64,37 +64,77 @@ class XMark2Json
     {
         if (null !== $dataSets) {
             $dataSets = (array) $dataSets;
-
-            foreach ($dataSets as $dataSet) {
-                if ('original' === $dataSet)
-                    continue;
-
-                $path = "$this->dataSetPath/rules/$dataSet";
-
-                if (! \is_dir($path))
-                    throw new \Exception("Rule '$path' does not exists");
-            }
+            $this->checkDataSetsExists($dataSets);
         } else {
-            $dataSets = \scandirNoPoints("$this->dataSetPath/rules");
-            $dataSets[] = 'original';
+            $dataSets = $this->getAllDataSets();
         }
         $this->setPostProcesses($dataSets);
         $this->_convertGroup($dataSets);
+    }
+
+    private function checkDataSetsExists(array $dataSets): void
+    {
+        foreach ($dataSets as $dataSet) {
+            if ('original' === $dataSet)
+                continue;
+
+            $path = "$this->dataSetPath/rules/$dataSet";
+
+            if (! \is_dir($path))
+                throw new \Exception("Rule '$path' does not exists");
+        }
+    }
+
+    private function getAllDataSets()
+    {
+        $dataSets = \scandirNoPoints("$this->dataSetPath/rules");
+        $dataSets[] = 'original';
+        return $dataSets;
     }
 
     private function _convertGroup(array $dataSets)
     {
         echo "Processing $this->dataSet [", implode(',', $dataSets), "]\n";
 
-        foreach ($dataSets as $dataSet) {
-            $this->cleanOutDir($dataSet);
-        }
+        $this->clean($dataSets);
         $xmarkFilePath = "$this->dataSetPath/xmark.xml";
         $this->read(\XMLReader::open($xmarkFilePath), $dataSets);
     }
 
-    private function cleanOutDir(string $dataSet)
+    private function parseDataSets($dataSets = null, bool $checkExists = true): array
     {
+        if (null === $dataSets)
+            return $this->getAllDataSets();
+        else {
+            $dataSets = (array) $dataSets;
+            $checkExists && $this->checkDataSetsExists($dataSets);
+            return $dataSets;
+        }
+    }
+
+    public function delete($dataSets = null)
+    {
+        $dataSets = $this->parseDataSets($dataSets, false);
+
+        foreach ($dataSets as $dataSet)
+            $this->_clean($dataSet);
+
+        foreach ($dataSets as $dataSet)
+            rmdir("$this->dataSetPath/data/$dataSet");
+    }
+
+    public function clean($dataSets = null)
+    {
+        $dataSets = $this->parseDataSets($dataSets);
+
+        foreach ($dataSets as $dataSet)
+            $this->_clean($dataSet);
+    }
+
+    private function _clean(string $dataSet)
+    {
+        echo "Cleaning $this->dataSet/$dataSet\n";
+
         $dataSetOutPath = "$this->outputPath/$dataSet";
 
         if (! \is_dir($dataSetOutPath))
