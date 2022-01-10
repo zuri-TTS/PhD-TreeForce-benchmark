@@ -328,7 +328,7 @@ final class Plot
 
     private function computeFooterBlocGraphics(array $bloc): array
     {
-        $bloc = \array_map(fn ($k, $v) => \is_int($k) ? '' : (null === $v ? $k : "$k: $v"), \array_keys($bloc), $bloc);
+        $bloc = \array_map(fn ($v) => empty($v) ? '' : (null === ($v[1] ?? null) ? $v[0] : "$v[0]: $v[1]"), $bloc);
         $maxLineSize = \array_reduce($bloc, fn ($c, $i) => \max($c, strlen($i)), 0);
         $nbLines = \count($bloc);
         $g = $this->plotGraphics;
@@ -377,14 +377,20 @@ final class Plot
         $line = [];
 
         foreach ((array) $group as $what) {
-            $line["[$what]"] = null;
+            $line[] = [
+                "[$what]",
+                null
+            ];
 
             foreach ($val[$what] as $k => $v) {
 
                 if (in_array($k, $exclude))
                     continue;
 
-                $line[$k] = (string) $v;
+                $line[] = [
+                    $k,
+                    (string) $v
+                ];
             }
             $line[] = null;
         }

@@ -4,7 +4,9 @@ $graphics = &$PLOT->getPlotGraphics();
 
 $exclude = [
     'datetime',
-    'output.dir'
+    'output.dir',
+    'measures.nb',
+    'measures.forget'
 ];
 $blocGroup = [
     'bench'
@@ -13,13 +15,19 @@ $blocs[] = $PLOT->prepareOneBloc($blocGroup, $exclude);
 
 $blocGroup = [
     'answers',
-    'queries'
+    'queries',
+    'bench'
 ];
 
 foreach ($val['files'] as $fileVal) {
     $bloc = &$blocs[];
-    $bloc["<{$fileVal['file.name']}>"] = null;
-    $bloc += $PLOT->prepareOneBloc($blocGroup, [], $fileVal);
+    $bloc[] = ["<{$fileVal['file.name']}>"];
+    $bloc += $PLOT->prepareOneBloc($blocGroup, [], [
+        'bench' => [
+            'measures.nb' => $fileVal['bench']['measures.nb'],
+            'measures.forget' => $fileVal['bench']['measures.forget']
+        ]
+    ] + $fileVal);
 }
 
 echo $PLOT->addFooter($blocs);
