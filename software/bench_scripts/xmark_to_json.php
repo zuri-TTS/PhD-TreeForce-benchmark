@@ -1,12 +1,17 @@
+
 <?php
 include_once __DIR__ . '/xmark_to_json/XMark2Json.php';
 include_once __DIR__ . '/common/functions.php';
 include_once __DIR__ . '/classes/DataSet.php';
+include_once __DIR__ . '/mongoimport/MongoImport.php';
 
 \array_shift($argv);
 
 $cmdArgsDef = [
-    'clean' => false
+    'clean' => false,
+    'load' => false,
+    'post-clean' => false,
+    'generate' => true
 ];
 
 while (! empty($argv)) {
@@ -19,12 +24,21 @@ while (! empty($argv)) {
     }
 
     while (null !== ($dataSetId = \array_shift($dataSets))) {
-        echo "\n";
+        echo "\n<$dataSetId>";
         $dataSet = new DataSet($dataSetId);
 
-        $method = $cmdParsed['clean'] ? 'delete' : 'convert';
-
         $converter = new \XMark2Json($dataSet);
-        $converter->$method();
+
+        if ($cmdParsed['generate']) {
+            $method = $cmdParsed['clean'] ? 'clean' : 'convert';
+            $converter->$method();
+        }
+
+        if ($cmdParsed['load']) {
+            MongoImport::importDataSet($dataSet);
+
+            if ($cmdParsed['post-clean'])
+                $converter->clean();
+        }
     }
 }
