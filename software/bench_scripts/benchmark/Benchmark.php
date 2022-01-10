@@ -1,8 +1,9 @@
 <?php
-require_once __DIR__ . '/../classes/DateIntervalFractions.php';
 
-class Benchmark
+final class Benchmark
 {
+
+    private const dateFormat = DateTime::ATOM;
 
     private array $config;
 
@@ -161,7 +162,7 @@ class Benchmark
         ]);
         $csvFile->fputcsv([
             'datetime',
-            $this->config['bench.datetime']
+            $this->config['bench.datetime']->format(self::dateFormat)
         ]);
         $csvFile->fputcsv([
             'output.dir',

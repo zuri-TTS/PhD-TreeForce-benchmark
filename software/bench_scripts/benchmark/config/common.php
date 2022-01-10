@@ -22,7 +22,7 @@ return [
         'query.native' => "",
         'query.batchSize' => $batchSize,
         'data.batchSize' => 100,
-        'leaf.checkTerminal' => 'n',
+        'leaf.checkTerminal' => 'y',
         'querying.each' => 'n',
         'inhibitBatchStreamTime' => 'y',
         'querying.display.answers' => 'n',
@@ -55,6 +55,40 @@ return [
         sleep(1);
     },
     'bench.output.base.path' => "$basePath/outputs",
-    'bench.output.dir' => $outDir,
-    'bench.datetime' => $outDir
+    'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, DateTimeInterface $dateTime): string {
+        $group = $dataSet->getGroup();
+        $rules = $dataSet->getRules()[0];
+
+        $cmd = $cmdArg['cmd'];
+        $cold = $cmdArg['cold'];
+        $executeEach = $cmdArg['each'] ?? false;
+        $summaryType = $cmdArg['summary'] ?? '';
+
+        $hasSummary = ! empty($summaryType);
+        $hasNative = ! empty($native);
+
+        if ($rules === 'original') {
+            $native = '';
+        } else {
+            $native = $cmdArg['native'] ?? '';
+        }
+        $outDir = "[$group][$rules]";
+
+        if ($executeEach)
+            $outDir .= "[EACH]";
+
+        $outDir .= "{{$cmd}}";
+
+        $outDir .= '[' . $dateTime->format('Y-m-d H:i:s v') . ']';
+
+        if ($hasNative)
+            $outDir .= "[native-$native]";
+        if ($hasSummary)
+            $outDir .= "[summary-$summaryType]";
+        if ($cold)
+            $outDir .= '[COLD]';
+
+        return $outDir;
+    },
+    'bench.datetime' => new DateTimeImmutable()
 ];

@@ -5,7 +5,7 @@ function selectJavaProperties(array $cmdArg)
     $ret = [];
 
     foreach ($cmdArg as $k => $v) {
-        if(!is_string($k))
+        if (! is_string($k))
             continue;
         if ($k[0] !== 'P')
             continue;
@@ -20,20 +20,18 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     $group = $dataSet->getGroup();
     $rules = $dataSet->getRules()[0];
 
-    if ($rules === 'original') {
-        $hasRules = false;
-        $summaryType = "";
-        $native = '';
-    } else {
-        $hasRules = true;
-        $summaryType = ! empty($hasRules) ? $cmdArg['summary'] : "";
-        $native = $cmdArg['native'] ?? '';
-    }
-
     $cmd = $cmdArg['cmd'];
     $cold = $cmdArg['cold'];
     $executeEach = $cmdArg['each'] ?? false;
+    $summaryType = $cmdArg['summary'] ?? '';
 
+    if ($rules === 'original') {
+        $hasRules = false;
+        $native = '';
+    } else {
+        $hasRules = true;
+        $native = $cmdArg['native'] ?? '';
+    }
     $hasSummary = ! empty($summaryType);
     $hasNative = ! empty($native);
 
@@ -43,27 +41,12 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     $dbCollection = $dataSet->getGroup() . '_' . $dataSet->getRules()[0];
     $dataBasePath = $dataSet->dataSetPath();
 
-    $outDir = $common['bench.output.dir'];
+    $outputDirGenerator = $common['bench.output.dir.generator'];
+    $outDir = $outputDirGenerator($dataSet, $cmdArg, $common['bench.datetime']);
 
-    if ($executeEach)
-        $outDir = "each-$outDir";
+    $outputPath = "${common['bench.output.base.path']}/$outDir";
 
-    $outDir = "$rules-$cmd-$outDir";
-
-    if ($hasNative)
-        $outDir .= "+native-$native";
-    if ($hasRules)
-        $outDir .= "+rules-$rules";
-    if ($hasSummary)
-        $outDir .= "+summary-$summaryType";
-    if ($cold)
-        $outDir .= '+cold';
-        
-    $outputPath = "${common['bench.output.base.path']}/$group";
     $summaryFileName = "summary-$summaryType.txt";
-
-    $common['bench.output.dir'] = $outDir;
-    $coldS = $cold ? '-cold' : '';
 
     $javaProperties = selectJavaProperties($cmdArg);
 
@@ -71,23 +54,24 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         'app.cmd' => $cmd,
         'bench.query.native.pattern' => $hasNative ? "$dataBasePath/queries/%s_each-native-$native.txt" : '',
         'bench.cold' => $cold,
-        'dataSet' => $dataSet
+        'dataSet' => $dataSet,
+        'bench.output.dir' => $outDir
     ]);
     $ret['java.properties'] = array_merge($ret['java.properties'], [
         'db.collection' => $dbCollection,
         'summary.type' => $summaryType,
         'queries.dir' => "$basePath/benchmark/queries",
         'querying.each' => $executeEach ? 'y' : 'n',
-        'output.path' => "$outputPath/$outDir",
+        'output.path' => "$outputPath",
         'rules' => '',
-        'summary' => ''
+        'summary' => $hasSummary ? "$dataBasePath/$summaryFileName" : null
     ] + $javaProperties);
 
     if ($hasRules)
         $ret['java.properties'] = array_merge($ret['java.properties'], [
-            'rules' => $dataSet->rulesPath(),
-            'summary' => $hasSummary ? "$dataBasePath/$summaryFileName" : null
+            'rules' => $dataSet->rulesPath()
         ]);
+
     return $ret;
 }
 
