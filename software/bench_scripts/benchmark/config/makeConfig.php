@@ -20,6 +20,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
 {
     $group = $dataSet->getGroup();
     $rules = $dataSet->getRules()[0];
+    $dataSetPath = $dataSet->dataSetPath();
 
     $cmd = $cmdArg['cmd'];
     $cold = $cmdArg['cold'];
@@ -29,31 +30,37 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     if ($rules === 'original') {
         $hasRules = false;
         $native = '';
+        $hasSummary = false;
     } else {
         $hasRules = true;
         $native = $cmdArg['native'] ?? '';
+        $hasSummary = ! empty($summaryType);
     }
-    $hasSummary = ! empty($summaryType);
     $hasNative = ! empty($native);
+
+    if ($hasSummary) {
+        $summaryFileName = "summary-$summaryType.txt";
+        $summaryPath = "$dataSetPath/$summaryFileName";
+
+        if (! \is_file($summaryPath))
+            throw new \Exception("Summary '$summaryPath' does not exists");
+    }
 
     $common = (include __DIR__ . '/common.php');
     $basePath = getBenchmarkBasePath();
 
     $dbCollection = $dataSet->getGroup() . '_' . $dataSet->getRules()[0];
-    $dataBasePath = $dataSet->dataSetPath();
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
     $outDir = $outputDirGenerator($dataSet, $cmdArg, $common['bench.datetime']);
 
     $outputPath = "${common['bench.output.base.path']}/$outDir";
 
-    $summaryFileName = "summary-$summaryType.txt";
-
     $javaProperties = selectJavaProperties($cmdArg);
 
     $ret = array_merge_recursive($common, [
         'app.cmd' => $cmd,
-        'bench.query.native.pattern' => $hasNative ? "$dataBasePath/queries/%s_each-native-$native.txt" : '',
+        'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
         'bench.output.dir' => $outDir
@@ -65,7 +72,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         'querying.each' => $executeEach ? 'y' : 'n',
         'output.path' => "$outputPath",
         'rules' => '',
-        'summary' => $hasSummary ? "$dataBasePath/$summaryFileName" : null
+        'summary' => $summaryPath ?? ''
     ] + $javaProperties);
 
     if ($hasRules)
