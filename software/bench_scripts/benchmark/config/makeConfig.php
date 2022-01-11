@@ -9,7 +9,8 @@ function selectJavaProperties(array $cmdArg)
             continue;
         if ($k[0] !== 'P')
             continue;
-
+        if (is_bool($v))
+            $v = $v ? 'y' : 'n';
         $ret[substr($k, 1)] = $v;
     }
     return $ret;
