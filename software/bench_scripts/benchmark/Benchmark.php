@@ -193,6 +193,10 @@ final class Benchmark
             $jprop['inhibitBatchStreamTime'] ?? ''
         ]);
         $csvFile->fputcsv([
+            'toNative.dots',
+            $jprop['toNative.dots'] ?? ''
+        ]);
+        $csvFile->fputcsv([
             'leaf.checkTerminal',
             $jprop['leaf.checkTerminal'] ?? ''
         ]);

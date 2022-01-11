@@ -19,7 +19,8 @@ $cmdArgsDef = [
     'native' => '',
     'cmd' => 'querying',
     'doonce' => false,
-    'cold' => false
+    'cold' => false,
+    'dots' => false,
 ];
 
 while (! empty($argv)) {

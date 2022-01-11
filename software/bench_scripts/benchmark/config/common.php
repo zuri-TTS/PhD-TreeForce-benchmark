@@ -29,6 +29,7 @@ return [
         'querying.output.pattern' => '${output.path}/${query.name}_%s.txt',
         'query' => '${queries.dir}/${query.name}',
         'querying.config.print' => 'y',
+        'toNative.dots' => 'n',
         'data' => 'mongodb://localhost/treeforce.${db.collection}',
         'rules' => '',
         'summary' => ''
