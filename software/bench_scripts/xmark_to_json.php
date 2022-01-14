@@ -20,25 +20,40 @@ while (! empty($argv)) {
 
     if (\count($dataSets) == 0) {
         echo "Convert ALL dataSets to json\n\n";
-        $dataSets = DataSet::getAllGroups();
+
+        foreach (DataSet::getAllGroups() as $group) {
+            $toProcess[] = new DataSet($group);
+        }
+    } else {
+        foreach ($dataSets as $dataSet) {
+            $ds = new DataSet($dataSet);
+            $group = $ds->getGroup();
+            $rules = $ds->getRules();
+
+            $ds_top = $toProcess[$group] ?? $ds;
+
+            $rules_top = array_unique(array_merge($ds_top->getRules(), $rules));
+            $ds_top->setRules($rules_top);
+            $toProcess[$group] = $ds_top;
+        }
+    }
+}
+
+foreach ($toProcess as $dataSet) {
+    $dataSetId = $dataSet->getId();
+    echo "\n<$dataSetId>\n";
+
+    $converter = new \XMark2Json($dataSet);
+
+    if ($cmdParsed['generate']) {
+        $method = $cmdParsed['clean'] ? 'clean' : 'convert';
+        $converter->$method();
     }
 
-    while (null !== ($dataSetId = \array_shift($dataSets))) {
-        echo "\n<$dataSetId>";
-        $dataSet = new DataSet($dataSetId);
+    if ($cmdParsed['load']) {
+        MongoImport::importDataSet($dataSet);
 
-        $converter = new \XMark2Json($dataSet);
-
-        if ($cmdParsed['generate']) {
-            $method = $cmdParsed['clean'] ? 'clean' : 'convert';
-            $converter->$method();
-        }
-
-        if ($cmdParsed['load']) {
-            MongoImport::importDataSet($dataSet);
-
-            if ($cmdParsed['post-clean'])
-                $converter->clean();
-        }
+        if ($cmdParsed['post-clean'])
+            $converter->clean();
     }
 }

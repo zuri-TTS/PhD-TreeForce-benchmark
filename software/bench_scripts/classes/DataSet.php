@@ -45,6 +45,16 @@ final class DataSet
         return $this;
     }
 
+    public function setRulesArray(array $rules): DataSet
+    {
+        $thus->rules = [];
+
+        foreach ($rules as $r)
+            $thus->rules[] = $this::parseRules($r);
+
+        return $this;
+    }
+
     public function setRules($rules): DataSet
     {
         $this->rules = $this::parseRules($rules);
@@ -98,7 +108,7 @@ final class DataSet
     public function getId(?string $rules = null, ?string $group = null): string
     {
         $group = $group ?? $this->group;
-        $rules = $this->rulesArg($rules);
+        $rules = implode(',', $this->rules);
 
         if (! empty($rules))
             return "$group/$rules";
@@ -179,7 +189,10 @@ final class DataSet
                     null
                 ];
             else
-                return $tmp;
+                return [
+                    $tmp[0],
+                    explode(',', $tmp[1])
+                ];
         }
         return [
             $id,
