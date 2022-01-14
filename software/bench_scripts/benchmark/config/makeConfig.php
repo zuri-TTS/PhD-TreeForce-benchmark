@@ -61,7 +61,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
     $outDir = $outputDirGenerator($dataSet, $cmdArg, $javaProperties, $common['bench.datetime']);
-    $outputPath = "${common['bench.output.base.path']}/$outDir";
+    $outputPath = ($cmdArg['output'] ?? $common['bench.output.base.path'])."/$outDir";
     $javaProperties['output.path'] = "$outputPath";
 
     $ret = array_merge($common, [
