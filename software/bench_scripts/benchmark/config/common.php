@@ -3,7 +3,6 @@ $basePath = getBenchmarkBasePath();
 
 $measuresNb = 6;
 $measuresForget = 1;
-$batchSize = 500;
 
 $measuresNb = 1;
 $measuresForget = 0;
@@ -20,10 +19,10 @@ return [
         'base.path' => $basePath,
         'output.measures' => "std://out" . ($measuresNb > 1 ? '' : ",\${output.path}/\${query.name}_measures.txt"),
         'query.native' => "",
-        'query.batchSize' => $batchSize,
+        'query.batchSize' => 500,
         'data.batchSize' => 100,
         'leaf.checkTerminal' => 'y',
-        'querying.mode' => 'query',
+        'querying.mode' => 'explain',
         'inhibitBatchStreamTime' => 'y',
         'querying.display.answers' => 'n',
         'querying.output.pattern' => '${output.path}/${query.name}_%s.txt',
