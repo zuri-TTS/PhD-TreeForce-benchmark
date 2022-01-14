@@ -15,7 +15,6 @@ $cmdArgsDef = [
     // 'data' => null,
     // 'rules' => null,
     'summary' => "key",
-    'each' => false,
     'native' => '',
     'cmd' => 'querying',
     'doonce' => false,

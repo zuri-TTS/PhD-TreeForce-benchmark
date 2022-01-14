@@ -24,7 +24,6 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
 
     $cmd = $cmdArg['cmd'];
     $cold = $cmdArg['cold'];
-    $executeEach = $cmdArg['each'] ?? false;
     $summaryType = $cmdArg['summary'] ?? '';
 
     if ($rules === 'original') {
@@ -51,29 +50,28 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
 
     $dbCollection = $dataSet->getGroup() . '_' . $dataSet->getRules()[0];
 
+    $javaProperties = selectJavaProperties($cmdArg) + $common['java.properties'];
+    $javaProperties = array_merge($javaProperties, [
+        'db.collection' => $dbCollection,
+        'summary.type' => $summaryType,
+        'queries.dir' => "$basePath/benchmark/queries",
+        'rules' => '',
+        'summary' => $summaryPath ?? ''
+    ]);
+
     $outputDirGenerator = $common['bench.output.dir.generator'];
-    $outDir = $outputDirGenerator($dataSet, $cmdArg, $common['bench.datetime']);
-
+    $outDir = $outputDirGenerator($dataSet, $cmdArg, $javaProperties, $common['bench.datetime']);
     $outputPath = "${common['bench.output.base.path']}/$outDir";
+    $javaProperties['output.path'] = "$outputPath";
 
-    $javaProperties = selectJavaProperties($cmdArg);
-
-    $ret = array_merge_recursive($common, [
+    $ret = array_merge($common, [
         'app.cmd' => $cmd,
         'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
         'bench.output.dir' => $outDir
     ]);
-    $ret['java.properties'] = array_merge($ret['java.properties'], [
-        'db.collection' => $dbCollection,
-        'summary.type' => $summaryType,
-        'queries.dir' => "$basePath/benchmark/queries",
-        'querying.each' => $executeEach ? 'y' : 'n',
-        'output.path' => "$outputPath",
-        'rules' => '',
-        'summary' => $summaryPath ?? ''
-    ] + $javaProperties);
+    $ret['java.properties'] = $javaProperties;
 
     if ($hasRules)
         $ret['java.properties'] = array_merge($ret['java.properties'], [

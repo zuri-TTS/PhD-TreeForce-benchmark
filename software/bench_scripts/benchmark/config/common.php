@@ -23,7 +23,7 @@ return [
         'query.batchSize' => $batchSize,
         'data.batchSize' => 100,
         'leaf.checkTerminal' => 'y',
-        'querying.each' => 'n',
+        'querying.mode' => 'query',
         'inhibitBatchStreamTime' => 'y',
         'querying.display.answers' => 'n',
         'querying.output.pattern' => '${output.path}/${query.name}_%s.txt',
@@ -56,7 +56,7 @@ return [
         sleep(1);
     },
     'bench.output.base.path' => "$basePath/outputs",
-    'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, DateTimeInterface $dateTime): string {
+    'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, array $javaProperties, DateTimeInterface $dateTime): string {
         $group = $dataSet->getGroup();
         $rules = $dataSet->getRules()[0];
 
@@ -74,11 +74,14 @@ return [
             $native = $cmdArg['native'] ?? '';
         }
         $outDir = "[$group][$rules]";
+        $mode = $javaProperties['querying.mode'];
 
-        if ($executeEach)
-            $outDir .= "[EACH]";
+        if ($mode === 'query')
+            $mode = '';
+        else
+            $mode = ":$mode";
 
-        $outDir .= "{{$cmd}}";
+        $outDir .= "{{$cmd}$mode}";
 
         $outDir .= '[' . $dateTime->format('Y-m-d H:i:s v') . ']';
 
@@ -86,6 +89,8 @@ return [
             $outDir .= "[native-$native]";
         if ($hasSummary)
             $outDir .= "[summary-$summaryType]";
+        if ($javaProperties['toNative.dots'] === 'y')
+            $outDir .= '[dots]';
         if ($cold)
             $outDir .= '[COLD]';
 

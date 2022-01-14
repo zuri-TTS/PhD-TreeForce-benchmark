@@ -181,8 +181,8 @@ final class Benchmark
             \substr($jprop['query.native'] ?? '', $basePathEndOffset)
         ]);
         $csvFile->fputcsv([
-            'querying.each',
-            $jprop['querying.each'] ?? ''
+            'querying.mode',
+            $jprop['querying.mode'] ?? ''
         ]);
         $csvFile->fputcsv([
             'querying.display.answers',
