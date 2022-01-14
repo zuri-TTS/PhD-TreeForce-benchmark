@@ -361,7 +361,7 @@ final class Benchmark
             $measures[] = $this->parseJavaOutput();
         }
         \usort($measures, function ($a, $b) {
-            return $a['measures']['command']['u'] - $b['measures']['command']['u'];
+            return $a['measures']['command']['r'] - $b['measures']['command']['r'];
         });
         return $measures;
     }
