@@ -15,6 +15,8 @@ class XMark2Json
 
     private array $filesData;
 
+    private bool $simplifyObject = false;
+
     public function __construct(DataSet $dataSet)
     {
         checkDataSetExists($dataSet);
@@ -35,6 +37,12 @@ class XMark2Json
     public function getDataSet(): DataSet
     {
         return $this->dataSet;
+    }
+
+    public function simplifyObject($simplify = true): XMark2Json
+    {
+        $this->simplifyObject = $simplify;
+        return $this;
     }
 
     private function setPostProcesses()
@@ -233,8 +241,9 @@ class XMark2Json
                 self::toPHP(simplexml_load_string($reader->readOuterXml()))
             ]
         ]);
+
         foreach ($this->files as $d => $file)
-            $file->fwrite(self::toJsonString($data, $this->filesData[$d]['randomize']) . "\n");
+            $file->fwrite($this->toJsonString($data, $this->filesData[$d]['randomize']) . "\n");
     }
 
     // ========================================================================
@@ -298,6 +307,28 @@ class XMark2Json
             $ret[$unwind] = self::getFileFromUnwind($unwind, $baseDir);
         }
         return $ret;
+    }
+
+    private static function doSimplifyObject(&$keys, $i = 0): void
+    {
+        if (! is_array($keys))
+            return;
+
+        foreach ($keys as $k => &$e) {
+            if (! is_array($e))
+                continue;
+
+            $c = \count($e);
+
+            if ($c === 1) {
+                $e = $e[0];
+
+                self::doSimplifyObject($e, $i + 1);
+            } else {
+                foreach ($e as &$se)
+                    self::doSimplifyObject($se, $i + 1);
+            }
+        }
     }
 
     private static function array_path(array $keys, $val): array
@@ -368,11 +399,14 @@ class XMark2Json
         return $attr;
     }
 
-    private static function toJsonString(array $data, ?callable $postProcess = null): string
+    private function toJsonString(array $data, ?callable $postProcess = null): string
     {
         if (isset($postProcess)) {
             $data = $postProcess($data);
         }
+        if ($this->simplifyObject)
+            self::doSimplifyObject($data);
+
         return \json_encode($data);
     }
 }

@@ -11,7 +11,8 @@ $cmdArgsDef = [
     'clean' => false,
     'load' => false,
     'post-clean' => false,
-    'generate' => true
+    'generate' => true,
+    'simplify.object' => false
 ];
 
 while (! empty($argv)) {
@@ -43,7 +44,7 @@ foreach ($toProcess as $dataSet) {
     $dataSetId = $dataSet->getId();
     echo "\n<$dataSetId>\n";
 
-    $converter = new \XMark2Json($dataSet);
+    $converter = (new \XMark2Json($dataSet))->simplifyObject($cmdParsed['simplify.object']);
 
     if ($cmdParsed['generate']) {
         $method = $cmdParsed['clean'] ? 'clean' : 'convert';
