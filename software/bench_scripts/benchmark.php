@@ -20,7 +20,7 @@ $cmdArgsDef = [
     'doonce' => false,
     'cold' => false,
     'dots' => false,
-    'output' => '',
+    'output' => null,
 ];
 
 while (! empty($argv)) {
