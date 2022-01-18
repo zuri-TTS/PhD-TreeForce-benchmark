@@ -179,7 +179,7 @@ final class DataSet
     // ========================================================================
     public static function getAllGroups(): array
     {
-        return \scandirNoPoints(self::groupsBasePath());
+        return \scandirNoPoints(self::getGroupsBasePath());
     }
 
     public function getAllRules(?string $group = null): array
