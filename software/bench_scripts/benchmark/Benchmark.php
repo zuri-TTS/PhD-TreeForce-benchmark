@@ -165,6 +165,10 @@ final class Benchmark
             $this->config['bench.datetime']->format(self::dateFormat)
         ]);
         $csvFile->fputcsv([
+            'db.collection',
+            $jprop['db.collection']
+        ]);
+        $csvFile->fputcsv([
             'output.dir',
             $this->config['bench.output.dir']
         ]);
