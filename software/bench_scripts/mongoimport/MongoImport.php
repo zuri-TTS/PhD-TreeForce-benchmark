@@ -21,9 +21,11 @@ final class MongoImport
         echo "\nImporting {$dataSet->getId()}\n";
 
         foreach ($dataSet->getRules() as $rulesDir) {
+            $dataSet->setTheRules($rulesDir);
             $path = $dataSet->dataSetPath($rulesDir);
             \chdir($path);
-            $collectionName = "{$dataSet->getGroup()}_$rulesDir";
+            $collectionName = self::getCollectionName($dataSet);
+
             $jsonFiles = \glob("*.json");
 
             echo "\nDeleting treeforce.$collectionName from MongoDB\n";
@@ -36,5 +38,10 @@ final class MongoImport
                 echo \shell_exec("cat '$json' | mongoimport -d treeforce -c '$collectionName'");
             }
         }
+    }
+
+    public static function getCollectionName(DataSet $dataSet)
+    {
+        return \str_replace('/', '_', $dataSet->getTheId());
     }
 }

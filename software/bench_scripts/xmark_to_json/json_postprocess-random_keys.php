@@ -87,7 +87,7 @@ return function (string $ruleModel, XMark2Json $converter): callable {
     };
     $replacements = $converter->getRelabellings($ruleModel);
 
-    return function (array $data) use ($converter, $replacements, $pseudoGenerator) {
+    return function (array $data) use ($replacements, $pseudoGenerator) {
         return replaceJsonData($data, $replacements, $pseudoGenerator);
     };
 };

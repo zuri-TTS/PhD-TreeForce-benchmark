@@ -21,7 +21,7 @@ class XMark2Json
 
     public function __construct(DataSet $dataSet, array $querlifiers = [])
     {
-        checkDataSetExists($dataSet);
+        checkDataSetExists($dataSet, false);
 
         $basePath = getBenchmarkBasePath();
         $dataSetPath = $dataSet->groupPath();
@@ -57,7 +57,7 @@ class XMark2Json
         if (false !== $pos) {
             $this->filesData[DataSet::originalDataSet] = [
                 'randomize' => fn ($data) => $data,
-                'path' => $this->dataSet->dataSetPath(DataSet::originalDataSet)
+                'path' => (clone $this->dataSet)->setTheRules(DataSet::originalDataSet)->dataSetPath()
             ];
             unset($rules[$pos]);
         }
@@ -66,7 +66,7 @@ class XMark2Json
         $rules, //
         \array_map(fn ($d) => [
             'randomize' => (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this),
-            'path' => $this->dataSet->dataSetPath($d)
+            'path' => (clone $this->dataSet)->setTheRules($d)->dataSetPath()
         ], $rules) //
         );
     }
@@ -86,7 +86,7 @@ class XMark2Json
 
     private function _convertGroup()
     {
-        echo "Processing {$this->dataSet->getGroup()} [", implode(',', $this->dataSet->getRules()), "]\n";
+        echo "Processing dataset {$this->dataSet->getId()}\n";
 
         $this->clean();
         $xmarkFilePath = "{$this->dataSet->groupPath()}/xmark.xml";
@@ -97,8 +97,8 @@ class XMark2Json
     {
         $rules = $this->dataSet->getRules();
 
-        foreach ($rules as $dataSet) {
-            $this->dataSet->setRules($dataSet);
+        foreach ($rules as $theRules) {
+            $this->dataSet->setTheRules($theRules);
             $this->_clean();
             @rmdir($this->dataSet->dataSetPath());
         }
@@ -109,8 +109,8 @@ class XMark2Json
     {
         $rules = $this->dataSet->getRules();
 
-        foreach ($rules as $dataSet) {
-            $this->dataSet->setRules($dataSet);
+        foreach ($rules as $theRules) {
+            $this->dataSet->setTheRules($theRules);
             $this->_clean();
         }
         $this->dataSet->setRules($rules);
@@ -118,14 +118,14 @@ class XMark2Json
 
     private function _clean()
     {
-        $dataSetId = $this->dataSet->getId();
+        $dataSetId = $this->dataSet->getTheId();
         echo "Cleaning $dataSetId\n";
 
         $dataSetOutPath = $this->dataSet->dataSetPath();
 
-        if (! \is_dir($dataSetOutPath))
+        if (! \is_dir($dataSetOutPath)) {
             \mkdir($dataSetOutPath, 0777, true);
-        else {
+        } else {
             foreach (\glob("$dataSetOutPath/*.json") as $f) {
                 \is_file($f) && unlink($f);
             }
@@ -148,7 +148,7 @@ class XMark2Json
         $path = &$this->path;
         $path = [];
         $outputPath = $this->dataSet->rulesPath();
-        $dataSets = $this->dataSet->getRules();
+        $rules = $this->dataSet->getRules();
 
         while ($reader->read()) {
             switch ($reader->nodeType) {
@@ -164,8 +164,8 @@ class XMark2Json
 
                     echo "Unwinding $u\n";
                     $this->files = \array_combine( //
-                    $dataSets, //
-                    \array_map(fn ($d) => new \SplFileObject(self::getFileFromUnwind($u, $this->filesData[$d]['path']), 'w'), $dataSets));
+                    $rules, //
+                    \array_map(fn ($theRules) => new \SplFileObject(self::getFileFromUnwind($u, $this->filesData[$theRules]['path']), 'w'), $rules));
 
                     $reader->read();
                     $u_a = explode('.', $u);
@@ -280,12 +280,17 @@ class XMark2Json
         return $ret;
     }
 
-    public function getRelabellings(string $rulesPath)
+    public function getRelabellings(string $theRules)
     {
-        $rules = $this->dataSet->rulesPath($rulesPath) . "/querying.txt";
+        if ($theRules === DataSet::originalDataSet)
+            return [];
+
+        $dataSet = clone $this->dataSet;
+        $dataSet->setTheRules($theRules);
+        $rules = $dataSet->theRulesPath() . "/querying.txt";
 
         if (! is_file($rules)) {
-            echo "Warning: rule file $rules does not exists\n";
+            echo "Warning: rule file $rules does not exists (for {$dataSet->getTheId()})\n";
             $rel = [];
         } else
             $rel = self::_getRelabellings($rules);

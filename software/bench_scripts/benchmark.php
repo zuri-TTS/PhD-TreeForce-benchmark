@@ -3,6 +3,7 @@ require_once __DIR__ . '/benchmark/Benchmark.php';
 require_once __DIR__ . '/benchmark/config/makeConfig.php';
 require_once __DIR__ . '/common/functions.php';
 include_once __DIR__ . '/classes/DataSet.php';
+require_once __DIR__ . '/mongoimport/MongoImport.php';
 
 \array_shift($argv);
 
@@ -37,8 +38,8 @@ while (! empty($argv)) {
         $rules = $dataSet->getRules();
         checkDataSetExists($dataSet);
 
-        foreach ($dataSet->getRules() as $rulesDir) {
-            $dataSet->setRules($rulesDir);
+        foreach ($dataSet->getRules() as $theRules) {
+            $dataSet->setTheRules($theRules);
             $config = makeConfig($dataSet, $cmdParsed);
             $bench = new \Benchmark($config);
 

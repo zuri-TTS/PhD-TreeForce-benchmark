@@ -101,10 +101,17 @@ function getBenchmarkBasePath(): string
     return \realpath(__DIR__ . "/../../..");
 }
 
-function checkDataSetExists(DataSet $dataSet):void
+function checkDataSetExists(DataSet $dataSet, bool $qualified = true): void
 {
+    if (! $qualified) {
+        $q = $dataSet->getQualifiers();
+        $dataSet->setQualifiers([]);
+    }
     if (! empty($error = $dataSet->allNotExists())) {
         $error = implode(',', $error);
         throw new \Exception("DataSet '$error' does not exists");
     }
+
+    if (! $qualified)
+        $dataSet->setQualifiers($q);
 }

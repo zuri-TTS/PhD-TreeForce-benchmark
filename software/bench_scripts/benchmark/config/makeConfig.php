@@ -19,7 +19,7 @@ function selectJavaProperties(array $cmdArg)
 function makeConfig(DataSet $dataSet, array $cmdArg) //
 {
     $group = $dataSet->getGroup();
-    $rules = $dataSet->getRules()[0];
+    $rules = $dataSet->getTheRules();
     $dataSetPath = $dataSet->dataSetPath();
 
     $cmd = $cmdArg['cmd'];
@@ -48,11 +48,9 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     $common = (include __DIR__ . '/common.php');
     $basePath = getBenchmarkBasePath();
 
-    $dbCollection = $dataSet->getGroup() . '_' . $dataSet->getRules()[0];
-
     $javaProperties = selectJavaProperties($cmdArg);
     $javaProperties = array_merge([
-        'db.collection' => $dbCollection,
+        'db.collection' => MongoImport::getCollectionName($dataSet),
         'summary.type' => $summaryType,
         'queries.dir' => "$basePath/benchmark/queries",
         'rules' => '',
@@ -75,7 +73,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
 
     if ($hasRules)
         $ret['java.properties'] = array_merge($ret['java.properties'], [
-            'rules' => $dataSet->rulesPath()
+            'rules' => $dataSet->theRulesPath()
         ]);
     return $ret;
 }

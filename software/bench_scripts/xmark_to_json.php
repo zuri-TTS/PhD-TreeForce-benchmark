@@ -42,20 +42,30 @@ while (! empty($argv)) {
 }
 
 foreach ($toProcess as $dataSet) {
+    $qualifiers = $dataSet->getQualifiers();
+    $doNotSimplifyPath = __DIR__ . '/xmark_to_json/do_not_simplify.php';
 
-    $simplifyObject = $cmdParsed['simplify.object'];
-
-    if ($simplifyObject) {
-        $useConfig = $cmdParsed['simplify.object.useConfig'];
-        $forceSimplify = $useConfig ? (include __DIR__ . '/xmark_to_json/do_not_simplify.php') : [];
-        $qualifiers = $simplifyObject ? [
-            $useConfig ? 'simplified' : 'simplified.all'
-        ] : [];
-    } else {
+    if (\in_array('simplified', $qualifiers)) {
+        $simplifyObject = true;
+        $forceSimplify = include $doNotSimplifyPath;
+    } elseif (\in_array('simplified.all', $qualifiers)) {
+        $simplifyObject = true;
         $forceSimplify = [];
-        $qualifiers = [];
+    } else {
+        $simplifyObject = $cmdParsed['simplify.object'];
+
+        if ($simplifyObject) {
+            $qualifiers = $simplifyObject ? [
+                $useConfig ? 'simplified' : 'simplified.all'
+            ] : [];
+            $useConfig = $cmdParsed['simplify.object.useConfig'];
+            $forceSimplify = $useConfig ? (include $doNotSimplifyPath) : [];
+        } else {
+            $qualifiers = [];
+            $forceSimplify = [];
+        }
+        $dataSet->setQualifiers($qualifiers);
     }
-    $dataSet->setQualifiers($qualifiers);
     $dataSetId = $dataSet->getId();
     echo "\n<$dataSetId>\n";
     $converter = (new \XMark2Json($dataSet))->simplifyObject($simplifyObject, $forceSimplify);

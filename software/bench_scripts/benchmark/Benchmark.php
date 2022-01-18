@@ -64,8 +64,11 @@ final class Benchmark
     private function writeJavaProperties(array $incVar)
     {
         $s = "";
+        $jprop = $this->config['java.properties'] + $incVar;
 
-        foreach ($this->config['java.properties'] + $incVar as $k => $v) {
+        $jprop['db.collection'] = \rawurlencode($jprop['db.collection']);
+
+        foreach ($jprop as $k => $v) {
             $s .= "$k: $v\n";
         }
         return $s;
@@ -158,7 +161,7 @@ final class Benchmark
         $dataSet = \array_slice(\explode('/', $this->qOutputPath), - 3, - 1);
         $csvFile->fputcsv([
             'dataSet',
-            $this->config['dataSet']->getId()
+            $this->config['dataSet']->getTheId()
         ]);
         $csvFile->fputcsv([
             'datetime',
@@ -398,7 +401,7 @@ final class Benchmark
 
         foreach ($queries as $query) {
             echo "==================================\n";
-            echo "<{$dataSet->getId()}>\n";
+            echo "<{$dataSet->getTheId()}>\n";
             echo "$query\n\n";
 
             $queryFile = $query;

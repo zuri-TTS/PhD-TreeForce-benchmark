@@ -57,7 +57,8 @@ return [
     'bench.output.base.path' => "$basePath/outputs",
     'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, array $javaProperties, DateTimeInterface $dateTime): string {
         $group = $dataSet->getGroup();
-        $rules = $dataSet->getRules()[0];
+        $theRules = $dataSet->getTheRules();
+        $qualifiers = $dataSet->qualifiersString();
 
         $cmd = $cmdArg['cmd'];
         $cold = $cmdArg['cold'];
@@ -67,12 +68,12 @@ return [
         $hasSummary = ! empty($summaryType);
         $hasNative = ! empty($native);
 
-        if ($rules === 'original') {
+        if ($theRules === 'original') {
             $native = '';
         } else {
             $native = $cmdArg['native'] ?? '';
         }
-        $outDir = "[$group][$rules]";
+        $outDir = "[$group][$theRules]$qualifiers";
         $mode = $javaProperties['querying.mode'];
 
         if ($mode === 'query')
