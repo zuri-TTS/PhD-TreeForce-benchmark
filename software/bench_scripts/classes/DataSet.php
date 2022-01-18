@@ -19,6 +19,8 @@ final class DataSet
 
     private ?array $rules;
 
+    private array $qualifiers = [];
+
     // ========================================================================
     public function __construct(string $id)
     {
@@ -58,6 +60,12 @@ final class DataSet
     public function setRules($rules): DataSet
     {
         $this->rules = $this::parseRules($rules);
+        return $this;
+    }
+
+    public function setQualifiers(array $qualifiers): DataSet
+    {
+        $this->qualifiers = $qualifiers;
         return $this;
     }
 
@@ -102,18 +110,29 @@ final class DataSet
     {
         $group = $group ?? $this->group;
         $rules = $this->rulesArg($rules);
-        return "$this->groupsBasePath/$group/" . self::dataSetDir . "/$rules";
+        $q = $this->qualifiersString();
+        return "$this->groupsBasePath/$group/" . self::dataSetDir . "/$rules$q";
     }
 
     public function getId(?string $rules = null, ?string $group = null): string
     {
         $group = $group ?? $this->group;
         $rules = implode(',', $this->rules);
+        $q = $this->qualifiersString();
 
         if (! empty($rules))
-            return "$group/$rules";
+            return "$group/$rules$q";
 
-        return $group;
+        return "$group$q";
+    }
+
+    private function qualifiersString(): string
+    {
+        if (empty($this->qualifiers))
+            return '';
+
+        $s = implode(',', $this->qualifiers);
+        return "[$s]";
     }
 
     // ========================================================================

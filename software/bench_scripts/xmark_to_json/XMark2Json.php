@@ -17,7 +17,9 @@ class XMark2Json
 
     private bool $simplifyObject = false;
 
-    public function __construct(DataSet $dataSet)
+    private array $doNotSimplify;
+
+    public function __construct(DataSet $dataSet, array $querlifiers = [])
     {
         checkDataSetExists($dataSet);
 
@@ -39,9 +41,10 @@ class XMark2Json
         return $this->dataSet;
     }
 
-    public function simplifyObject($simplify = true): XMark2Json
+    public function simplifyObject($simplify = true, array $doNotSimplify): XMark2Json
     {
         $this->simplifyObject = $simplify;
+        $this->doNotSimplify = $doNotSimplify;
         return $this;
     }
 
@@ -309,13 +312,13 @@ class XMark2Json
         return $ret;
     }
 
-    private static function doSimplifyObject(&$keys, $i = 0): void
+    private function doSimplifyObject(&$keys): void
     {
         if (! is_array($keys))
             return;
 
         foreach ($keys as $k => &$e) {
-            if (! is_array($e))
+            if (! is_array($e) || in_array($k, $this->doNotSimplify))
                 continue;
 
             $c = \count($e);
@@ -323,10 +326,10 @@ class XMark2Json
             if ($c === 1) {
                 $e = $e[0];
 
-                self::doSimplifyObject($e, $i + 1);
+                $this->doSimplifyObject($e);
             } else {
                 foreach ($e as &$se)
-                    self::doSimplifyObject($se, $i + 1);
+                    $this->doSimplifyObject($se);
             }
         }
     }
@@ -405,7 +408,7 @@ class XMark2Json
             $data = $postProcess($data);
         }
         if ($this->simplifyObject)
-            self::doSimplifyObject($data);
+            $this->doSimplifyObject($data);
 
         return \json_encode($data);
     }

@@ -12,7 +12,8 @@ $cmdArgsDef = [
     'load' => false,
     'post-clean' => false,
     'generate' => true,
-    'simplify.object' => false
+    'simplify.object' => false,
+    'simplify.object.useConfig' => true
 ];
 
 while (! empty($argv)) {
@@ -41,10 +42,23 @@ while (! empty($argv)) {
 }
 
 foreach ($toProcess as $dataSet) {
+
+    $simplifyObject = $cmdParsed['simplify.object'];
+
+    if ($simplifyObject) {
+        $useConfig = $cmdParsed['simplify.object.useConfig'];
+        $forceSimplify = $useConfig ? (include __DIR__ . '/xmark_to_json/do_not_simplify.php') : [];
+        $qualifiers = $simplifyObject ? [
+            $useConfig ? 'simplified' : 'simplified.all'
+        ] : [];
+    } else {
+        $forceSimplify = [];
+        $qualifiers = [];
+    }
+    $dataSet->setQualifiers($qualifiers);
     $dataSetId = $dataSet->getId();
     echo "\n<$dataSetId>\n";
-
-    $converter = (new \XMark2Json($dataSet))->simplifyObject($cmdParsed['simplify.object']);
+    $converter = (new \XMark2Json($dataSet))->simplifyObject($simplifyObject, $forceSimplify);
 
     if ($cmdParsed['generate']) {
         $method = $cmdParsed['clean'] ? 'clean' : 'convert';
