@@ -50,14 +50,14 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
 
     $dbCollection = $dataSet->getGroup() . '_' . $dataSet->getRules()[0];
 
-    $javaProperties = selectJavaProperties($cmdArg) + $common['java.properties'];
-    $javaProperties = array_merge($javaProperties, [
+    $javaProperties = selectJavaProperties($cmdArg);
+    $javaProperties = array_merge([
         'db.collection' => $dbCollection,
         'summary.type' => $summaryType,
         'queries.dir' => "$basePath/benchmark/queries",
         'rules' => '',
         'summary' => $summaryPath ?? ''
-    ]);
+    ], $javaProperties) + $common['java.properties'];
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
     $outDir = $outputDirGenerator($dataSet, $cmdArg, $javaProperties, $common['bench.datetime']);
