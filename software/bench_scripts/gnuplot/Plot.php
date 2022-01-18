@@ -319,7 +319,7 @@ final class Plot
 
         $x = 0;
         foreach ($blocs as $b) {
-            $s = \implode('\\n', $b['bloc']);
+            $s = \str_replace('_', '\\\\_', \implode('\\n', $b['bloc']));
             $ret .= "set label \"$s\" at screen 0.01,0.01 offset character $x, character $charOffset\n";
             $x += $b['lines.size.max'];
         }
