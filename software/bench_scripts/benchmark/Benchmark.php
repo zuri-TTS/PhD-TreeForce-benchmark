@@ -157,8 +157,8 @@ final class Benchmark
         ]);
         $dataSet = \array_slice(\explode('/', $this->qOutputPath), - 3, - 1);
         $csvFile->fputcsv([
-            'dataset',
-            implode('/', $dataSet)
+            'dataSet',
+            $this->config['dataSet']->getId()
         ]);
         $csvFile->fputcsv([
             'datetime',
