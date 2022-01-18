@@ -41,7 +41,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         $summaryFileName = "summary-$summaryType.txt";
         $summaryPath = "$dataSetPath/$summaryFileName";
 
-        if (! \is_file($summaryPath))
+        if (! \is_file($summaryPath) && $cmd !== "summarize")
             throw new \Exception("Summary '$summaryPath' does not exists");
     }
 
@@ -77,7 +77,6 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         $ret['java.properties'] = array_merge($ret['java.properties'], [
             'rules' => $dataSet->rulesPath()
         ]);
-
     return $ret;
 }
 
