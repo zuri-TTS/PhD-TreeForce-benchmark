@@ -37,10 +37,10 @@ class ModelGen
     {
         $outFile = $this->outModelPath;
 
-        if (\is_file($outFile)) {
-            echo "Already generated: $outFile\n";
-            return true;
-        }
+//         if (\is_file($outFile)) {
+//             echo "Already generated: $outFile\n";
+//             return true;
+//         }
         if ($this->generator->validArgs()) {
             echo "Generating $outFile\n";
             $this->generator->generate(new \SplFileObject($outFile, 'w'));
