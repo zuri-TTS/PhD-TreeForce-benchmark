@@ -336,7 +336,7 @@ final class Plot
         return [
             'bloc' => $bloc,
             'lines.nb' => $nbLines,
-            'lines.size.max' => $maxLineSize,
+            'lines.size.max' => $maxLineSize * 0.9,
             'w' => $g['font.size'] * $maxLineSize,
             'h' => ($g['font.size'] + 8) * $nbLines
         ];
