@@ -22,7 +22,9 @@ final class MongoImport
 
         foreach ($dataSet->getRules() as $rulesDir) {
             $dataSet->setTheRules($rulesDir);
-            $path = $dataSet->dataSetPath($rulesDir);
+
+            $path = $dataSet->dataSetPath();
+            echo "CD $path\n";
             \chdir($path);
             $collectionName = self::getCollectionName($dataSet);
 

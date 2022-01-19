@@ -157,12 +157,12 @@ final class DataSet
     }
 
     // ========================================================================
-    public function allNotExists(): array
+    public function allNotExists(bool $onlyRules = false): array
     {
-        return self::getAllNotExists($this->group, $this->rules, $this->qualifiers);
+        return self::getAllNotExists($this->group, $this->rules, $this->qualifiers, ! $onlyRules);
     }
 
-    public static function getAllNotExists(string $group, array $rules, array $qualifiers = []): array
+    public static function getAllNotExists(string $group, array $rules, array $qualifiers = [], bool $checkDataSet = true): array
     {
         $ret = [];
 
@@ -170,7 +170,7 @@ final class DataSet
             return [];
 
         foreach ($rules as $theRules) {
-            if (! self::_exists($group, $theRules, $qualifiers))
+            if (! self::_exists($group, $theRules, $qualifiers, $checkDataSet))
                 $ret[] = self::_getTheId($group, $theRules, $qualifiers);
         }
         return $ret;
@@ -260,7 +260,7 @@ final class DataSet
         return self::_getTheId($group, implode(',', $rules), $qualifiers);
     }
 
-    private static function _exists(string $group, string $theRules, array $qualifiers): bool
+    private static function _exists(string $group, string $theRules, array $qualifiers, bool $checkDataSet = true): bool
     {
         if (empty($group) && empty($theRules))
             return true;
@@ -268,8 +268,9 @@ final class DataSet
             return self::_groupExists($group);
         if (empty($group))
             return false;
-        echo $theRules, ":", (self::_theRulesPath($group, $theRules)), "\n";
-        return self::_theRulesExists($group, $theRules) && self::_theDataSetExists($group, $theRules, $qualifiers);
+
+        return self::_theRulesExists($group, $theRules) && //
+        (! $checkDataSet || self::_theDataSetExists($group, $theRules, $qualifiers));
     }
 
     private static function _groupExists(string $group): bool
@@ -279,6 +280,7 @@ final class DataSet
 
     private static function _theRulesExists(string $group, string $theRules): bool
     {
+        var_dump(self::_theRulesPath($group, $theRules));
         return $theRules === self::originalDataSet || \is_dir(self::_theRulesPath($group, $theRules));
     }
 

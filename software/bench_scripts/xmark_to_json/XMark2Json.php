@@ -21,7 +21,7 @@ class XMark2Json
 
     public function __construct(DataSet $dataSet, array $querlifiers = [])
     {
-        checkDataSetExists($dataSet, false);
+        checkDataSetExists($dataSet, false, true);
 
         $basePath = getBenchmarkBasePath();
         $dataSetPath = $dataSet->groupPath();
@@ -61,7 +61,6 @@ class XMark2Json
             ];
             unset($rules[$pos]);
         }
-
         $this->filesData += \array_combine( //
         $rules, //
         \array_map(fn ($d) => [
@@ -70,6 +69,11 @@ class XMark2Json
         ], $rules) //
         );
         $this->filesData = \array_filter($this->filesData, fn ($f) => ! \is_file("{$f['path']}/end.json"));
+
+        foreach ($this->filesData as $f) {
+            if (! \is_dir($f['path']))
+                \mkdir($f['path']);
+        }
     }
 
     public function convert()
@@ -161,7 +165,7 @@ class XMark2Json
         $path = &$this->path;
         $path = [];
         $outputPath = $this->dataSet->rulesPath();
-        $rules = $this->dataSet->getRules();
+        $rules = \array_keys($this->filesData);
 
         while ($reader->read()) {
             switch ($reader->nodeType) {

@@ -19,8 +19,15 @@ function parseArgvShift(array &$argv, string $endArg = ''): array
     while (null !== ($arg = \array_shift($argv))) {
 
         if ($arg[0] === '+' || $arg[0] === '-') {
-            $name = \substr($arg, 1);
-            $ret[$name] = $arg[0] === '+';
+            $sign = $arg[0];
+            $arg = \substr($arg, 1);
+
+            if (false === strpos($arg, '='))
+                $ret[$arg] = ($sign === '+');
+            else {
+                list ($name, $val) = explode('=', $arg, 2);
+                $ret[$name] = $val;
+            }
         } else if (false === strpos($arg, '=')) {
 
             if ($arg === $endArg)
@@ -28,12 +35,27 @@ function parseArgvShift(array &$argv, string $endArg = ''): array
 
             $ret[] = $arg;
         } else {
-            [
-                $name,
-                $val
-            ] = explode('=', $arg, 2);
+            list ($name, $val) = explode('=', $arg, 2);
+
+            if ($name[0] === '+' || $name[0] === '-')
+                $name = \substr($name, 1);
+
             $ret[$name] = $val;
         }
+    }
+    return $ret;
+}
+
+function argPrefixed(array $args, string $prefix)
+{
+    $ret = [];
+
+    foreach ($args as $arg => $v) {
+
+        if (0 !== \strpos($arg, $prefix))
+            continue;
+
+        $ret[\substr($arg, \strlen($prefix))] = $v;
     }
     return $ret;
 }
@@ -56,6 +78,14 @@ function argShift(array &$args, string $key, $default = null)
         unset($args[$keys[0]]);
     }
     return $v;
+}
+
+function updateObject(array $args, object &$obj)
+{
+    foreach ($args as $k => $v) {
+        $k = \str_replace('.', '_', $k);
+        $obj->$k = $v;
+    }
 }
 
 function getVal(array $a, $default, string ...$key)
@@ -101,14 +131,31 @@ function getBenchmarkBasePath(): string
     return \realpath(__DIR__ . "/../../..");
 }
 
-function checkDataSetExists(DataSet $dataSet, bool $qualified = true): void
+function getQueriesBasePath(): string
+{
+    return getBenchmarkBasePath() . '/benchmark/queries';
+}
+
+function getQueries(bool $getPath = true): array
+{
+    $path = getQueriesBasePath();
+    $queries = scandirNoPoints($path);
+    $ret = \array_filter($queries, fn ($f) => \is_file("$path/$f"));
+    \sort($ret);
+
+    if ($getPath)
+        return \array_map(fn ($f) => "$path/$f", $ret);
+    return $ret;
+}
+
+function checkDataSetExists(DataSet $dataSet, bool $qualified = true, bool $onlyRules = false): void
 {
     if (! $qualified) {
         $q = $dataSet->getQualifiers();
         $dataSet->setQualifiers([]);
     }
-    if (! empty($error = $dataSet->allNotExists())) {
-        $error = implode(',', $error);
+    if (! empty($error = $dataSet->allNotExists($onlyRules))) {
+        $error = implode(",\n", $error);
         throw new \Exception("DataSet '$error' does not exists");
     }
 
