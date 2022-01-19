@@ -69,12 +69,15 @@ class XMark2Json
             'path' => (clone $this->dataSet)->setTheRules($d)->dataSetPath()
         ], $rules) //
         );
+        $this->filesData = \array_filter($this->filesData, fn ($f) => ! \is_file("{$f['path']}/end.json"));
     }
 
     public function convert()
     {
         $this->setPostProcesses();
-        $this->_convertGroup();
+
+        if (! empty($this->filesData))
+            $this->_convertGroup();
     }
 
     private function getAllDataSets()
@@ -88,9 +91,12 @@ class XMark2Json
     {
         echo "Processing dataset {$this->dataSet->getId()}\n";
 
-        $this->clean();
+        $this->_prepareDir();
         $xmarkFilePath = "{$this->dataSet->groupPath()}/xmark.xml";
         $this->read(\XMLReader::open($xmarkFilePath));
+
+        foreach ($this->filesData as $fd)
+            \touch("{$fd['path']}/end.json");
     }
 
     public function delete($dataSets = null)
@@ -116,6 +122,15 @@ class XMark2Json
         $this->dataSet->setRules($rules);
     }
 
+    private function _prepareDir()
+    {
+        $dataSetOutPath = $this->dataSet->dataSetPath();
+
+        if (! \is_dir($dataSetOutPath)) {
+            \mkdir($dataSetOutPath, 0777, true);
+        }
+    }
+
     private function _clean()
     {
         $dataSetId = $this->dataSet->getTheId();
@@ -123,9 +138,7 @@ class XMark2Json
 
         $dataSetOutPath = $this->dataSet->dataSetPath();
 
-        if (! \is_dir($dataSetOutPath)) {
-            \mkdir($dataSetOutPath, 0777, true);
-        } else {
+        if (\is_dir($dataSetOutPath)) {
             foreach (\glob("$dataSetOutPath/*.json") as $f) {
                 \is_file($f) && unlink($f);
             }

@@ -10,6 +10,7 @@ include_once __DIR__ . '/mongoimport/MongoImport.php';
 $cmdArgsDef = [
     'clean' => false,
     'load' => false,
+    'pre-clean' => false,
     'post-clean' => false,
     'generate' => true,
     'simplify.object' => false,
@@ -69,6 +70,9 @@ foreach ($toProcess as $dataSet) {
     $dataSetId = $dataSet->getId();
     echo "\n<$dataSetId>\n";
     $converter = (new \XMark2Json($dataSet))->simplifyObject($simplifyObject, $forceSimplify);
+
+    if ($cmdParsed['pre-clean'])
+        $converter->clean();
 
     if ($cmdParsed['generate']) {
         $method = $cmdParsed['clean'] ? 'clean' : 'convert';
