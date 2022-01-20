@@ -29,6 +29,7 @@ return [
         'query' => '${queries.dir}/${query.name}',
         'querying.config.print' => 'y',
         'toNative.dots' => 'n',
+        'toNative.useSummary' => 'n',
         'data' => 'mongodb://localhost/treeforce.${db.collection}',
         'rules' => '',
         'summary' => ''
@@ -89,6 +90,8 @@ return [
             $outDir .= "[native-$native]";
         if ($hasSummary)
             $outDir .= "[summary-$summaryType]";
+        if ($javaProperties['toNative.useSummary'] === 'y')
+            $outDir .= '[toNative.useSummary]';
         if ($javaProperties['toNative.dots'] === 'y')
             $outDir .= '[dots]';
         if ($cold)
