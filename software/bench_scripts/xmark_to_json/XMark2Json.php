@@ -51,22 +51,19 @@ class XMark2Json
     private function setPostProcesses()
     {
         $rules = $this->dataSet->getRules();
-        $pos = \array_search(DataSet::originalDataSet, $rules, true);
         $this->filesData = [];
 
-        if (false !== $pos) {
-            $this->filesData[DataSet::originalDataSet] = [
-                'randomize' => fn ($data) => $data,
-                'path' => (clone $this->dataSet)->setTheRules(DataSet::originalDataSet)->dataSetPath()
-            ];
-            unset($rules[$pos]);
-        }
         $this->filesData += \array_combine( //
         $rules, //
-        \array_map(fn ($d) => [
-            'randomize' => (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this),
-            'path' => (clone $this->dataSet)->setTheRules($d)->dataSetPath()
-        ], $rules) //
+        \array_map(function ($d) {
+            $dataSet = (clone $this->dataSet)->setTheRules($d);
+            $theRulesFiles = $dataSet->theRulesFiles();
+
+            return [
+                'randomize' => empty($theRulesFiles) ? fn ($data) => $data : (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this),
+                'path' => $dataSet->dataSetPath()
+            ];
+        }, $rules) //
         );
         $this->filesData = \array_filter($this->filesData, fn ($f) => ! \is_file("{$f['path']}/end.json"));
 
@@ -299,15 +296,15 @@ class XMark2Json
 
     public function getRelabellings(string $theRules)
     {
-        if ($theRules === DataSet::originalDataSet)
-            return [];
-
         $dataSet = clone $this->dataSet;
         $dataSet->setTheRules($theRules);
-        $rules = $dataSet->theRulesPath() . "/querying.txt";
+        $rulesPath = $dataSet->theRulesPath();
+        $rules = "$rulesPath/querying.txt";
 
-        if (! is_file($rules)) {
+        if (! is_dir($rulesPath)) {
             echo "Warning: rule file $rules does not exists (for {$dataSet->getTheId()})\n";
+            $rel = [];
+        } else if (! is_file($rules)) {
             $rel = [];
         } else
             $rel = self::_getRelabellings($rules);

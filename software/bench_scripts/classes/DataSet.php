@@ -9,8 +9,6 @@ final class DataSet
 
     private const groupsBasePath = 'benchmark/data';
 
-    public const originalDataSet = 'original';
-
     private string $benchmarkBasePath;
 
     private string $group;
@@ -136,6 +134,17 @@ final class DataSet
         return self::_theRulesPath($this->group, $this->theRules);
     }
 
+    public function theRulesFiles(bool $addPath = false): array
+    {
+        $path = $this->theRulesPath();
+        $files = scandirNoPoints($path);
+
+        if ($addPath)
+            return \array_map(fn ($f) => "$path/$f");
+
+        return $files;
+    }
+
     public function dataSetPath(): string
     {
         return self::_dataSetPath($this->group, $this->theRules, $this->qualifiers);
@@ -186,7 +195,6 @@ final class DataSet
     {
         $group = $group ?? $this->group;
         $rules = \scandirNoPoints($this->rulesBasePath($group));
-        $rules[] = self::originalDataSet;
         return $rules;
     }
 
@@ -280,12 +288,11 @@ final class DataSet
 
     private static function _theRulesExists(string $group, string $theRules): bool
     {
-        var_dump(self::_theRulesPath($group, $theRules));
-        return $theRules === self::originalDataSet || \is_dir(self::_theRulesPath($group, $theRules));
+        return \is_dir(self::_theRulesPath($group, $theRules));
     }
 
     private static function _theDataSetExists(string $group, string $theRules, array $qualifiers): bool
     {
-        return $theRules === self::originalDataSet || \is_dir(self::_dataSetPath($group, $theRules, $qualifiers));
+        return \is_dir(self::_dataSetPath($group, $theRules, $qualifiers));
     }
 }
