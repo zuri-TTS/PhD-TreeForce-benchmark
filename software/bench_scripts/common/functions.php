@@ -2,10 +2,10 @@
 
 function scandirNoPoints(string $path)
 {
-    return \array_diff(\scandir($path), [
+    return \array_values(\array_diff(\scandir($path), [
         '.',
         '..'
-    ]);
+    ]));
 }
 
 function parseArgv(array $argv): array
