@@ -41,7 +41,10 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         $summaryFileName = "summary-$summaryType.txt";
         $summaryPath = "$dataSetPath/$summaryFileName";
 
-        if (! \is_file($summaryPath) && $cmd !== "summarize")
+        if (! \is_file($summaryPath) && ! \in_array($cmd, [
+            "summarize",
+            "config"
+        ]))
             throw new \Exception("Summary '$summaryPath' does not exists");
     }
 
