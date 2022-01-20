@@ -11,11 +11,15 @@ $cmdArgsDef = [
     'clean' => false,
     'load' => false,
     'pre-clean' => false,
+    'pre-clean-db' => false,
     'post-clean' => false,
     'generate' => true,
     'simplify.object' => false,
     'simplify.object.useConfig' => true
 ];
+
+if (empty($argv))
+    $argv[] = ";";
 
 while (! empty($argv)) {
     $cmdParsed = \parseArgvShift($argv, ';') + $cmdArgsDef;
@@ -40,49 +44,52 @@ while (! empty($argv)) {
             $toProcess[$group] = $ds_top;
         }
     }
-}
 
-foreach ($toProcess as $dataSet) {
-    $qualifiers = $dataSet->getQualifiers();
-    $doNotSimplifyPath = __DIR__ . '/xmark_to_json/do_not_simplify.php';
+    foreach ($toProcess as $dataSet) {
+        $qualifiers = $dataSet->getQualifiers();
+        $doNotSimplifyPath = __DIR__ . '/xmark_to_json/do_not_simplify.php';
 
-    if (\in_array('simplified', $qualifiers)) {
-        $simplifyObject = true;
-        $forceSimplify = include $doNotSimplifyPath;
-    } elseif (\in_array('simplified.all', $qualifiers)) {
-        $simplifyObject = true;
-        $forceSimplify = [];
-    } else {
-        $simplifyObject = $cmdParsed['simplify.object'];
-
-        if ($simplifyObject) {
-            $qualifiers = $simplifyObject ? [
-                $useConfig ? 'simplified' : 'simplified.all'
-            ] : [];
-            $useConfig = $cmdParsed['simplify.object.useConfig'];
-            $forceSimplify = $useConfig ? (include $doNotSimplifyPath) : [];
-        } else {
-            $qualifiers = [];
+        if (\in_array('simplified', $qualifiers)) {
+            $simplifyObject = true;
+            $forceSimplify = include $doNotSimplifyPath;
+        } elseif (\in_array('simplified.all', $qualifiers)) {
+            $simplifyObject = true;
             $forceSimplify = [];
+        } else {
+            $simplifyObject = $cmdParsed['simplify.object'];
+
+            if ($simplifyObject) {
+                $qualifiers = $simplifyObject ? [
+                    $useConfig ? 'simplified' : 'simplified.all'
+                ] : [];
+                $useConfig = $cmdParsed['simplify.object.useConfig'];
+                $forceSimplify = $useConfig ? (include $doNotSimplifyPath) : [];
+            } else {
+                $qualifiers = [];
+                $forceSimplify = [];
+            }
+            $dataSet->setQualifiers($qualifiers);
         }
-        $dataSet->setQualifiers($qualifiers);
-    }
-    $dataSetId = $dataSet->getId();
-    echo "\n<$dataSetId>\n";
-    $converter = (new \XMark2Json($dataSet))->simplifyObject($simplifyObject, $forceSimplify);
+        $dataSetId = $dataSet->getId();
+        echo "\n<$dataSetId>\n";
+        $converter = (new \XMark2Json($dataSet))->simplifyObject($simplifyObject, $forceSimplify);
 
-    if ($cmdParsed['pre-clean'])
-        $converter->clean();
+        if ($cmdParsed['pre-clean-db'])
+            MongoImport::dropDatabase($dataSet);
 
-    if ($cmdParsed['generate']) {
-        $method = $cmdParsed['clean'] ? 'clean' : 'convert';
-        $converter->$method();
-    }
-
-    if ($cmdParsed['load']) {
-        MongoImport::importDataSet($dataSet);
-
-        if ($cmdParsed['post-clean'])
+        if ($cmdParsed['pre-clean'])
             $converter->clean();
+
+        if ($cmdParsed['generate']) {
+            $method = $cmdParsed['clean'] ? 'clean' : 'convert';
+            $converter->$method();
+        }
+
+        if ($cmdParsed['load']) {
+            MongoImport::importDataSet($dataSet);
+
+            if ($cmdParsed['post-clean'])
+                $converter->clean();
+        }
     }
 }

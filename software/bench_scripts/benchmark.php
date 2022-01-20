@@ -24,6 +24,9 @@ $cmdArgsDef = [
     'output' => null,
 ];
 
+if(empty($argv))
+    $argv[] = ";";
+
 while (! empty($argv)) {
     $cmdParsed = \parseArgvShift($argv, ';') + $cmdArgsDef;
     $dataSets = \array_filter($cmdParsed, 'is_int', ARRAY_FILTER_USE_KEY);

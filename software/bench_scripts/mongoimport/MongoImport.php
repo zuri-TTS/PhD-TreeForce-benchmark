@@ -15,6 +15,23 @@ final class MongoImport
         $this->importDataSet($this->dataSet);
     }
 
+    public static function dropDatabase(DataSet $dataSet): void
+    {
+        foreach ($dataSet->getRules() as $rulesDir) {
+            $dataSet->setTheRules($rulesDir);
+            $collectionName = self::getCollectionName($dataSet);
+            self::_dropDatabase($collectionName);
+        }
+    }
+
+    private static function _dropDatabase(string $collectionName): void
+    {
+        echo "\nDeleting treeforce.$collectionName from MongoDB\n";
+
+        $cmd = "echo '' | mongoimport -d treeforce -c '$collectionName' --drop\n";
+        echo \shell_exec($cmd);
+    }
+
     public static function importDataSet(DataSet $dataSet): void
     {
         checkDataSetExists($dataSet);
@@ -26,14 +43,11 @@ final class MongoImport
             $path = $dataSet->dataSetPath();
             echo "CD $path\n";
             \chdir($path);
+
             $collectionName = self::getCollectionName($dataSet);
+            self::_dropDatabase($collectionName);
 
             $jsonFiles = \glob("*.json");
-
-            echo "\nDeleting treeforce.$collectionName from MongoDB\n";
-
-            $cmd = "echo '' | mongoimport -d treeforce -c '$collectionName' --drop\n";
-            echo \shell_exec($cmd);
 
             foreach ($jsonFiles as $json) {
                 echo "Importing $json\n";
