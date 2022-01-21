@@ -25,12 +25,21 @@ $cmdArgsDef = [
     'skip.existing' => true
 ];
 
-if(empty($argv))
+if (empty($argv))
     $argv[] = ";";
 
 while (! empty($argv)) {
     $cmdParsed = \parseArgvShift($argv, ';') + $cmdArgsDef;
     $dataSets = \array_filter($cmdParsed, 'is_int', ARRAY_FILTER_USE_KEY);
+    $summarize = false;
+
+    if (\in_array($cmdParsed['cmd'], [
+        'summarize',
+        'each'
+    ])) {
+        $cmdParsed['doonce'] = true;
+        $summarize = $cmdParsed['cmd'] === 'summarize';
+    }
 
     if (\count($dataSets) == 0) {
         echo "Test ALL dataSets\n\n";
@@ -62,6 +71,15 @@ while (! empty($argv)) {
                     $existings = implode(",\n", $existings);
                     echo "\n<{$dataSet->getTheId()}>\n(Skipped) Similar test already exists: $existings\n";
                     continue;
+                }
+                if ($summarize) {
+                    $path = $config['java.properties']['summary'];
+
+                    if (\is_file($path)) {
+                        $fname = \basename($path);
+                        echo "\n<{$dataSet->getTheId()}>($fname)\n(Skipped) Summary already exists\n";
+                        continue;
+                    }
                 }
             }
 
