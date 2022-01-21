@@ -27,22 +27,18 @@ while (! empty($argv)) {
 
     if (\count($dataSets) == 0) {
         echo "Convert ALL dataSets to json\n\n";
+        $dataSets = Dataset::getAllGroups();
+    }
+    foreach ($dataSets as $dataSet) {
+        $ds = new DataSet($dataSet);
+        $group = $ds->getGroup();
+        $rules = $ds->getRules();
 
-        foreach (DataSet::getAllGroups() as $group) {
-            $toProcess[] = new DataSet($group);
-        }
-    } else {
-        foreach ($dataSets as $dataSet) {
-            $ds = new DataSet($dataSet);
-            $group = $ds->getGroup();
-            $rules = $ds->getRules();
+        $ds_top = $toProcess[$group] ?? $ds;
 
-            $ds_top = $toProcess[$group] ?? $ds;
-
-            $rules_top = array_unique(array_merge($ds_top->getRules(), $rules));
-            $ds_top->setRules($rules_top);
-            $toProcess[$group] = $ds_top;
-        }
+        $rules_top = array_unique(array_merge($ds_top->getRules(), $rules));
+        $ds_top->setRules($rules_top);
+        $toProcess[$group] = $ds_top;
     }
 
     foreach ($toProcess as $dataSet) {
