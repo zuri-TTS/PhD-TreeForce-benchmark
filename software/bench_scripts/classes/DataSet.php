@@ -30,6 +30,17 @@ final class DataSet
         $this->setQualifiers($qualifiers);
     }
 
+    public static function getAll(): array
+    {
+        $ret = [];
+
+        foreach (DataSet::getAllGroups() as $group) {
+            $ret[] = new DataSet($group);
+        }
+
+        return $ret;
+    }
+
     public function getGroup(): string
     {
         return $this->group;
