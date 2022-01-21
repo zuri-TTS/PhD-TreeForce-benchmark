@@ -32,23 +32,42 @@ final class MongoImport
         echo \shell_exec($cmd);
     }
 
-    public static function importDataSet(DataSet $dataSet): void
+    public static function collectionExists(string $collection): bool
+    {
+        return \in_array($collection, self::getCollections());
+    }
+
+    public static function getCollections(): array
+    {
+        $cmd = "echo 'show tables' | mongo treeforce --quiet\n";
+        return \explode("\n", \shell_exec($cmd));
+    }
+
+    public static function importDataSet(DataSet $dataSet, bool $forceImport = false): void
     {
         checkDataSetExists($dataSet);
         echo "\nImporting {$dataSet->getId()}\n";
 
         foreach ($dataSet->getRules() as $rulesDir) {
             $dataSet->setTheRules($rulesDir);
+            $collectionName = self::getCollectionName($dataSet);
 
+            if (self::collectionExists($collectionName)) {
+                echo "$collectionName exists\n";
+                continue;
+            }
             $path = $dataSet->dataSetPath();
             echo "CD $path\n";
             \chdir($path);
 
-            $collectionName = self::getCollectionName($dataSet);
             self::_dropDatabase($collectionName);
 
             $jsonFiles = \glob("*.json");
 
+            if (empty($jsonFiles)) {
+                echo "!!$collectionName: no json files to load!!\n";
+                continue;
+            }
             foreach ($jsonFiles as $json) {
                 echo "Importing $json\n";
                 echo \shell_exec("cat '$json' | mongoimport -d treeforce -c '$collectionName'");
