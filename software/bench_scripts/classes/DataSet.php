@@ -199,7 +199,8 @@ final class DataSet
     // ========================================================================
     public static function getAllGroups(): array
     {
-        return \scandirNoPoints(self::getGroupsBasePath());
+        $ret = \scandirNoPoints(self::getGroupsBasePath());
+        return \array_filter($ret, fn ($g) => $g[0] !== "#");
     }
 
     public function getAllRules(?string $group = null): array
