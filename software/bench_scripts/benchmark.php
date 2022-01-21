@@ -22,6 +22,7 @@ $cmdArgsDef = [
     'cold' => false,
     'dots' => false,
     'output' => null,
+    'skip.existing' => true
 ];
 
 if(empty($argv))
@@ -44,7 +45,25 @@ while (! empty($argv)) {
         foreach ($dataSet->getRules() as $theRules) {
             $dataSet->setTheRules($theRules);
             $config = makeConfig($dataSet, $cmdParsed);
+
             $bench = new \Benchmark($config);
+
+            $collection = MongoImport::getCollectionName($dataSet);
+
+            if (! MongoImport::collectionExists($collection)) {
+                fwrite(STDERR, "\n<{$dataSet->getTheId()}>\n!!The collection treeforce.$collection must exists in the database!!");
+                continue;
+            }
+
+            if ($cmdParsed['skip.existing']) {
+                $existings = $bench->getExistings();
+
+                if (! empty($existings)) {
+                    $existings = implode(",\n", $existings);
+                    echo "\n<{$dataSet->getTheId()}>\n(Skipped) Similar test already exists: $existings\n";
+                    continue;
+                }
+            }
 
             if ($cmdParsed['doonce'])
                 $bench->executeOnce();

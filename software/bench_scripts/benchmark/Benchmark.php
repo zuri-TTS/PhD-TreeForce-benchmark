@@ -48,12 +48,36 @@ final class Benchmark
             2 => STDOUT
         );
         $this->qOutputPath = $config['java.properties']['output.path'];
+    }
 
-        // Create the output dir
+    private function createOutputDir(): void
+    {
         if (! \is_dir($this->qOutputPath)) {
             \mkdir($this->qOutputPath, 0777, true);
             $this->writeBenchConfigToCSV(new SplFileObject("{$this->qOutputPath}/@config.csv", "w"));
         }
+    }
+
+    public function getExistings(): array
+    {
+        $outPath = \dirname($this->qOutputPath);
+
+        $regex = $this->config['bench.output.pattern'];
+        $regex = \str_replace([
+            '[',
+            ']',
+            '(',
+            ')'
+        ], [
+            '\[',
+            '\]',
+            '\(',
+            '\)'
+        ], $regex);
+        $regex = sprintf($regex, '[^\]]+');
+        $a = $files = \scandirNoPoints($outPath);
+        $files = \array_filter($files, fn ($f) => \preg_match("#^$regex$#", $f));
+        return $files;
     }
 
     function __destruct()
@@ -375,6 +399,7 @@ final class Benchmark
 
     public function executeOnce()
     {
+        $this->createOutputDir();
         $incVars = $this->prepareIncVars();
         $descriptors = $this->descriptors;
         $descriptors[1] = STDOUT;
@@ -392,6 +417,7 @@ final class Benchmark
 
     public function doTheBenchmark()
     {
+        $this->createOutputDir();
         $queryFiles = $this->getFiles();
         $queries = $queryFiles['queries'];
         $dataSet = $this->config['dataSet'];

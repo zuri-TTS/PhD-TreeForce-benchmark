@@ -56,7 +56,7 @@ return [
         sleep(1);
     },
     'bench.output.base.path' => "$basePath/outputs",
-    'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, array $javaProperties, DateTimeInterface $dateTime): string {
+    'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, array $javaProperties): string {
         $group = $dataSet->getGroup();
         $theRules = $dataSet->getTheRules();
         $qualifiers = $dataSet->qualifiersString();
@@ -84,7 +84,7 @@ return [
 
         $outDir .= "{{$cmd}$mode}";
 
-        $outDir .= '[' . $dateTime->format('Y-m-d H:i:s v') . ']';
+        $outDir .= '[%s]';
 
         if ($hasNative)
             $outDir .= "[native-$native]";

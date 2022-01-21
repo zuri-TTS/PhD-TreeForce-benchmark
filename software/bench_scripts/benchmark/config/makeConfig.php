@@ -61,8 +61,11 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     ], $javaProperties) + $common['java.properties'];
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
-    $outDir = $outputDirGenerator($dataSet, $cmdArg, $javaProperties, $common['bench.datetime']);
-    $outputPath = ($cmdArg['output'] ?? $common['bench.output.base.path'])."/$outDir";
+    $outDirPattern = $outputDirGenerator($dataSet, $cmdArg, $javaProperties);
+
+    $outDir = sprintf($outDirPattern, $common['bench.datetime']->format('Y-m-d H:i:s v'));
+
+    $outputPath = ($cmdArg['output'] ?? $common['bench.output.base.path']) . "/$outDir";
     $javaProperties['output.path'] = "$outputPath";
 
     $ret = array_merge($common, [
@@ -70,7 +73,8 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
-        'bench.output.dir' => $outDir
+        'bench.output.dir' => $outDir,
+        'bench.output.pattern' => $outDirPattern,
     ]);
     $ret['java.properties'] = $javaProperties;
 
