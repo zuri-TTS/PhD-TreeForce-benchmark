@@ -53,6 +53,7 @@ class XMark2Json
 
     private function setPostProcesses()
     {
+        $this->_prepareDir();
         $rules = $this->dataSet->getRules();
         $this->filesData = [];
 
@@ -95,7 +96,6 @@ class XMark2Json
     {
         echo "Processing dataset {$this->dataSet->getId()}\n";
 
-        $this->_prepareDir();
         $xmarkFilePath = "{$this->dataSet->groupPath()}/xmark.xml";
         $this->generateXMark($xmarkFilePath);
         $this->read(\XMLReader::open($xmarkFilePath));
