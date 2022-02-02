@@ -21,6 +21,8 @@ class XMark2Json
 
     private array $doNotSimplify;
 
+    private string $myBaseDir;
+
     public function __construct(DataSet $dataSet, array $cmdConfig)
     {
         checkDataSetExists($dataSet, false, true);
@@ -29,8 +31,9 @@ class XMark2Json
         $dataSetPath = $dataSet->groupPath();
         $configPath = "$dataSetPath/config.php";
         $this->dataSet = $dataSet;
+        $this->myBaseDir = getBenchmarkBasePath() . '/software/bench_scripts/xmark_to_json';
         $this->config = include $configPath;
-        $this->unwind = include __DIR__ . '/unwind.php';
+        $this->unwind = include "$this->myBaseDir/unwind.php";
         $this->cmdConfig = $cmdConfig;
     }
 
@@ -64,7 +67,7 @@ class XMark2Json
             $theRulesFiles = $dataSet->theRulesFiles();
 
             return [
-                'randomize' => empty($theRulesFiles) ? fn ($data) => $data : (include __DIR__ . '/json_postprocess-random_keys.php')($d, $this),
+                'randomize' => empty($theRulesFiles) ? fn ($data) => $data : (include "$this->myBaseDir/json_postprocess-random_keys.php")($d, $this),
                 'path' => $dataSet->dataSetPath()
             ];
         }, $rules) //

@@ -1,9 +1,7 @@
 <?php
-require_once __DIR__ . '/benchmark/Benchmark.php';
+require_once __DIR__ . '/classes/autoload.php';
 require_once __DIR__ . '/benchmark/config/makeConfig.php';
 require_once __DIR__ . '/common/functions.php';
-include_once __DIR__ . '/classes/DataSet.php';
-require_once __DIR__ . '/mongoimport/MongoImport.php';
 
 \array_shift($argv);
 

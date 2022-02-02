@@ -1,9 +1,7 @@
 
 <?php
-include_once __DIR__ . '/xmark_to_json/XMark2Json.php';
+require_once __DIR__ . '/classes/autoload.php';
 include_once __DIR__ . '/common/functions.php';
-include_once __DIR__ . '/classes/DataSet.php';
-include_once __DIR__ . '/mongoimport/MongoImport.php';
 
 \array_shift($argv);
 
