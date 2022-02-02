@@ -37,11 +37,16 @@ final class MongoImport
         return \in_array($collection, self::getCollections());
     }
 
-    public static function getCollections(): array
+    public static function getCollections(bool $forceCheck = false): array
     {
+        static $ret;
+
+        if (! $forceCheck && $ret !== null)
+            return $ret;
+
         $cmd = "echo 'show tables' | mongosh treeforce --quiet\n";
         \preg_match_all("#([^\s]+)#", \shell_exec($cmd), $matches);
-        return $matches[0];
+        return $ret = $matches[0];
     }
 
     public static function importDataSet(DataSet $dataSet, bool $forceImport = false): void
