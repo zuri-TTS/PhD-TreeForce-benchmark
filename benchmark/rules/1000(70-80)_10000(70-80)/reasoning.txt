@@ -1,0 +1,21 @@
+#person 0
+
+
+#address 0
+
+
+#closed_auction 0
+
+
+#annotation 0
+
+
+#description 0
+
+
+#emph 0
+
+
+#bold 0
+
+

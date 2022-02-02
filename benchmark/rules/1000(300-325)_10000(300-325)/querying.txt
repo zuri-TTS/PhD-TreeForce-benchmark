@@ -1,0 +1,49 @@
+#site 2
+
+'q_site_1'=?x? --> 'site'=?x?
+'q_site_0'=?x? --> 'site'=?x?
+
+#people 4
+
+'q_people_3'=?x? --> 'people'=?x?
+'q_people_2'=?x? --> 'people'=?x?
+'q_people_1'=?x? --> 'people'=?x?
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 2
+
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#address 6
+
+'q_address_5'=?x? --> 'address'=?x?
+'q_address_4'=?x? --> 'address'=?x?
+'q_address_3'=?x? --> 'address'=?x?
+'q_address_2'=?x? --> 'address'=?x?
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
+
+#closed_auction 2
+
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#description 2
+
+'q_description_1'=?x? --> 'description'=?x?
+'q_description_0'=?x? --> 'description'=?x?
+
+#text 2
+
+'q_text_1'=?x? --> 'text'=?x?
+'q_text_0'=?x? --> 'text'=?x?
+
+#emph 1
+
+'q_emph_0'=?x? --> 'emph'=?x?
+
+#bold 1
+
+'q_bold_0'=?x? --> 'bold'=?x?
+

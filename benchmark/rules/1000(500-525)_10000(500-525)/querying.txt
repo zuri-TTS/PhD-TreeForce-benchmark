@@ -1,0 +1,55 @@
+#site 1
+
+'q_site_0'=?x? --> 'site'=?x?
+
+#people 5
+
+'q_people_4'=?x? --> 'people'=?x?
+'q_people_3'=?x? --> 'people'=?x?
+'q_people_2'=?x? --> 'people'=?x?
+'q_people_1'=?x? --> 'people'=?x?
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 6
+
+'q_person_5'=?x? --> 'person'=?x?
+'q_person_4'=?x? --> 'person'=?x?
+'q_person_3'=?x? --> 'person'=?x?
+'q_person_2'=?x? --> 'person'=?x?
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#address 5
+
+'q_address_4'=?x? --> 'address'=?x?
+'q_address_3'=?x? --> 'address'=?x?
+'q_address_2'=?x? --> 'address'=?x?
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
+
+#closed_auctions 1
+
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+
+#annotation 1
+
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#description 3
+
+'q_description_2'=?x? --> 'description'=?x?
+'q_description_1'=?x? --> 'description'=?x?
+'q_description_0'=?x? --> 'description'=?x?
+
+#parlist 3
+
+'q_parlist_2'=?x? --> 'parlist'=?x?
+'q_parlist_1'=?x? --> 'parlist'=?x?
+'q_parlist_0'=?x? --> 'parlist'=?x?
+
+#emph 3
+
+'q_emph_2'=?x? --> 'emph'=?x?
+'q_emph_1'=?x? --> 'emph'=?x?
+'q_emph_0'=?x? --> 'emph'=?x?
+

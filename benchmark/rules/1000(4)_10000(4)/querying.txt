@@ -1,0 +1,12 @@
+#address 3
+
+'q_address_2'=?x? --> 'address'=?x?
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
+
+#bold 3
+
+'q_bold_2'=?x? --> 'bold'=?x?
+'q_bold_1'=?x? --> 'bold'=?x?
+'q_bold_0'=?x? --> 'bold'=?x?
+
