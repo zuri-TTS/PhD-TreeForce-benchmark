@@ -7,6 +7,10 @@ include_once __DIR__ . '/mongoimport/MongoImport.php';
 
 \array_shift($argv);
 
+$cmdConfig = [
+    'xmark.program.path' => 'software/bin/xmlgen.Linux'
+];
+
 $cmdArgsDef = [
     'clean' => false,
     'load' => false,
@@ -68,7 +72,7 @@ while (! empty($argv)) {
         }
         $dataSetId = $dataSet->getId();
         echo "\n<$dataSetId>\n";
-        $converter = (new \XMark2Json($dataSet))->simplifyObject($simplifyObject, $forceSimplify);
+        $converter = (new \XMark2Json($dataSet, $cmdConfig))->simplifyObject($simplifyObject, $forceSimplify);
 
         if ($cmdParsed['pre-clean-db'])
             MongoImport::dropDatabase($dataSet);

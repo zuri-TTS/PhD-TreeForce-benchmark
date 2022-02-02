@@ -1,5 +1,5 @@
 <?php
-
 return [
-	'seed' => 1
+    'seed' => 1,
+    'xmark.factor' => 10
 ];

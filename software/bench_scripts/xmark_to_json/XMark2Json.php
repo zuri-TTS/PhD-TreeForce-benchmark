@@ -7,6 +7,8 @@ class XMark2Json
 
     private array $config;
 
+    private array $cmdConfig;
+
     private array $unwind;
 
     private array $path = [];
@@ -19,7 +21,7 @@ class XMark2Json
 
     private array $doNotSimplify;
 
-    public function __construct(DataSet $dataSet, array $querlifiers = [])
+    public function __construct(DataSet $dataSet, array $cmdConfig)
     {
         checkDataSetExists($dataSet, false, true);
 
@@ -29,6 +31,7 @@ class XMark2Json
         $this->dataSet = $dataSet;
         $this->config = include $configPath;
         $this->unwind = include __DIR__ . '/unwind.php';
+        $this->cmdConfig = $cmdConfig;
     }
 
     public function getSeed(): int
@@ -94,10 +97,25 @@ class XMark2Json
 
         $this->_prepareDir();
         $xmarkFilePath = "{$this->dataSet->groupPath()}/xmark.xml";
+        $this->generateXMark($xmarkFilePath);
         $this->read(\XMLReader::open($xmarkFilePath));
 
         foreach ($this->filesData as $fd)
             \touch("{$fd['path']}/end.json");
+    }
+
+    private function generateXMark(string $xmarkFilePath)
+    {
+        if (\is_file($xmarkFilePath))
+            return;
+
+        echo "Generate $xmarkFilePath\n";
+        $basePath = getBenchmarkBasePath();
+        $xmarkCmd = $this->cmdConfig['xmark.program.path'];
+        $factor = $this->config['xmark.factor'];
+        $cmd = "'$basePath/$xmarkCmd' -f $factor -o '$xmarkFilePath'";
+        echo "Execute $cmd";
+        \system($cmd);
     }
 
     public function delete($dataSets = null)
