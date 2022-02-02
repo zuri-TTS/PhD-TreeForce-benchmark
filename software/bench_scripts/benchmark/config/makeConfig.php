@@ -29,12 +29,11 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     if ($rules === 'original') {
         $hasRules = false;
         $native = '';
-        $hasSummary = false;
     } else {
         $hasRules = true;
         $native = $cmdArg['native'] ?? '';
-        $hasSummary = ! empty($summaryType);
     }
+    $hasSummary = ! empty($summaryType);
     $hasNative = ! empty($native);
 
     if ($hasSummary) {

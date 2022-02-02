@@ -1,7 +1,7 @@
 <?php
 $basePath = getBenchmarkBasePath();
 
-$measuresNb = 6;
+$measuresNb = 5;
 $measuresForget = 1;
 
 $measuresNb = 1;
@@ -19,7 +19,7 @@ return [
         'base.path' => $basePath,
         'output.measures' => "std://out" . ($measuresNb > 1 ? '' : ",\${output.path}/\${query.name}_measures.txt"),
         'query.native' => "",
-        'query.batchSize' => 500,
+        'query.batchSize' => 1000,
         'data.batchSize' => 100,
         'leaf.checkTerminal' => 'y',
         'querying.mode' => 'explain',
@@ -92,6 +92,8 @@ return [
             $outDir .= "[summary-$summaryType]";
         if ($javaProperties['toNative.useSummary'] === 'y')
             $outDir .= '[toNative.useSummary]';
+        if ($javaProperties['querying.mode'] === 'each')
+            $outDir .= '[each]';
         if ($javaProperties['toNative.dots'] === 'y')
             $outDir .= '[dots]';
         if ($cold)

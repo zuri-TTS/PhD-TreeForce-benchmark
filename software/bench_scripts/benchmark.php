@@ -20,7 +20,6 @@ $cmdArgsDef = [
     'cmd' => 'querying',
     'doonce' => false,
     'cold' => false,
-    'dots' => false,
     'output' => null,
     'skip.existing' => true
 ];
@@ -35,7 +34,8 @@ while (! empty($argv)) {
 
     if (\in_array($cmdParsed['cmd'], [
         'summarize',
-        'each'
+        'each',
+        'config'
     ])) {
         $cmdParsed['doonce'] = true;
         $summarize = $cmdParsed['cmd'] === 'summarize';
@@ -53,6 +53,8 @@ while (! empty($argv)) {
 
         foreach ($dataSet->getRules() as $theRules) {
             $dataSet->setTheRules($theRules);
+
+            echo "\n<{$dataSet->getTheId()}>\n";
             $config = makeConfig($dataSet, $cmdParsed);
 
             $bench = new \Benchmark($config);
@@ -60,7 +62,7 @@ while (! empty($argv)) {
             $collection = MongoImport::getCollectionName($dataSet);
 
             if (! MongoImport::collectionExists($collection)) {
-                fwrite(STDERR, "\n<{$dataSet->getTheId()}>\n!!The collection treeforce.$collection must exists in the database!!");
+                fwrite(STDERR, "!!The collection treeforce.$collection must exists in the database!!");
                 continue;
             }
 
@@ -69,7 +71,7 @@ while (! empty($argv)) {
 
                 if (! empty($existings)) {
                     $existings = implode(",\n", $existings);
-                    echo "\n<{$dataSet->getTheId()}>\n(Skipped) Similar test already exists: $existings\n";
+                    echo "(Skipped) Similar test already exists: $existings\n";
                     continue;
                 }
                 if ($summarize) {
@@ -83,10 +85,14 @@ while (! empty($argv)) {
                 }
             }
 
-            if ($cmdParsed['doonce'])
-                $bench->executeOnce();
-            else
-                $bench->doTheBenchmark();
+            try {
+                if ($cmdParsed['doonce'])
+                    $bench->executeOnce();
+                else
+                    $bench->doTheBenchmark();
+            } catch (\Exception $e) {
+                fwrite(STDERR, "<{$dataSet->getTheId()}>Exception:\n {$e->getMessage()}\n");
+            }
         }
     }
 }
