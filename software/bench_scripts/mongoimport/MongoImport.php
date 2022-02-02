@@ -39,7 +39,7 @@ final class MongoImport
 
     public static function getCollections(): array
     {
-        $cmd = "echo 'show tables' | mongo treeforce --quiet\n";
+        $cmd = "echo 'show tables' | mongosh treeforce --quiet\n";
         \preg_match_all("#([^\s]+)#", \shell_exec($cmd), $matches);
         return $matches[0];
     }
