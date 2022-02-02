@@ -40,7 +40,8 @@ final class MongoImport
     public static function getCollections(): array
     {
         $cmd = "echo 'show tables' | mongo treeforce --quiet\n";
-        return \explode("\n", \shell_exec($cmd));
+        \preg_match_all("#([^\s]+)#", \shell_exec($cmd), $matches);
+        return $matches[0];
     }
 
     public static function importDataSet(DataSet $dataSet, bool $forceImport = false): void
