@@ -71,13 +71,7 @@ while (! empty($argv)) {
             }
 
             if ($cmdParsed['skip.existing']) {
-                $existings = $bench->getExistings();
 
-                if (! empty($existings)) {
-                    $existings = implode(",\n", $existings);
-                    echo "(Skipped) Similar test already exists: $existings\n";
-                    continue;
-                }
                 if ($summarize) {
                     $path = $config['java.properties']['summary'];
 
@@ -86,6 +80,10 @@ while (! empty($argv)) {
                         echo "\n<{$dataSet->getTheId()}>($fname)\n(Skipped) Summary already exists\n";
                         continue;
                     }
+                } else if (! empty($existings = $bench->getExistings())) {
+                    $existings = implode(",\n", $existings);
+                    echo "(Skipped) Similar test already exists: $existings\n";
+                    continue;
                 }
             }
 
