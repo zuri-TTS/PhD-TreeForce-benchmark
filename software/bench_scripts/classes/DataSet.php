@@ -105,6 +105,14 @@ final class DataSet
         return $this;
     }
 
+    public function isSimplified(): bool
+    {
+        return \array_intersect([
+            'simplified',
+            'simplified.all'
+        ], $this->getQualifiers()) !== [];
+    }
+
     // ========================================================================
     private function parseRules($rules): array
     {

@@ -56,7 +56,8 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         'summary.type' => $summaryType,
         'queries.dir' => "$basePath/benchmark/queries",
         'rules' => '',
-        'summary' => $summaryPath ?? ''
+        'summary' => $summaryPath ?? '',
+        'toNative.useSummary' => ($cmd !== 'summarize' && $dataSet->isSimplified()) ? 'y' : 'n'
     ], $javaProperties) + $common['java.properties'];
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
@@ -73,7 +74,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
         'bench.output.dir' => $outDir,
-        'bench.output.pattern' => $outDirPattern,
+        'bench.output.pattern' => $outDirPattern
     ]);
     $ret['java.properties'] = $javaProperties;
 
