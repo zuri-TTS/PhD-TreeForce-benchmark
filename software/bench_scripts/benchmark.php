@@ -49,6 +49,12 @@ while (! empty($argv)) {
         $rules = $dataSet->getRules();
         checkDataSetExists($dataSet);
 
+        if (\array_intersect([
+            'simplified',
+            'simplified.all'
+        ], $dataSet->getQualifiers()) !== [])
+            $cmdParsed['summary'] = 'key-type';
+
         foreach ($dataSet->getRules() as $theRules) {
             $dataSet->setTheRules($theRules);
 
