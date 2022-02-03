@@ -3,13 +3,17 @@
 final class BringIt
 {
 
-    private string $outputPath;
+    private string $outputPath, $realPath;
 
     private array $scanned = [];
 
     public function __construct(string $outDir)
     {
-        $this->outputPath = getBenchmarkBasePath() . "/$outDir";
+        if (! is_dir($outDir))
+            throw new \Error("Dir '$outDir' does not exists");
+
+        $this->outputPath = $outDir;
+        $this->realPath = \realpath($outDir);
     }
 
     private function bringFileName(string $dirName)
@@ -23,10 +27,10 @@ final class BringIt
         $lastScan = $this->scanned;
         $this->scanned = [];
 
-        $scanned = scandirNoPoints($this->outputPath);
+        $scanned = scandirNoPoints($this->realPath);
 
         foreach ($scanned as $dirName) {
-            $path = "$this->outputPath/$dirName";
+            $path = "$this->realPath/$dirName";
 
             if (is_dir($path)) {
                 $this->scanned[] = $dirName;
@@ -35,16 +39,16 @@ final class BringIt
         $dels = array_diff($lastScan, $this->scanned);
 
         foreach ($this->scanned as $dir) {
-            $pathLink = "$this->outputPath/" . $this->bringFileName($dir);
-            $ref = "$this->outputPath/$dir/all_time.png";
+            $pathLink = "$this->realPath/" . $this->bringFileName($dir);
+            $ref = "$dir/all_time.png";
 
-            if (! is_file($pathLink) && is_file($ref)) {
-                @symlink($ref, $pathLink);
+            if (! is_file($pathLink) && is_file("$this->realPath/$ref")) {
+                @symlink("./$ref", $pathLink);
             }
         }
 
         foreach ($dels as $del) {
-            $pathLink = "$this->outputPath/" . $this->bringFileName($del);
+            $pathLink = "$this->realPath/" . $this->bringFileName($del);
 
             if (is_link($pathLink)) {
                 echo "Drop $del\n";
