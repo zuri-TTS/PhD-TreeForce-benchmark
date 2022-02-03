@@ -1,12 +1,13 @@
 <?php
-include_once __DIR__ . '/CSVReader.php';
 
 final class Plot
 {
 
-    private array $infos = [
-        'time.real.max' => 0
-    ];
+    public const PROCESS_FULL = 'full';
+
+    public const PROCESS_GROUP = 'group';
+
+    public const PROCESS_EACH = 'each';
 
     private array $data;
 
@@ -16,9 +17,11 @@ final class Plot
 
     private array $graphics;
 
+    private array $plotVariables;
+
     private array $plotGraphics;
 
-    private array $plotVariables;
+    private array $plotCSVFiles;
 
     function __construct(string $workingDir, array $csvPaths)
     {
@@ -54,6 +57,16 @@ final class Plot
         return $this->plotVariables;
     }
 
+    public function getPlotCsvFiles(): array
+    {
+        return $this->plotCSVFiles;
+    }
+
+    public function getData(): array
+    {
+        return $this->data;
+    }
+
     // ========================================================================
     private function nbMeasures(array $data)
     {
@@ -73,184 +86,109 @@ final class Plot
         return max(...$r);
     }
 
-    private function preparePlotsConfig(array $config): array
-    {
-        $configsPlot = $config['plots'];
-
-        if (isset($configsPlot[0])) {
-            $configPlot_default = $configsPlot['default'] ?? [];
-            unset($configsPlot['default']);
-
-            foreach ($configsPlot as &$c)
-                $c += $configPlot_default;
-        } else
-            $configsPlot = [
-                $configsPlot
-            ];
-
-        return $configsPlot;
-    }
-
-    private function makeCsvPaths(string $csvPath, array $plotConfig)
-    {
-        $id = $plotConfig['id'];
-        $fileName = \baseName($csvPath, ".csv");
-        $basePath = \dirname($csvPath);
-        $data = $this->data[$csvPath];
-
-        $dataFileName = "{$fileName}_$id.dat";
-        $dataFilePath = "$basePath/$dataFileName";
-
-        $outFileName = "{$fileName}_$id.{$plotConfig['terminal.type']}";
-        $outFilePath = "$basePath/$outFileName";
-
-        $plotFileName = "{$fileName}_$id.plot";
-        $plotFilePath = "$basePath/$plotFileName";
-
-        return [
-            'out.base.path' => $basePath,
-
-            'plot.file.path' => $plotFilePath,
-            'plot.file.name' => $plotFileName,
-
-            'data.file.path' => $dataFilePath,
-            'data.file.name' => $dataFileName,
-
-            'out.file.path' => $outFilePath,
-            'out.file.name' => $outFileName,
-
-            'file.name' => $fileName,
-            'data' => $data,
-            'time.real.max' => $this->maxRealTime($data),
-            'time.nb' => $this->nbMeasures($data)
-        ] + [
-            'bench' => $data['bench'],
-            'answers' => $data['answers'] ?? [],
-            'queries' => $data['queries'] ?? []
-        ];
-    }
-
-    // ========================================================================
-    public function plot(array $config)
-    {
-        foreach ($this->csvGroupByBasePath as $base => $csvFile) {
-            echo "\n$base/\n";
-            $this->plotGroup($config, \array_map(fn ($f) => "$base/$f.csv", $csvFile));
-        }
-    }
-
-    private function makeInfos()
+    private function datas_maxRealTime(array $data_array)
     {
         $max = 0;
 
-        foreach ($this->data as $data)
+        foreach ($data_array as $data)
             $max = max($max, $this->maxRealTime($data));
 
-        $this->infos['time.real.max'] = $max;
+        return $max;
     }
 
-    private function plotGroup(array $config, array $csvFiles)
+    private function getPlotters(array $config)
+    {
+        foreach ($config['plotter.factory'] as $fact)
+            $ret[] = $fact($this);
+
+        return $ret;
+    }
+
+    // ========================================================================
+    private array $plotters;
+
+    public function plot(array $config)
     {
         $wdir = \getcwd();
+        $this->plotters = $this->getPlotters($config);
+        $csvFiles = [];
 
-        foreach ($csvFiles as $csvPath)
-            $this->data[$csvPath] = \CSVReader::read($csvPath);
+        foreach ($this->csvGroupByBasePath as $base => $csvFile) {
+            echo "\nPlotting group\n<$base>/\n";
+            $groupCsvFiles = \array_map(fn ($f) => "$base/$f.csv", $csvFile);
+            \chdir($base);
+            $this->_plotGroup($groupCsvFiles);
+            $csvFiles = \array_merge($csvFiles, $groupCsvFiles);
+        }
 
-        $this->makeInfos();
-        $plotConfigs = $this->preparePlotsConfig($config);
+        foreach ($this->plotters as $plotter) {
 
-        foreach ($csvFiles as $csvPath)
-            $this->plotEach($csvPath, $plotConfigs);
-
-        $this->plotAll($csvFiles, $plotConfigs);
+            if ($plotter->getProcessType() === self::PROCESS_FULL)
+                $this->plotFull($csvFiles, $plotter);
+        }
         \chdir($wdir);
     }
 
-    // ========================================================================
-    private function plotAll(array $csvFiles, array $plotConfigs)
+    private function _plotGroup(array $csvFiles)
     {
-        foreach ($plotConfigs as $plotConfig) {
-
-            if (($plotConfig['process'] ?? '') === 'all')
-                $this->plotAll_($csvFiles, $plotConfig);
-        }
-    }
-
-    private function plotAll_(array $csvFiles, array $plotConfig)
-    {
-        $id = $plotConfig['id'];
-
         foreach ($csvFiles as $csvPath)
-            $paths[$csvPath] = $this->makeCsvPaths($csvPath, $plotConfig);
+            $this->data[$csvPath] = \CSVReader::read($csvPath);
 
-        $vars = $plotConfig;
-        $vars['files'] = $paths;
-        $basePath = dirname($csvFiles[0]);
-        \chdir($basePath);
+        foreach ($this->plotters as $plotter) {
 
-        $fName = "all_$id";
-        $plotFileName = "$fName.plot";
-        $plotFilePath = "{$basePath}/$plotFileName";
-        $outFileName = "$fName.{$plotConfig['terminal.type']}";
-        $outFilePath = "{$basePath}/$outFileName";
+            if ($plotter->getProcessType() === self::PROCESS_EACH)
+                $this->plotEach($csvFiles, $plotter);
+        }
 
-        $vars = array_merge($vars, [
-            'out.base.path' => basename($basePath),
-            'out.file.name' => $outFileName,
-            'out.file.path' => $outFilePath,
-            'plot.file.name' => $plotFileName,
-            'plot.file.path' => $plotFilePath,
-            'bench' => $paths[$csvFiles[0]]['data']['bench'],
-            'time.nb' => $this->nbMeasures($paths[$csvFiles[0]]['data']),
-            'queries.nb' => count($csvFiles)
-        ], $this->infos);
+        foreach ($this->plotters as $plotter) {
 
-        $this->plotGraphics = $this->computeGraphics($vars);
-        $this->plotVariables = $vars;
-
-        $contents = \get_include_contents($plotConfig['template.path'], [
-            'PLOT' => $this
-        ]);
-        \file_put_contents($plotFilePath, $contents);
-
-        $cmd = "gnuplot '$plotFilePath' > '$outFilePath'";
-        echo "plotting {$vars['out.file.name']}\n";
-        system($cmd);
-    }
-
-    // ========================================================================
-    private function plotEach(string $csvPath, array $plotConfigs)
-    {
-        foreach ($plotConfigs as $plotConfig) {
-
-            if (($plotConfig['process'] ?? '') !== 'all')
-                $this->plotOne($csvPath, $plotConfig);
+            if ($plotter->getProcessType() === self::PROCESS_GROUP)
+                $this->plotGroup($csvFiles, $plotter);
         }
     }
 
-    private function plotOne(string $csvPath, array $plotConfig)
+    // ========================================================================
+    private function plotFull(array $csvFiles, IPlotter $plotter)
     {
-        $vars = $this->makeCsvPaths($csvPath, $plotConfig) + $plotConfig;
-        \chdir($vars['out.base.path']);
-        $plotFilePath = $vars['plot.file.path'];
-        $outFilePath = $vars['out.file.path'];
-        $dataFilePath = $vars['data.file.path'];
+        $this->plotFiles($csvFiles, $plotter, \realpath(\dirname($csvFiles[0]) . "/.."), "full_");
+    }
 
+    private function plotGroup(array $csvFiles, IPlotter $plotter)
+    {
+        $this->plotFiles($csvFiles, $plotter, \dirname($csvFiles[0]), "all_");
+    }
+
+    private function plotFiles(array $csvFiles, IPlotter $plotter, string $basePath, string $filePrefix)
+    {
+        $wdir = \getcwd();
+        $data = \array_values($this->data)[0];
+        $this->plotVariables = $vars = [
+            'time.real.max' => $this->datas_maxRealTime($this->data),
+            'time.nb' => $this->nbMeasures($data)
+        ];
         $this->plotGraphics = $this->computeGraphics($vars);
-        $this->plotVariables = $vars;
+        $plotter->plot($csvFiles);
+    }
 
-        \file_put_contents($dataFilePath, get_ob(fn () => $vars['data.plot']($vars)));
+    // ========================================================================
+    private function plotEach(array $csvFiles, IPlotter $plotter)
+    {
+        foreach ($csvFiles as $file)
+            $this->plotOne($file, $plotter);
+    }
 
-        $contents = \get_include_contents($plotConfig['template.path'], [
-            'PLOT' => $this
-        ]);
+    private function plotOne(string $csvPath, IPlotter $plotter)
+    {
+        $csvFileName = \basename($csvPath);
+        echo "plotting from $csvFileName\n";
 
-        \file_put_contents($plotFilePath, $contents);
-
-        $cmd = "gnuplot '$plotFilePath' > '$outFilePath'";
-        echo "plotting {$vars['out.file.name']}\n";
-
-        system($cmd);
+        $data = $this->data[$csvPath];
+        $this->plotVariables = $vars = [
+            'time.real.max' => $this->maxRealTime($data),
+            'time.nb' => $this->nbMeasures($data)
+        ];
+        $this->plotGraphics = $this->computeGraphics($vars);
+        $plotter->plot((array) $csvPath);
     }
 
     // ========================================================================
@@ -262,6 +200,12 @@ final class Plot
             's',
             'c'
         ];
+    }
+
+    public static function plotterFileName(IPlotter $plotter, string $csvPath, string $suffix = ''): string
+    {
+        $fileName = \baseName($csvPath, ".csv");
+        return "{$fileName}_{$plotter->getId()}$suffix";
     }
 
     private function computeGraphics(array $vars): array

@@ -1,5 +1,5 @@
 <?php
-$val = $PLOT->getPlotVariables();
+// $val = $PLOT->getPlotVariables();
 $graphics = &$PLOT->getPlotGraphics();
 
 $exclude = [
@@ -13,13 +13,17 @@ $blocGroups = [
         'queries'
     ]
 ];
-$blocs = $PLOT->prepareBlocs($blocGroups, $exclude);
+$data = $PLOTTER->getData();
+$blocs = $PLOT->prepareBlocs($blocGroups, $exclude, $data);
 echo $PLOT->addFooter($blocs);
 
 $w = $graphics['w'];
 $h = $graphics['h'];
+
+$lines = $PLOT->getPlotYLines();
+$fileName = $PLOTTER->getFileName('.png');
 ?>
-set title "<?=$val['file.name']?>"
+set title "<?=$fileName?>"
 set ylabel "time (ms)"
 set key title "Times" bottom
 
@@ -43,7 +47,7 @@ set lmargin 0
 set bmargin 0
 set tmargin <?=(int)ceil($graphics['plot.header.h'] / $graphics['font.size'])?>
 
-set label "<?=$val['bench']['datetime']?>" at screen 0.5,0 offset 0, character 1 center
+set label "<?=$data['bench']['datetime']?>" at screen 0.5,0 offset 0, character 1 center
 
 set origin <?=$graphics['plot.x'] / $w?>, <?=$graphics['plot.y'] / $h?>
 
@@ -51,4 +55,6 @@ set size <?=$graphics['plot.w'] / $w?>, <?=$graphics['plot.h'] / $h?>
 
 set term png size <?=$w?>, <?=$h?>
 
-<?=$val['plot']($PLOT)?>
+plot <?=$lines?> \
+, '<?=$PLOTTER->getFileName('.dat')?>' u 2:xtic(1) ls 1 fs pattern 0, '' u 3 fs pattern 3 ls 1
+

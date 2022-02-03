@@ -1,36 +1,43 @@
 <?php
+require_once __DIR__ . '/classes/autoload.php';
 include_once __DIR__ . '/gnuplot/functions.php';
 include_once __DIR__ . '/gnuplot/Plot.php';
 require_once __DIR__ . '/common/functions.php';
 
 array_shift($argv);
 
-while (! empty($exec = nextExecution($argv, __DIR__ . '/gnuplot/config.php'))) {
-    [
-    $config,
-    $plotPath
-    ] = $exec;
-    
-    if (is_dir($plotPath)) {
-        // $plotFiles = glob("$plotPath/*.csv");
-        $dir = new RecursiveDirectoryIterator($plotPath);
-        $ite = new RecursiveIteratorIterator($dir);
-        $reg = new RegexIterator($ite, "#/[^@][^/]+\.csv$#");
+while (! empty($exec = \parseArgvShift($argv, ";"))) {
+    $outPath = \argShift($exec, 'output');
+    $config = \argShift($exec, 'config', __DIR__ . '/gnuplot/config.php');
+    $paths = \array_filter($argv, 'is_int');
+
+    $plotFiles = [];
+
+    if (empty($paths))
+        $paths = (array)$outPath;
+
+    foreach ($paths as $outPath) {
         
-        foreach ($reg as $file)
-            $plotFiles[] = $file->getRealPath();
-    } elseif (is_file($plotPath) && preg_match('#\.csv$#', $plotPath)) {
-        $plotFiles = [
-            $plotPath
-        ];
-        $plotPath = \dirname($plotPath);
-    } else {
-        fputs(STDERR, "Can't handle $plotPath!\n");
-        continue;
+        if (is_dir($outPath)) {
+            $dir = new RecursiveDirectoryIterator($outPath);
+            $ite = new RecursiveIteratorIterator($dir);
+            $reg = new RegexIterator($ite, "#/[^@][^/]+\.csv$#");
+
+            foreach ($reg as $file)
+                $plotFiles[] = $file->getRealPath();
+        } elseif (is_file($outPath) && preg_match('#\.csv$#', $outPath)) {
+            $plotFiles = [
+                $outPath
+            ];
+            $outPath = \dirname($outPath);
+        } else {
+            fputs(STDERR, "Can't handle '$outPath'!\n");
+            continue;
+        }
     }
     $queries = [];
     $allNbThreads = [];
-    (new \Plot($plotPath, $plotFiles))->plot(include $config);
+    (new \Plot($outPath, $plotFiles))->plot(include $config);
 }
 
 // ====================================================================
