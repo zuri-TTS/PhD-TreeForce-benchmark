@@ -127,8 +127,11 @@ function get_include_contents(string $filename, array $variables, string $unique
 
 function getBenchmarkBasePath(): string
 {
-    return \realpath(__DIR__ . "/../../..");
+    static $p = null;
+    return $p ?? ($p = \realpath(getcwd()));
+    // return \realpath(__DIR__ . "/../../..");
 }
+getBenchmarkBasePath();
 
 function getQueriesBasePath(): string
 {
