@@ -436,6 +436,16 @@ final class Benchmark
             $this->writeCSV($query, $measures);
         }
         $this->plot();
+        $this->bringOutputs();
+    }
+
+    private function bringOutputs(): void
+    {
+        $argv[] = 'plot.php';
+        $argv[] = \dirname($this->qOutputPath);
+        $argv[] = 0;
+
+        include __DIR__ . "/../bring-outputs.php";
     }
 
     private function plot(): void
