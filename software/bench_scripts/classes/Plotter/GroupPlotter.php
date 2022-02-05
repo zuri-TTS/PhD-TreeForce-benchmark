@@ -1,7 +1,7 @@
 <?php
 namespace Plotter;
 
-class GroupPlotter implements \IPlotter
+final class GroupPlotter implements IPlotter
 {
 
     private const template = __DIR__ . '/templates/group.plot.php';

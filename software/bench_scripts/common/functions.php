@@ -7,6 +7,14 @@ function scandirNoPoints(string $path)
     return $ret;
 }
 
+function removePrefix(string $s, string $prefix): string
+{
+    if (0 === \strpos($s, $prefix))
+        return \substr($s, \strlen($prefix));
+
+    return $s;
+}
+
 function parseArgv(array $argv): array
 {
     return parseArgvShift($argv);

@@ -1,5 +1,7 @@
 <?php
-$graphics = &$PLOT->getPlotGraphics();
+$graphics = new Plotter\Graphics();
+
+$nbQueries = \count($PLOT->getData());
 
 $exclude = [
     'datetime',
@@ -11,7 +13,7 @@ $blocGroup = [
     'bench'
 ];
 $data = \array_values($PLOT->getData())[0];
-$blocs[] = $PLOT->prepareOneBloc($blocGroup, $exclude, $data);
+$blocs[] = $graphics->prepareOneBloc($blocGroup, $exclude, $data);
 
 $blocGroup = [
     'answers',
@@ -26,7 +28,7 @@ foreach ($PLOTTER->getCSVPaths() as $path) {
     $bloc[] = [
         "<$fileName>"
     ];
-    $bloc += $PLOT->prepareOneBloc($blocGroup, [], [
+    $bloc += $graphics->prepareOneBloc($blocGroup, [], [
         'bench' => [
             'measures.nb' => $data['bench']['measures.nb'],
             'measures.forget' => $data['bench']['measures.forget']
@@ -34,13 +36,21 @@ foreach ($PLOTTER->getCSVPaths() as $path) {
     ] + $data);
 }
 
-echo $PLOT->addFooter($blocs);
+list ($yMin, $yMax) = $graphics->getYMinMax($PLOT->getData());
+$ymin = \max(0, $yMin - 1);
 
+$nbMeasures = \count(\array_filter($data, fn ($d) => \PLOT::isTimeMeasure($d)));
+$nbBars = $nbMeasures * $nbQueries * 2;
+
+
+$graphics->compute($nbBars, $nbMeasures, $yMax);
+
+echo $graphics->addFooter($blocs);
 $w = $graphics['w'];
 $h = $graphics['h'];
 
 ?>
-set title "<?=$PLOTTER->getGroupPath()?>"
+set title "<?=$PLOT->gnuplotSpecialChars(\basename($PLOTTER->getGroupPath()))?>"
 set ylabel "time (ms)"
 set key title "Times"
 
@@ -73,15 +83,16 @@ set size <?=$graphics['plot.w'] / $w?>, <?=$graphics['plot.h'] / $h?>
 set term png size <?=$w?>, <?=$h?>
 
 <?php
-$plot_lines = $PLOT->getPlotYLines();
-$val = $PLOT->getPlotVariables();
+$plot_lines = $graphics->plotYLines($yMax);
 $ls = 1;
 
 foreach ($PLOTTER->getCSVPaths() as $f) {
-    $fname = \basename($f, '.csv') .'_time';
+    $fname = \basename($f, '.csv') . '_time';
+    $title = $PLOT->gnuplotSpecialChars($fname);
+    
     $tmp[] = <<<EOD
-    '$fname.dat' u 2:xtic(1) title '$fname real' ls $ls fs pattern 0 \\
-    ,'' u 3 title '$fname cpu' fs pattern 3 ls $ls \\\n
+    '$fname.dat' u 2:xtic(1) title '$title real' ls $ls fs pattern 0 \\
+    ,'' u 3 title '$title cpu' fs pattern 3 ls $ls \\\n
     EOD;
     $ls ++;
 }

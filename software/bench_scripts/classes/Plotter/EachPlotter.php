@@ -1,7 +1,7 @@
 <?php
 namespace Plotter;
 
-class EachPlotter implements \IPlotter
+final class EachPlotter implements IPlotter
 {
 
     private const template = __DIR__ . '/templates/each.plot.php';

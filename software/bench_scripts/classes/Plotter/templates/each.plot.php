@@ -1,6 +1,5 @@
 <?php
-// $val = $PLOT->getPlotVariables();
-$graphics = &$PLOT->getPlotGraphics();
+$graphics = new Plotter\Graphics();
 
 $exclude = [
     'datetime',
@@ -14,16 +13,26 @@ $blocGroups = [
     ]
 ];
 $data = $PLOTTER->getData();
-$blocs = $PLOT->prepareBlocs($blocGroups, $exclude, $data);
-echo $PLOT->addFooter($blocs);
+$blocs = $graphics->prepareBlocs($blocGroups, $exclude, $data);
+
+
+list ($yMin, $yMax) = $graphics->getYMinMax($PLOT->getData());
+$ymin = \max(0, $yMin - 1);
+
+$nbMeasures = \count(\array_filter($data, fn ($d) => \PLOT::isTimeMeasure($d)));
+$nbBars = $nbMeasures * 2;
+
+
+$graphics->compute($nbBars, $nbMeasures, $yMax);
+echo $graphics->addFooter($blocs);
 
 $w = $graphics['w'];
 $h = $graphics['h'];
 
-$lines = $PLOT->getPlotYLines();
+$lines = $graphics->plotYLines($yMax);
 $fileName = $PLOTTER->getFileName('.png');
 ?>
-set title "<?=$fileName?>"
+set title "<?=$PLOT->gnuplotSpecialChars($fileName)?>"
 set ylabel "time (ms)"
 set key title "Times" bottom
 

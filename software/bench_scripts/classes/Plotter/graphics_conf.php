@@ -6,12 +6,12 @@ return [
     // Terminal (png)
     'w' => - 1,
     'h' => - 1,
-    'h.space' => 50,
+    'h.space' => 80,
     'w.space' => 250,
 
     // Bar
-    'bar.w' => 35,
-    'bar.nb' => 2,
+    'bar.w' => 15,
+    // 'bar.nb' => 2,
     'bar.gap.factor' => 1,
 
     // Plot
@@ -27,14 +27,16 @@ return [
     'plot.bmargin' => 130,
 
     'plot.x' => - 1,
-    'plot.x.step' => - 1,
-    'plot.x.step.nb' => -1,
+//     'plot.x.step' => - 1,
+//     'plot.x.step.nb' => - 1,
 
     'plot.y' => - 1,
     'plot.y.step' => 150,
     'plot.y.step.nb' => - 1,
-    'plot.y.max' => -1,
+    'plot.y.max' => - 1,
+
+    'plots.max.x' => 2,
 
     // Infos
-    'queries.nb' => -1
+//     'queries.nb' => - 1
 ];

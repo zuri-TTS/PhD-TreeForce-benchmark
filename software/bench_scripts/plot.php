@@ -8,16 +8,20 @@ array_shift($argv);
 
 while (! empty($exec = \parseArgvShift($argv, ";"))) {
     $outPath = \argShift($exec, 'output');
-    $config = \argShift($exec, 'config', __DIR__ . '/gnuplot/config.php');
+    $types = \argShift($exec, 'types', '');
     $paths = \array_filter($argv, 'is_int');
+    $config = __DIR__ . '/gnuplot/config.php';
+
+    if (! empty($types))
+        $types = \explode(',', $types);
 
     $plotFiles = [];
 
     if (empty($paths))
-        $paths = (array)$outPath;
+        $paths = (array) $outPath;
 
     foreach ($paths as $outPath) {
-        
+
         if (is_dir($outPath)) {
             $dir = new RecursiveDirectoryIterator($outPath);
             $ite = new RecursiveIteratorIterator($dir);
@@ -37,7 +41,15 @@ while (! empty($exec = \parseArgvShift($argv, ";"))) {
     }
     $queries = [];
     $allNbThreads = [];
-    (new \Plot($outPath, $plotFiles))->plot(include $config);
+    $config = include $config;
+
+    if (! empty($types)) {
+        $delTypes = \array_diff(\array_keys($config['plotter.factory']), $types);
+
+        foreach ($delTypes as $d)
+            unset($config['plotter.factory'][$d]);
+    }
+    (new \Plot($outPath, $plotFiles))->plot($config);
 }
 
 // ====================================================================

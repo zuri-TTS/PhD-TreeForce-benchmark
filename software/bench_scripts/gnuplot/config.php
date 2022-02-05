@@ -1,7 +1,8 @@
 <?php
 return [
     'plotter.factory' => [
-        fn (Plot $plot) => new Plotter\EachPlotter($plot),
-        fn (Plot $plot) => new Plotter\GroupPlotter($plot)
+        'each' => fn (Plot $plot) => new Plotter\EachPlotter($plot),
+        'group' => fn (Plot $plot) => new Plotter\GroupPlotter($plot),
+        'full' => fn (Plot $plot) => new Plotter\FullPlotter($plot)
     ]
 ];
