@@ -29,7 +29,7 @@ while (! empty($argv)) {
 
     if (\count($dataSets) == 0) {
         echo "Convert ALL dataSets to json\n\n";
-        $dataSets = Dataset::getAllGroups();
+        $dataSets = DataSet::getAllGroups();
     }
     foreach ($dataSets as $dataSet) {
         $ds = new DataSet($dataSet);
