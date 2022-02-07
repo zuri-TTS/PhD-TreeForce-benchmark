@@ -8,34 +8,36 @@ $modelPath = 'genetic';
 
 $ranges = [
     [
-        2,
-        10,
-        1
+        2, // min
+        10, // max
+        1, // increment
+        0 // result range
     ],
     [
         10,
         100,
-        20
+        20,
+        10
     ],
     [
         100,
         550,
-        50
+        50,
+        25
     ]
 ];
 
 $options = [
     'Gsort' => 1,
-    'generate' => true,
-    'GnbLoops' => 500
+    'generate' => true
 ];
 $args = \parseArgv($argv) + $options;
 
 foreach ($ranges as $range) {
-    list ($i, $c, $s) = $range;
+    list ($i, $c, $s, $r) = $range;
 
     for (; $i < $c; $i += $s) {
-        $max = $i + (int) ($s / 2);
+        $max = $i + $r;
 
         $args['Qdefault'] = [
             $i,

@@ -54,12 +54,16 @@ class ModelGen
     {
         $outDirPath = "$this->basePath/$this->outFileName";
 
-        if (! \is_dir($outDirPath))
-            \mkdir($outDirPath);
-
         echo "Generate rules in $outDirPath\n";
 
         $model = $this->readModel($this->outModelPath);
+
+        if (empty($model))
+            echo "Nothing to generate, retry another time\n";
+
+        if (! \is_dir($outDirPath))
+            \mkdir($outDirPath);
+
         $qvocFile = new \SplFileObject("$outDirPath/querying.txt", 'w');
         $rvocFile = new \SplFileObject("$outDirPath/reasoning.txt", 'w');
 

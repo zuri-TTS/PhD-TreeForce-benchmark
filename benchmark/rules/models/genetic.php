@@ -17,13 +17,27 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private int $nbLoops = 1000;
 
-    private float $mutation_factor = 0.5;
+    private float $crossOver_nbLabels_factor_min = 0;
 
-    private float $select_factor = 0.75;
+    private float $crossOver_nbLabels_factor_max = 0.8;
 
-    private float $select_factor_elite = 0.7;
+    private float $select_factor = .5;
+
+    private float $select_factor_elite = .3;
+
+    private float $mutation_factor = .8;
+
+    private float $reproduction_factor = .6;
+
+    private float $fresh_factor = .15;
+
+    private bool $skip_existing = true;
 
     private bool $stopOnSolution = true;
+
+    private bool $solutions_more = true;
+
+    private bool $clean_solutions = false;
 
     private int $nbTry = 1;
 
@@ -33,14 +47,21 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private int $sort = 1;
 
-    // ========================================================================
-    private const default_options = [
-        // Clean solutions file before begins
-        'clean.solutions' => false,
-        // Add more solutions to the existing ones
-        'solutions.more' => false
-    ];
+    private int $init_rand_max = 10;
 
+    private int $mutation_nb_max = 5;
+
+    private int $mutation_rand_min = 1;
+
+    private int $mutation_rand_max = 5;
+
+    private $display = 0;
+
+    private $display_offset = 0;
+
+    private $it;
+
+    // ========================================================================
     function usage(): string
     {
         return <<<EOT
@@ -60,10 +81,23 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         Gselect.factor.elite($this->select_factor_elite):
         GstopOnSolution($this->stopOnSolution):
         GuseModel($this->useModel): index of the model to use at the end
+        GrandMin($this->randMin):
+        GrandMax($this->randMax):
 
         Query option:
         Q#query: number of reformulations for the query #query
         EOT;
+    }
+
+    private function displayConfig(): void
+    {
+        foreach (\get_object_vars($this) as $k => $v)
+            if (\is_numeric($v))
+                echo "$k($v)\n";
+            elseif (\is_bool($v)) {
+                $v = $v ? 'true' : 'false';
+                echo "$k($v)\n";
+            }
     }
 
     function validArgs(): bool
@@ -74,8 +108,6 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     // ========================================================================
     function __construct(array $args)
     {
-        $args += self::default_options;
-
         $this->query_nbRewritings = [];
         $this->queries = getQueries(false);
         // Prepare queries' range
@@ -97,9 +129,10 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
                 $range = $user_q[$query] ?? $user_q['default'] ?? self::default_nbRefs_range;
                 $this->query_nbRewritings[$query] = $range;
+                $this->query_nbRewritings[$query]['range'] = ($range[1] - $range[0]);
+                $this->query_nbRewritings[$query]['frange'] = (float) ($range[1] - $range[0] + 1);
             }
         }
-        $this->init();
 
         // Prepare object's properties
         {
@@ -112,27 +145,31 @@ return fn (array $args) => new class($args) implements IModelGenerator {
                 return;
             }
         }
+        $this->init();
         $geneticModelPath = $this->getGeneticModelFilePath();
 
-        if ($args['clean.solutions']) {
+        if ($this->clean_solutions) {
 
             if (\is_file($geneticModelPath))
                 unlink($geneticModelPath);
         }
         $model = $this->getGeneticModel();
+        $generatedModel = [];
         $mustGenerate = empty($model);
         $nbTry = $this->nbTry;
 
-        if ($args['solutions.more']) {
+        if ($this->solutions_more)
             $mustGenerate = true;
 
-            while ($nbTry --)
-                $model = \array_merge($model, $this->doGeneration());
-        } else {
-            while (empty($model) && $nbTry --) {
-                $model = $this->doGeneration();
+        if (! $this->skip_existing || empty($model)) {
+            $this->currentTry = 0;
+
+            while (empty($generatedModel) && $nbTry --) {
+                $generatedModel = $this->doGeneration();
+                $model = \array_merge($model, $generatedModel);
             }
-        }
+        } else
+            echo "(Skipped)\n";
 
         if (! empty($model) && $this->sort !== 0) {
             $mustGenerate = true;
@@ -172,13 +209,13 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         $this->$name = $val;
     }
 
-    function generate(\SplFileObject $writeTo)
+    public function generate(\SplFileObject $writeTo)
     {
         $model = $this->getGeneticModel();
 
         if (! empty($model)) {
 
-            foreach ($model[0] as $label => $nb) {
+            foreach ($model[$this->useModel] as $label => $nb) {
                 if (! \is_int($nb) || (-- $nb == 0))
                     continue;
 
@@ -187,7 +224,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         }
     }
 
-    function writeGeneticModelFile(\SplFileObject $writeTo, array &$solutions): void
+    private function writeGeneticModelFile(\SplFileObject $writeTo, array &$solutions): void
     {
         if (empty($solutions))
             $writeTo->fwrite('<?php return [];');
@@ -204,17 +241,20 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private function getSuffixName(): string
     {
-        $s = [];
+        $s = $groups = [];
 
         foreach ($this->query_nbRewritings as $k => $v) {
             if ($v[0] === $v[1])
                 $v = $v[0];
             else
-                $v = implode('-', $v);
+                $v = $v[0] . '-' . $v[1];
 
-            $s[] = "{$k}($v)";
+            $groups[$v][] = $k;
         }
-        return implode('_', $s);
+        foreach ($groups as $r => $queries) {
+            $s[] = "($r)" . implode('_', $queries);
+        }
+        return implode('-', $s);
     }
 
     private function getGeneticModel(): array
@@ -244,11 +284,46 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         return "{$s}";
     }
 
+    private function displayOne($p)
+    {
+        foreach ($p[self::i_qdistance] as $q => $dist)
+            printf("$q:%12.2f ", $dist);
+
+        echo "|";
+
+        foreach ($p["#nb"] ?? [] as $q => $nb)
+            printf(" $q:%5d", $nb);
+
+        printf("|%4d d%8d", $p[self::i_dominants], $p[self::i_distance]);
+        echo ' [' . implode(',', $p['o']) . ']';
+    }
+
+    private function displayFirsts($population, int $nb)
+    {
+        if (! $nb)
+            return;
+
+        $c = \count($population);
+        $offset = $this->display_offset;
+
+        if ($offset < 0)
+            $offset = $c + $offset - 1;
+
+        echo "(pop:$c)[$offset:" . (string) ($offset + $nb) . "] try:$this->currentTry/$this->nbTry i:$this->it/$this->nbLoops\n";
+
+        for ($i = 0; $i < $nb; $i ++) {
+            $k = $i + $offset;
+            $this->displayOne($population[$k]);
+            $population[$k]['o'] = \array_values($population[$k]['o']);
+            echo "\n";
+        }
+        echo "\n";
+    }
+
     // ========================================================================
     private static function randomItem(array $a)
     {
-        \shuffle($a);
-        return $a[0];
+        return $a[\array_rand($a)];
     }
 
     // ========================================================================
@@ -264,6 +339,14 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private const i_nbRefs = 'nb';
 
+    private int $select_nb, $select_elites_nb;
+
+    private int $mutations_nb;
+
+    private int $reproduction_nb;
+
+    private int $fresh_nb;
+
     private function init(): void
     {
         $this->labels = [];
@@ -276,29 +359,36 @@ return fn (array $args) => new class($args) implements IModelGenerator {
                 continue;
 
             $q = \file_get_contents($fpath);
-            preg_match_all("#[\w@]+#", $q, $labels);
+            \preg_match_all("#[\w@]+#", $q, $labels);
             $labels = \array_shift($labels);
 
             $this->labels = \array_merge($this->labels, $labels);
             $this->query_labelsFreq[$query] = \array_count_values($labels);
         }
         $this->labels = \array_unique($this->labels);
+
+        $this->fresh_nb = (int) ($this->n * $this->fresh_factor);
+        $this->select_nb = (int) ($this->n * $this->select_factor);
+        $this->select_elites_nb = (int) ($this->select_nb * $this->select_factor_elite);
+        $this->reproduction_nb = (int) ($this->n * $this->reproduction_factor);
+        $this->mutations_nb = (int) ($this->reproduction_nb * $this->mutation_factor);
     }
 
     private function initPopulation(int $nb): array
     {
         $ret = [];
 
-        for ($i = 0; $i < $nb; $i ++) {
+        while ($nb -- > 0) {
             $one = [];
 
             foreach ($this->labels as $label)
-                $one[$label] = \rand(1, 2);
+                $one[$label] = \mt_rand(1, $this->init_rand_max);
 
             $one = [
                 'o' => $one
             ];
             $this->updateOne($one);
+
             $ret[] = $one;
         }
         $this->updateNotes($ret);
@@ -310,6 +400,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     {
         $one[self::i_qdistance] = $this->getDistances($one['o']);
         $one[self::i_distance] = $this->getDistance($one[self::i_qdistance]);
+//         $one["#nb"] = $this->getDistances($one['o'], true);
     }
 
     private function sortPopulation(array &$population): void
@@ -320,7 +411,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         ]);
     }
 
-    private function cmpDominants(array $a, array $b): int
+    private function cmpDominants(array $a, array $b)
     {
         $tmp = $a[self::i_dominants] - $b[self::i_dominants];
 
@@ -367,52 +458,63 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         $dists = [];
 
         foreach ($this->query_labelsFreq as $query => $labels) {
+            $q = $this->query_nbRewritings[$query];
             $nb = 1;
 
-            foreach ($labels as $label => $freq)
-                $nb *= $one[$label] * $freq;
+            foreach ($labels as $label => $freq) {
+                $n = $one[$label];
 
-            if ($onlyNbRefs)
+                if ($n > 1)
+                    $nb *= $one[$label] * $freq;
+            }
+            if ($onlyNbRefs) {
                 $v = $nb;
-            else {
-                $min = ($this->query_nbRewritings[$query][0] - $nb);
-                $max = ($this->query_nbRewritings[$query][1] - $nb);
+            } else {
+                $min = ($q[0] - $nb);
+                $max = ($q[1] - $nb);
 
                 if ($min > 0)
                     $v = $min;
                 elseif ($max < 0)
                     $v = $max;
+                elseif ($q['range'])
+                    $v = (- $min) / $q['frange'];
                 else
-                    $v = 0;
+                    $v = - $min;
             }
             $dists[$query] = $v;
         }
         return $dists;
     }
 
-    private function getDistance(array $distances): int
+    private function getDistance(array $distances)
     {
-        return \array_reduce($distances, fn ($a, $b) => abs($a) + abs($b), 0);
+        return \array_reduce($distances, fn ($a, $b) => abs((int) $a) + abs((int) $b), 0);
     }
 
     // ========================================================================
     private function isSolution($one)
     {
-        return $one[self::i_distance] == 0;
+        $d = $one[self::i_distance];
+        return $d >= 0.0 && $d < 1.0;
     }
 
     private function doGeneration(): array
     {
-        echo "<", $this->getGeneticModelFileName(), ">\n";
-        echo "Try $this->currentTry/$this->nbTry nbLoops:$this->nbLoops n:$this->n\n";
         $this->currentTry ++;
+        echo "<", $this->getGeneticModelFileName(), ">\n";
+        echo $this->displayConfig();
+        echo "Try $this->currentTry/$this->nbTry\n";
 
         $solutions = [];
         $population = $this->initPopulation($this->n);
         $this->sortPopulation($population);
+        $this->it = 0;
 
         for ($i = 0; $i < $this->nbLoops; $i ++) {
+            $this->it ++;
             $population = $this->evolution($population);
+            $this->displayFirsts($population, $this->display);
             $s = 0;
             $hasSol = false;
 
@@ -435,65 +537,79 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private function evolution($population): array
     {
-        $select = $this->selection($population);
-        $this->mutation($select);
+        $select = $this->selection($population, $this->select_nb, $this->select_elites_nb);
+        $childs = $this->reproduction($select, $this->reproduction_nb);
 
-        $new = $this->initPopulation($this->n - \count($select));
+        $fresh = $this->initPopulation($this->fresh_nb);
 
-        $population = array_merge($select, $new);
+        $nbPadding = $this->n - ($this->select_nb + \count($childs) + $this->fresh_nb);
+        $padding = $nbPadding > 0 ? $this->initPopulation($nbPadding) : [];
+
+        $population = \array_merge($select, $childs, $fresh, $padding);
+        $this->updateNotes($population);
+        $this->sortPopulation($population);
+        $population = \array_slice($population, 0, $this->n);
         $this->updateNotes($population);
         $this->sortPopulation($population);
         return $population;
     }
 
-    private function selection($population): array
+    private function selection($population, int $nbTotal, int $nbElites): array
     {
-        $nb = (int) ($this->n * $this->select_factor);
-        $nbElite = (int) ($nb * $this->select_factor_elite);
+        $ret = \array_slice($population, 0, $nbElites);
+        $other = \array_slice($population, $nbElites);
+        \shuffle($other);
+        return \array_merge($ret, \array_slice($other, 0, $nbTotal - $nbElites));
+    }
 
-        $ret = \array_slice($population, 0, $nbElite);
-        $othersId = \range($nbElite, $this->n - 1);
+    private function reproduction($population, int $nbChilds): array
+    {
+        $new = [];
 
-        \shuffle($othersId);
-        $c = $nb - $nbElite;
+        while ($nbChilds --) {
+            $a = $this->randomItem($population);
+            $b = $this->randomItem($population);
+            $new[] = $this->crossOver($a, $b);
+        }
+        $this->mutate($new, $this->mutations_nb);
+        return \array_unique($new, SORT_REGULAR);
+    }
 
-        while ($c --)
-            $ret[] = $population[$othersId[$c]];
+    private function crossOver($a, $b): array
+    {
+        $nbLabels = (int) (\count($a['o']) * (\mt_rand($this->crossOver_nbLabels_factor_min * 1000, $this->crossOver_nbLabels_factor_max * 1000) / 1000.0));
+        $ret = $a;
 
-        \shuffle($ret);
+        while ($nbLabels --) {
+            $k = \array_rand($ret['o']);
+            $ret['o'][$k] = $b['o'][$k];
+        }
+        $this->updateOne($ret);
         return $ret;
     }
 
-    private const mutationVal = [
-        1,
-        2
-    ];
-
-    private function mutation(&$population): void
+    private function mutateOne(&$p): void
     {
-        $c = \count($population);
-        $nb = (int) ($c * $this->mutation_factor);
-        $ids = \range(0, $c - 1);
-        \shuffle($ids);
-        $nbLabels = \count($this->labels);
+        $one = &$p['o'];
 
-        while ($c --) {
-            $p = &$population[$ids[$c]];
-            $one = &$p['o'];
+        $minv = \min($p[self::i_qdistance]);
+        $add = ($minv < 0) ? - 1 : 1;
+        $nbMut = \mt_rand(1, $this->mutation_nb_max);
 
-            $minv = \min($p[self::i_qdistance]);
-            $add = ($minv < 0) ? - 1 : 1;
-            for (;;) {
-                $label = self::randomItem($this->labels);
-                $val = &$one[$label];
+        for (; $nbMut;) {
+            $label = self::randomItem($this->labels);
+            $val = &$one[$label];
+            $addf = \mt_rand($this->mutation_rand_min, $this->mutation_rand_max);
+            $val = \max(1, $val + $add * $addf);
+            $nbMut --;
+        }
+        $this->updateOne($p);
+    }
 
-                if ($minv < 0 && $val == 1)
-                    continue;
-
-                $val = \max(1, $val + $add);
-                break;
-            }
-            $this->updateOne($p);
+    private function mutate($population, int $nb): void
+    {
+        while ($nb -- > 0) {
+            $this->mutateOne($population[\array_rand($population)]);
         }
     }
 };
