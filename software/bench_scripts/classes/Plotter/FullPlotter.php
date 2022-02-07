@@ -38,7 +38,7 @@ final class FullPlotter implements IPlotter
     {
         return $this->cutData;
     }
-    
+
     public function toPlot(): array
     {
         return $this->toPlot;
@@ -82,7 +82,7 @@ final class FullPlotter implements IPlotter
 
     private function cleanCurrentDir()
     {
-        foreach (\glob('*.(dat|plot)') as $file)
+        foreach ($g = \glob('*.dat') as $file)
             \unlink($file);
     }
 
@@ -107,13 +107,27 @@ final class FullPlotter implements IPlotter
         $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
         $groups = \array_map(function ($p) {
             \preg_match("#^\[(.+)\]#U", \basename($p), $matches);
-            return $matches[1] ?? [];
+            \preg_match("#\[(simplified.*)\]#U", \basename($p), $simplified);
+            return [
+                $matches[1],
+                ($simplified[1] ?? '')
+            ];
         }, $dirs);
-        $groups = \array_unique($groups);
-        \natsort($groups);
+        $groups = \array_unique($groups, SORT_REGULAR);
+        \usort($groups, fn ($a, $b) => strnatcasecmp($a[0], $b[0]));
 
         foreach ($groups as $group) {
-            $gdirs = \array_filter($dirs, fn ($d) => \fnmatch("*\[$group\]*", $d));
+            $g = $group[0];
+            $s = $group[1];
+            $group = $g;
+            $pattern = "*\[$g\]*";
+
+            if ($s) {
+                $pattern .= "[$s\]*";
+                $group .= "[$s]";
+            }
+
+            $gdirs = \array_filter($dirs, fn ($d) => \fnmatch($pattern, $d));
             foreach ($queries as $query) {
                 $dd = \array_map(fn ($p) => "$p/$query.csv", $gdirs);
                 \natcasesort($dd);

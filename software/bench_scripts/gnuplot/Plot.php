@@ -92,11 +92,12 @@ final class Plot
         }
 
         \chdir($this->workingDir);
+        $nbFiles = \count($csvFiles);
 
         foreach ($this->plotters as $plotter) {
 
             if ($plotter->getProcessType() === self::PROCESS_FULL) {
-                echo "\nPlotting Full ({$plotter->getID()}) with\n" . implode("\n", $csvFiles), "\n";
+                echo "\nPlotting Full ({$plotter->getID()}) with $nbFiles files\n";
                 $outDir = "full_{$plotter->getID()}";
 
                 if (! is_dir($outDir))
