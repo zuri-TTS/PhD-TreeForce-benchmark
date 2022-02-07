@@ -1,0 +1,33 @@
+#site 0
+
+
+#people 0
+
+
+#person 0
+
+
+#address 0
+
+
+#closed_auctions 0
+
+
+#closed_auction 0
+
+
+#listitem 0
+
+
+#bold 0
+
+
+#regions 0
+
+
+#item 0
+
+
+#mailbox 0
+
+

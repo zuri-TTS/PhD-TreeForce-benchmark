@@ -1,0 +1,18 @@
+#people 0
+
+
+#person 0
+
+
+#closed_auctions 0
+
+
+#annotation 0
+
+
+#africa 0
+
+
+#mail 0
+
+

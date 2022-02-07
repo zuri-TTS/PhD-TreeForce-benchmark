@@ -1,0 +1,24 @@
+#person 1
+
+'q_person_0'=?x? --> 'person'=?x?
+
+#address 1
+
+'q_address_0'=?x? --> 'address'=?x?
+
+#closed_auction 1
+
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#annotation 1
+
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#africa 1
+
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#mailbox 1
+
+'q_mailbox_0'=?x? --> 'mailbox'=?x?
+

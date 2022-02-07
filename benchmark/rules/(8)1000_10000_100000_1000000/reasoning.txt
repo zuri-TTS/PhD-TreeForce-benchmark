@@ -1,0 +1,15 @@
+#person 0
+
+
+#address 0
+
+
+#closed_auction 0
+
+
+#text 0
+
+
+#regions 0
+
+

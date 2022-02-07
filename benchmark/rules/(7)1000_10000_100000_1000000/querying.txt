@@ -1,0 +1,27 @@
+#person 6
+
+'q_person_5'=?x? --> 'person'=?x?
+'q_person_4'=?x? --> 'person'=?x?
+'q_person_3'=?x? --> 'person'=?x?
+'q_person_2'=?x? --> 'person'=?x?
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#closed_auction 6
+
+'q_closed_auction_5'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_4'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#mailbox 6
+
+'q_mailbox_5'=?x? --> 'mailbox'=?x?
+'q_mailbox_4'=?x? --> 'mailbox'=?x?
+'q_mailbox_3'=?x? --> 'mailbox'=?x?
+'q_mailbox_2'=?x? --> 'mailbox'=?x?
+'q_mailbox_1'=?x? --> 'mailbox'=?x?
+'q_mailbox_0'=?x? --> 'mailbox'=?x?
+

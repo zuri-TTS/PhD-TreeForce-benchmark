@@ -1,0 +1,60 @@
+#people 4
+
+'q_people_3'=?x? --> 'people'=?x?
+'q_people_2'=?x? --> 'people'=?x?
+'q_people_1'=?x? --> 'people'=?x?
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 1
+
+'q_person_0'=?x? --> 'person'=?x?
+
+#address 6
+
+'q_address_5'=?x? --> 'address'=?x?
+'q_address_4'=?x? --> 'address'=?x?
+'q_address_3'=?x? --> 'address'=?x?
+'q_address_2'=?x? --> 'address'=?x?
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
+
+#closed_auctions 6
+
+'q_closed_auctions_5'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_4'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_3'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_2'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_1'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+
+#closed_auction 1
+
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#listitem 4
+
+'q_listitem_3'=?x? --> 'listitem'=?x?
+'q_listitem_2'=?x? --> 'listitem'=?x?
+'q_listitem_1'=?x? --> 'listitem'=?x?
+'q_listitem_0'=?x? --> 'listitem'=?x?
+
+#regions 6
+
+'q_regions_5'=?x? --> 'regions'=?x?
+'q_regions_4'=?x? --> 'regions'=?x?
+'q_regions_3'=?x? --> 'regions'=?x?
+'q_regions_2'=?x? --> 'regions'=?x?
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#africa 1
+
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#mail 4
+
+'q_mail_3'=?x? --> 'mail'=?x?
+'q_mail_2'=?x? --> 'mail'=?x?
+'q_mail_1'=?x? --> 'mail'=?x?
+'q_mail_0'=?x? --> 'mail'=?x?
+

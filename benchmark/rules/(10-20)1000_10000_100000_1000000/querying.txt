@@ -1,0 +1,37 @@
+#people 1
+
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 1
+
+'q_person_0'=?x? --> 'person'=?x?
+
+#address 2
+
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
+
+#closed_auction 2
+
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#annotation 1
+
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#bold 1
+
+'q_bold_0'=?x? --> 'bold'=?x?
+
+#regions 4
+
+'q_regions_3'=?x? --> 'regions'=?x?
+'q_regions_2'=?x? --> 'regions'=?x?
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#mailbox 1
+
+'q_mailbox_0'=?x? --> 'mailbox'=?x?
+

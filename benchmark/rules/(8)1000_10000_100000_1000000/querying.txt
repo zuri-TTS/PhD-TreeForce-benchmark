@@ -1,0 +1,24 @@
+#person 3
+
+'q_person_2'=?x? --> 'person'=?x?
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#address 1
+
+'q_address_0'=?x? --> 'address'=?x?
+
+#closed_auction 3
+
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#text 1
+
+'q_text_0'=?x? --> 'text'=?x?
+
+#regions 1
+
+'q_regions_0'=?x? --> 'regions'=?x?
+

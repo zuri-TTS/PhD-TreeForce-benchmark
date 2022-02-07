@@ -1,0 +1,21 @@
+#person 4
+
+'q_person_3'=?x? --> 'person'=?x?
+'q_person_2'=?x? --> 'person'=?x?
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#closed_auction 4
+
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#mail 4
+
+'q_mail_3'=?x? --> 'mail'=?x?
+'q_mail_2'=?x? --> 'mail'=?x?
+'q_mail_1'=?x? --> 'mail'=?x?
+'q_mail_0'=?x? --> 'mail'=?x?
+

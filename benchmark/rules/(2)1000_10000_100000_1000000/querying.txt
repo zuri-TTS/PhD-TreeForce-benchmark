@@ -1,0 +1,12 @@
+#person 1
+
+'q_person_0'=?x? --> 'person'=?x?
+
+#annotation 1
+
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#africa 1
+
+'q_africa_0'=?x? --> 'africa'=?x?
+
