@@ -57,10 +57,10 @@ while (! empty($argv)) {
             $simplifyObject = $cmdParsed['simplify.object'];
 
             if ($simplifyObject) {
+                $useConfig = $cmdParsed['simplify.object.useConfig'];
                 $qualifiers = $simplifyObject ? [
                     $useConfig ? 'simplified' : 'simplified.all'
                 ] : [];
-                $useConfig = $cmdParsed['simplify.object.useConfig'];
                 $forceSimplify = $useConfig ? (include $doNotSimplifyPath) : [];
             } else {
                 $qualifiers = [];
