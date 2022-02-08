@@ -20,19 +20,9 @@ if (! function_exists('replaceJsonData')) {
                 $replacement = $replacement[$index];
                 $pseudoGenerator->next();
 
-                if (is_array($val) && isset($val[0])) {
-                    $newVal = [];
-
-                    foreach ($val as $k => $subVal) {
-
-                        if (! is_array($subVal))
-                            $newVal[$k] = $subVal;
-                        else
-                            $newVal[$k] = replaceJsonData($subVal, $replacements, $pseudoGenerator);
-                    }
-                    $ret[$replacement] = $newVal;
-                } else
-                    $ret[$replacement] = $val;
+                $ret[$replacement] = is_array($val) ? //
+                replaceJsonData($val, $replacements, $pseudoGenerator) : //
+                $val;
             }
         }
         return $ret;

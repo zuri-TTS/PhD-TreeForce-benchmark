@@ -358,22 +358,26 @@ class XMark2Json
 
     private function doSimplifyObject(&$keys): void
     {
-        if (! is_array($keys))
+        if (! \is_array($keys))
             return;
 
         foreach ($keys as $k => &$e) {
-            if (! is_array($e) || in_array($k, $this->doNotSimplify))
-                continue;
+            $doNotSimplify = \in_array($k, $this->doNotSimplify);
 
-            $c = \count($e);
+            if ($doNotSimplify)
+                $e = (array) $e;
 
-            if ($c === 1) {
-                $e = $e[0];
+            // Add a value to be recognized as an array by TreeForce-Demo
+            // if (\count($e) === 1)
+            // $e[] = null;
 
-                $this->doSimplifyObject($e);
-            } else {
+            if (\is_array($e)) {
+
                 foreach ($e as &$se)
                     $this->doSimplifyObject($se);
+
+                if (! $doNotSimplify && \count($e) === 1)
+                    $e = $e[0];
             }
         }
     }
@@ -448,11 +452,11 @@ class XMark2Json
 
     private function toJsonString(array $data, ?callable $postProcess = null): string
     {
+        if ($this->simplifyObject)
+            $this->doSimplifyObject($data);
         if (isset($postProcess)) {
             $data = $postProcess($data);
         }
-        if ($this->simplifyObject)
-            $this->doSimplifyObject($data);
 
         return \json_encode($data);
     }
