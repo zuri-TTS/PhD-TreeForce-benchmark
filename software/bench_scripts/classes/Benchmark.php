@@ -452,6 +452,7 @@ final class Benchmark
     {
         $argv[] = 'plot.php';
         $argv[] = $this->qOutputPath;
+        $argv[] = 'types=each,group';
 
         include __DIR__ . "/../plot.php";
     }
