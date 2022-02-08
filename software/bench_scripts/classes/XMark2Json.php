@@ -155,16 +155,20 @@ class XMark2Json
 
     private function _clean()
     {
+        $wd = \getcwd();
         $dataSetId = $this->dataSet->getTheId();
         echo "Cleaning $dataSetId\n";
 
         $dataSetOutPath = $this->dataSet->dataSetPath();
 
         if (\is_dir($dataSetOutPath)) {
-            foreach (\glob("$dataSetOutPath/*.json") as $f) {
+            \chdir($dataSetOutPath);
+
+            foreach (\glob("*.json") as $f) {
                 \is_file($f) && unlink($f);
             }
         }
+        \chdir($wd);
     }
 
     private function reachUnwind(string $path): ?string
