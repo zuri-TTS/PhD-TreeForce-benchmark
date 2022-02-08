@@ -1,12 +1,9 @@
-#site 0
+#address 0
 
 
-#people 0
+#parlist 0
 
 
-#closed_auction 0
-
-
-#mail 0
+#regions 0
 
 

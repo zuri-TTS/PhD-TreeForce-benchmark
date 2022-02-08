@@ -1,9 +1,9 @@
-#person 4
+#address 4
 
-'q_person_3'=?x? --> 'person'=?x?
-'q_person_2'=?x? --> 'person'=?x?
-'q_person_1'=?x? --> 'person'=?x?
-'q_person_0'=?x? --> 'person'=?x?
+'q_address_3'=?x? --> 'address'=?x?
+'q_address_2'=?x? --> 'address'=?x?
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
 
 #closed_auction 4
 
@@ -12,10 +12,10 @@
 'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
 'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
 
-#mail 4
+#regions 4
 
-'q_mail_3'=?x? --> 'mail'=?x?
-'q_mail_2'=?x? --> 'mail'=?x?
-'q_mail_1'=?x? --> 'mail'=?x?
-'q_mail_0'=?x? --> 'mail'=?x?
+'q_regions_3'=?x? --> 'regions'=?x?
+'q_regions_2'=?x? --> 'regions'=?x?
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
 

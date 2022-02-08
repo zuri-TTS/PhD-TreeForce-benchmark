@@ -1,10 +1,10 @@
-#person 1
+#people 1
 
-'q_person_0'=?x? --> 'person'=?x?
+'q_people_0'=?x? --> 'people'=?x?
 
-#annotation 1
+#closed_auctions 1
 
-'q_annotation_0'=?x? --> 'annotation'=?x?
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
 
 #africa 1
 

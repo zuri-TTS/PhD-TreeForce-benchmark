@@ -1,24 +1,32 @@
-#person 3
+#address 7
 
-'q_person_2'=?x? --> 'person'=?x?
-'q_person_1'=?x? --> 'person'=?x?
-'q_person_0'=?x? --> 'person'=?x?
-
-#address 1
-
+'q_address_6'=?x? --> 'address'=?x?
+'q_address_5'=?x? --> 'address'=?x?
+'q_address_4'=?x? --> 'address'=?x?
+'q_address_3'=?x? --> 'address'=?x?
+'q_address_2'=?x? --> 'address'=?x?
+'q_address_1'=?x? --> 'address'=?x?
 'q_address_0'=?x? --> 'address'=?x?
 
-#closed_auction 3
+#closed_auction 1
 
-'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
-'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
 'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
 
-#text 1
+#annotation 1
 
-'q_text_0'=?x? --> 'text'=?x?
+'q_annotation_0'=?x? --> 'annotation'=?x?
 
-#regions 1
+#parlist 1
 
-'q_regions_0'=?x? --> 'regions'=?x?
+'q_parlist_0'=?x? --> 'parlist'=?x?
+
+#item 3
+
+'q_item_2'=?x? --> 'item'=?x?
+'q_item_1'=?x? --> 'item'=?x?
+'q_item_0'=?x? --> 'item'=?x?
+
+#mailbox 1
+
+'q_mailbox_0'=?x? --> 'mailbox'=?x?
 

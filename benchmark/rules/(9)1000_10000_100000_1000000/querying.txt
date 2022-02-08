@@ -1,20 +1,33 @@
-#site 2
+#address 8
 
-'q_site_1'=?x? --> 'site'=?x?
-'q_site_0'=?x? --> 'site'=?x?
+'q_address_7'=?x? --> 'address'=?x?
+'q_address_6'=?x? --> 'address'=?x?
+'q_address_5'=?x? --> 'address'=?x?
+'q_address_4'=?x? --> 'address'=?x?
+'q_address_3'=?x? --> 'address'=?x?
+'q_address_2'=?x? --> 'address'=?x?
+'q_address_1'=?x? --> 'address'=?x?
+'q_address_0'=?x? --> 'address'=?x?
 
-#people 2
+#parlist 8
 
-'q_people_1'=?x? --> 'people'=?x?
-'q_people_0'=?x? --> 'people'=?x?
+'q_parlist_7'=?x? --> 'parlist'=?x?
+'q_parlist_6'=?x? --> 'parlist'=?x?
+'q_parlist_5'=?x? --> 'parlist'=?x?
+'q_parlist_4'=?x? --> 'parlist'=?x?
+'q_parlist_3'=?x? --> 'parlist'=?x?
+'q_parlist_2'=?x? --> 'parlist'=?x?
+'q_parlist_1'=?x? --> 'parlist'=?x?
+'q_parlist_0'=?x? --> 'parlist'=?x?
 
-#closed_auction 2
+#regions 8
 
-'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
-'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
-
-#mail 2
-
-'q_mail_1'=?x? --> 'mail'=?x?
-'q_mail_0'=?x? --> 'mail'=?x?
+'q_regions_7'=?x? --> 'regions'=?x?
+'q_regions_6'=?x? --> 'regions'=?x?
+'q_regions_5'=?x? --> 'regions'=?x?
+'q_regions_4'=?x? --> 'regions'=?x?
+'q_regions_3'=?x? --> 'regions'=?x?
+'q_regions_2'=?x? --> 'regions'=?x?
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
 

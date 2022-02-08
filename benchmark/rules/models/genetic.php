@@ -34,6 +34,8 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     private bool $skip_existing = true;
 
     private bool $stopOnSolution = true;
+    
+    private bool $forceRetry = false;
 
     private bool $solutions_more = true;
 
@@ -164,9 +166,11 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         if (! $this->skip_existing || empty($model)) {
             $this->currentTry = 0;
 
-            while (empty($generatedModel) && $nbTry --) {
+            while (($this->forceRetry || empty($generatedModel)) && $nbTry --) {
                 $generatedModel = $this->doGeneration();
                 $model = \array_merge($model, $generatedModel);
+                $nb = \count($model);
+                echo "solutions: $nb\n";
             }
         } else
             echo "(Skipped)\n";
@@ -183,7 +187,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         }
         // must be after writeGeneticModelFile that uniquify solutions
         $nb = \count($model);
-        echo "solutions: $nb\n";
+        echo "total solutions: $nb\n";
     }
 
     private static function cmpResult($a, $b): int
@@ -400,7 +404,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     {
         $one[self::i_qdistance] = $this->getDistances($one['o']);
         $one[self::i_distance] = $this->getDistance($one[self::i_qdistance]);
-//         $one["#nb"] = $this->getDistances($one['o'], true);
+        // $one["#nb"] = $this->getDistances($one['o'], true);
     }
 
     private function sortPopulation(array &$population): void
@@ -462,10 +466,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
             $nb = 1;
 
             foreach ($labels as $label => $freq) {
-                $n = $one[$label];
-
-                if ($n > 1)
-                    $nb *= $one[$label] * $freq;
+                $nb *= $one[$label] ** $freq;
             }
             if ($onlyNbRefs) {
                 $v = $nb;

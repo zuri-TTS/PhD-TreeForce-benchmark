@@ -7,14 +7,14 @@
 'q_person_1'=?x? --> 'person'=?x?
 'q_person_0'=?x? --> 'person'=?x?
 
-#closed_auction 6
+#listitem 6
 
-'q_closed_auction_5'=?x? --> 'closed_auction'=?x?
-'q_closed_auction_4'=?x? --> 'closed_auction'=?x?
-'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
-'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
-'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
-'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+'q_listitem_5'=?x? --> 'listitem'=?x?
+'q_listitem_4'=?x? --> 'listitem'=?x?
+'q_listitem_3'=?x? --> 'listitem'=?x?
+'q_listitem_2'=?x? --> 'listitem'=?x?
+'q_listitem_1'=?x? --> 'listitem'=?x?
+'q_listitem_0'=?x? --> 'listitem'=?x?
 
 #mailbox 6
 

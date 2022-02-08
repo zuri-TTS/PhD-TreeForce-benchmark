@@ -4,13 +4,10 @@
 #person 0
 
 
-#closed_auctions 0
+#description 0
 
 
-#annotation 0
-
-
-#africa 0
+#listitem 0
 
 
 #mail 0
