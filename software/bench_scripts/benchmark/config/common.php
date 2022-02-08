@@ -25,7 +25,7 @@ return [
         'querying.mode' => 'explain',
         'inhibitBatchStreamTime' => 'y',
         'querying.display.answers' => 'n',
-        'querying.output.pattern' => '${output.path}/${query.name}_%s.txt',
+        'output.pattern' => '${output.path}/${query.name}_%s.txt',
         'query' => '${queries.dir}/${query.name}',
         'querying.config.print' => 'y',
         'toNative.dots' => 'n',
