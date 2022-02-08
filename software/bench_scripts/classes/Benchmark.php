@@ -360,13 +360,18 @@ final class Benchmark
         return $config['bench.measures'][$queryFile] ?? $config['bench.measures']['default'];
     }
 
-    private function executeMeasures(string $queryFile)
+    private function executeMeasures(string $queryFile, ?int $forceNbMeasures = null)
     {
         $config = $this->config;
         $cold = $config['bench.cold'];
         $measures = [];
-        $confMeasure = $this->getMeasuresConfig($queryFile);
-        $nbMeasures = (int) $confMeasure['nb'];
+
+        if (isset($forceNbMeasures)) {
+            $nbMeasures = $totalMeasures = 1;
+        } else {
+            $confMeasure = $this->getMeasuresConfig($queryFile);
+            $nbMeasures = $totalMeasures = $confMeasure['nb'];
+        }
 
         $incVars = $this->prepareIncVars($queryFile);
 
@@ -378,7 +383,7 @@ final class Benchmark
             // if ($nbMeasures === 0)
             // $incVars['querying_config_print'] = 'y';
 
-            echo $confMeasure['nb'] - $nbMeasures, "/", $confMeasure['nb'], "\n";
+            echo $totalMeasures - $nbMeasures, "/", $totalMeasures, "\n";
 
             $proc = \proc_open($this->cmd, $this->descriptors, $pipes);
             \fwrite($pipes[0], $this->writeJavaProperties($incVars));
@@ -415,7 +420,7 @@ final class Benchmark
             \fputs(STDERR, "Return code: $cmdReturn\n");
     }
 
-    public function doTheBenchmark()
+    public function doTheBenchmark(?int $forceNbMeasures = null)
     {
         $this->createOutputDir();
         $queryFiles = $this->getFiles();
@@ -431,7 +436,7 @@ final class Benchmark
             echo "$query\n\n";
 
             $queryFile = $query;
-            $measures = $this->executeMeasures($query);
+            $measures = $this->executeMeasures($query, $forceNbMeasures);
 
             $this->writeCSV($query, $measures);
         }

@@ -29,14 +29,18 @@ while (! empty($argv)) {
     $cmdParsed = \parseArgvShift($argv, ';') + $cmdArgsDef;
     $dataSets = \array_filter($cmdParsed, 'is_int', ARRAY_FILTER_USE_KEY);
     $summarize = false;
+    $forceNbMeasures = null;
 
     if (\in_array($cmdParsed['cmd'], [
         'summarize',
-        'each',
         'config'
     ])) {
         $cmdParsed['doonce'] = true;
         $summarize = $cmdParsed['cmd'] === 'summarize';
+    } elseif (\in_array($cmdParsed['cmd'], [
+        'generate'
+    ])) {
+        $forceNbMeasures = 1;
     }
 
     if (\count($dataSets) == 0) {
@@ -88,7 +92,7 @@ while (! empty($argv)) {
                 if ($cmdParsed['doonce'])
                     $bench->executeOnce();
                 else
-                    $bench->doTheBenchmark();
+                    $bench->doTheBenchmark($forceNbMeasures);
             } catch (\Exception $e) {
                 fwrite(STDERR, "<{$dataSet->getTheId()}>Exception:\n {$e->getMessage()}\n");
             }
