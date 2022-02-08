@@ -1,4 +1,11 @@
 <?php
+if (! function_exists('array_is_list')) {
+
+    function array_is_list(array $array)
+    {
+        return \array_keys($array) === \range(0, \count($array) - 1);
+    }
+}
 
 function scandirNoPoints(string $path)
 {
@@ -28,29 +35,42 @@ function parseArgvShift(array &$argv, string $endArg = ''): array
         if ($arg[0] === '+' || $arg[0] === '-') {
             $sign = $arg[0];
             $arg = \substr($arg, 1);
+            list ($name, $val) = parseArgKeyValue($argv, $arg);
 
-            if (false === strpos($arg, '='))
-                $ret[$arg] = ($sign === '+');
-            else {
-                list ($name, $val) = explode('=', $arg, 2);
-                $ret[$name] = $val;
+            if (\is_int($name)) {
+                $name = $val;
+                $val = ($sign === '+');
             }
-        } else if (false === strpos($arg, '=')) {
-
-            if ($arg === $endArg)
-                break;
-
-            $ret[] = $arg;
         } else {
-            list ($name, $val) = explode('=', $arg, 2);
-
-            if ($name[0] === '+' || $name[0] === '-')
-                $name = \substr($name, 1);
-
-            $ret[$name] = $val;
+            list ($name, $val) = parseArgKeyValue($argv, $arg);
         }
+
+        if (\is_int($name))
+            $ret[] = $val;
+        else
+            $ret[$name] = $val;
     }
     return $ret;
+}
+
+function parseArgKeyValue(array &$argv, string $currentArg): array
+{
+    if (false !== \strpos($currentArg, '=')) {
+        list ($name, $val) = \explode('=', $currentArg, 2);
+        return [
+            $name,
+            $val
+        ];
+    } elseif ($currentArg[\strlen($currentArg) - 1] === ':') {
+        return [
+            \substr($currentArg, 0, - 1),
+            \array_shift($argv)
+        ];
+    } else
+        return [
+            0,
+            $currentArg
+        ];
 }
 
 function argPrefixed(array $args, string $prefix)
@@ -85,6 +105,67 @@ function argShift(array &$args, string $key, $default = null)
         unset($args[$keys[0]]);
     }
     return $v;
+}
+
+function array_filter_shift(array &$array, ?callable $filter = null, int $mode): array
+{
+    $drop = [];
+    $ret = [];
+
+    if ($mode === 0)
+        $fmakeParams = fn ($k, $v) => (array) $v;
+    elseif ($mode === ARRAY_FILTER_USE_KEY)
+        $fmakeParams = fn ($k, $v) => (array) $k;
+    elseif ($mode === ARRAY_FILTER_USE_BOTH)
+        $fmakeParams = fn ($k, $v) => [
+            $k,
+            $v
+        ];
+    else
+        throw new \Exception("Invalid mode $mode");
+
+    foreach ($array as $k => $v) {
+        $valid = $filter(...$fmakeParams($k, $v));
+
+        if ($valid) {
+            $drop[] = $k;
+            $ret[$k] = $v;
+        }
+    }
+    foreach ($drop as $d)
+        unset($array[$d]);
+
+    return $ret;
+}
+
+function updateArray(array $args, array &$array, ?callable $onUnexists = null, ?callable $mapKey = null)
+{
+    if (null === $mapKey)
+        $mapKey = fn ($k) => \is_int($k) ? $k : \str_replace('.', '_', $k);
+
+    foreach ($args as $k => $v) {
+        $k = $mapKey($k);
+
+        if (! \array_key_exists($k, $array)) {
+
+            if ($onUnexists === null)
+                throw new \Exception("The key '$key' does not exists in the array: " . implode(',', \array_kets($array)));
+            else
+                $onUnexists($array, $k, $v);
+        } else
+            $array[$k] = $v;
+    }
+}
+
+function updateArray_getRemains(array $args, array &$array, ?callable $mapKey = null): array
+{
+    $remains = [];
+    $fstore = function ($array, $k, $v) use (&$remains): void {
+        $remains[$k] = $v;
+    };
+
+    updateArray($args, $array, $fstore, $mapKey);
+    return $remains;
 }
 
 function updateObject(array $args, object &$obj)

@@ -11,25 +11,35 @@ if (empty($argv)) {
 }
 
 $cmdArgsDef = [
-    // 'data' => null,
-    // 'rules' => null,
     'summary' => "key",
     'native' => '',
     'cmd' => 'querying',
     'doonce' => false,
     'cold' => false,
     'output' => null,
-    'skip.existing' => true
+    'skip_existing' => true
 ];
 
 if (empty($argv))
     $argv[] = ";";
 
 while (! empty($argv)) {
-    $cmdParsed = \parseArgvShift($argv, ';') + $cmdArgsDef;
-    $dataSets = \array_filter($cmdParsed, 'is_int', ARRAY_FILTER_USE_KEY);
+    $cmdParsed = $cmdArgsDef;
+    $cmdRemains = updateArray_getRemains(\parseArgvShift($argv, ';'), $cmdParsed);
+
+    $dataSets = \array_filter_shift($cmdRemains, 'is_int', ARRAY_FILTER_USE_KEY);
     $summarize = false;
     $forceNbMeasures = null;
+
+    $javaProperties = \array_filter_shift($cmdRemains, fn ($k) => ($k[0] ?? '') === 'P', ARRAY_FILTER_USE_KEY);
+
+    if (! empty($cmdRemains)) {
+        $usage = "\nValid cli arguments are:\n" . \var_export($cmdParsed, true) . //
+        "\nor a Java property of the form P#prop=#val\n";
+        fwrite(STDERR, "Unknown cli argument(s):\n" . \var_export($cmdRemains, true) . $usage);
+        exit(1);
+    }
+    $cmdParsed += $javaProperties;
 
     if (\in_array($cmdParsed['cmd'], [
         'summarize',
@@ -71,7 +81,7 @@ while (! empty($argv)) {
                 continue;
             }
 
-            if ($cmdParsed['skip.existing']) {
+            if ($cmdParsed['skip_existing']) {
 
                 if ($summarize) {
                     $path = $config['java.properties']['summary'];
