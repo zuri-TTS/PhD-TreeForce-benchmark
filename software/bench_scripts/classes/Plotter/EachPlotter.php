@@ -75,6 +75,7 @@ final class EachPlotter implements IPlotter
             $r = max(0, $measure['r']);
             $c = max(0, $measure['c']);
             $realRemain = max(0, $r - $c);
+            $group = $this->plot->gnuplotSpecialChars($group);
             echo "\"$group\" $r $c\n";
         }
     }

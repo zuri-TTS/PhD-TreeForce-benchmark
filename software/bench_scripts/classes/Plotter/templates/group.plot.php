@@ -23,7 +23,7 @@ $blocGroup = [
 
 foreach ($PLOTTER->getCSVPaths() as $path) {
     $data = $PLOT->getData()[$path];
-    $fileName = Plot::plotterFileName($PLOTTER, $path);
+    $fileName = \basename($path,'.csv');
     $bloc = &$blocs[];
     $bloc[] = [
         "<$fileName>"
@@ -91,8 +91,8 @@ foreach ($PLOTTER->getCSVPaths() as $f) {
     $title = $PLOT->gnuplotSpecialChars($fname);
     
     $tmp[] = <<<EOD
-    '$fname.dat' u 2:xtic(1) title '$title real' ls $ls fs pattern 0 \\
-    ,'' u 3 title '$title cpu' fs pattern 3 ls $ls \\\n
+    '$fname.dat' u 2:xtic(1) title "$title real" ls $ls fs pattern 0 \\
+    ,'' u 3 title "$title cpu" fs pattern 3 ls $ls \\\n
     EOD;
     $ls ++;
 }
