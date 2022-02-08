@@ -1,12 +1,8 @@
 <?php
 $basePath = getBenchmarkBasePath();
 
-$measuresNb = 5;
-$measuresForget = 1;
-
-$measuresNb = 1;
+$measuresNb = 3;
 $measuresForget = 0;
-// $batchSize = 1;
 
 $time = \date(DATE_ATOM);
 $outDir = $time;
@@ -41,14 +37,14 @@ return [
             // We delete this number of measure from the start and the end of the sorted array of measures
             'forget' => $measuresForget
         ],
-        '100000' => [
-            'nb' => min(3, $measuresNb),
-            'forget' => 0
-        ],
-        '1000000' => [
-            'nb' => 1,
-            'forget' => 0
-        ]
+//         '100000' => [
+//             'nb' => min(3, $measuresNb),
+//             'forget' => 0
+//         ],
+//         '1000000' => [
+//             'nb' => 1,
+//             'forget' => 0
+//         ]
     ],
     'bench.cold.function' => function () {
         system('sudo service mongodb stop');
