@@ -53,8 +53,8 @@ return [
     },
     'bench.output.base.path' => "$basePath/outputs",
     'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, array $javaProperties): string {
-        $group = $dataSet->getGroup();
-        $theRules = $dataSet->getTheRules();
+        $group = $dataSet->group();
+        $theRules = $dataSet->rules();
         $qualifiers = $dataSet->qualifiersString();
 
         $cmd = $cmdArg['cmd'];

@@ -3,31 +3,23 @@
 final class DataSet
 {
 
-    private const ruleDir = 'rules';
-
-    private const dataSetDir = 'datasets';
-
-    private const groupsBasePath = 'benchmark/data';
-
-    private string $benchmarkBasePath;
-
     private string $group;
 
-    private ?array $rules;
-
-    private string $theRules;
+    private string $rules;
 
     private array $qualifiers = [];
 
     // ========================================================================
-    public function __construct(string $id)
+    private function __construct()
+    {}
+
+    public static function create(string $group, string $rules, array $qualifiers): DataSet
     {
-        $this->benchmarkBasePath = getBenchmarkBasePath();
-        list ($group, $rules, $qualifiers) = self::parseDataSetId($id);
-        $this->theRules = '';
-        $this->setGroup($group);
-        $this->setRules($rules);
-        $this->setQualifiers($qualifiers);
+        $ret = new DataSet();
+        $ret->group = $group;
+        $ret->rules = $rules;
+        $ret->qualifiers = $qualifiers;
+        return $ret;
     }
 
     public static function getAll(): array
@@ -41,68 +33,30 @@ final class DataSet
         return $ret;
     }
 
-    public function getGroup(): string
+    // ========================================================================
+    public function id(): string
+    {
+        return DataSets::idOf($this);
+    }
+
+    public function group(): string
     {
         return $this->group;
     }
 
-    public function getRules(): array
+    public function rules(): string
     {
-        return $this->rules ?? $this->getAllRules();
+        return $this->rules;
     }
 
-    public function getTheRules(): string
-    {
-        return $this->theRules;
-    }
-
-    public function getQualifiers(): array
+    public function qualifiers(): array
     {
         return $this->qualifiers;
     }
 
-    public function setGroup(string $group): DataSet
+    public function qualifiersString(): string
     {
-        $this->group = $group;
-        return $this;
-    }
-
-    public function setRulesArray(array $rules): DataSet
-    {
-        $thus->rules = [];
-
-        foreach ($rules as $r)
-            $this->rules[] = $this->parseRules($r);
-
-        return $this;
-    }
-
-    public function setTheRules(string $theRules): DataSet
-    {
-        if (! \in_array($theRules, $this->rules))
-            throw new \Exception("The rules $theRules must be an item of: " . implode(',', $this->rules));
-
-        $this->theRules = $theRules;
-        return $this;
-    }
-
-    public function setRules($rules): DataSet
-    {
-        $this->rules = $this->parseRules($rules);
-
-        if (empty($this->rules))
-            $this->theRules = '';
-        elseif (! \in_array($this->theRules, $this->rules))
-            $this->theRules = $rules[0] ?? '';
-
-        return $this;
-    }
-
-    public function setQualifiers(array $qualifiers): DataSet
-    {
-        $this->qualifiers = $qualifiers;
-        \sort($this->qualifiers);
-        return $this;
+        return DataSets::getQualifiersString($this->qualifiers());
     }
 
     public function isSimplified(): bool
@@ -110,209 +64,43 @@ final class DataSet
         return \array_intersect([
             'simplified',
             'simplified.all'
-        ], $this->getQualifiers()) !== [];
+        ], $this->qualifiers()) !== [];
+    }
+
+    public function exists(): bool
+    {
+        return DataSets::exists($this);
     }
 
     // ========================================================================
-    private function parseRules($rules): array
-    {
-        if (null === $rules)
-            $rules = $this->getAllRules();
-        elseif (is_array($rules))
-            $rules = $rules;
-        else
-            $rules = [
-                (string) $rules
-            ];
-        return $rules;
-    }
-
-    private function rulesArg(?string $rules = null): ?string
-    {
-        return $rules ?? $this->theRules ?? $this->rules[0] ?? null;
-    }
-
-    // ========================================================================
-    public function rulesBasePath(): string
-    {
-        return self::getRulesBasePath($this->group);
-    }
-
     public function groupPath(): string
     {
-        return self::_groupPath($this->group);
+        return DataSets::getGroupPath($this->group);
+    }
+
+    public function rulesBasePath(): string
+    {
+        return DataSets::getRulesBasePath($this->group);
     }
 
     public function rulesPath(): string
     {
-        return self::getRulesBasePath($this->group);
+        return DataSets::getRulesPath($this->group, $this->rules);
     }
 
-    public function theRulesPath(): string
+    public function rulesFilesPath(): array
     {
-        return self::_theRulesPath($this->group, $this->theRules);
+        return wdOp($this->rulesPath(), fn () => \glob("*.txt"));
     }
 
-    public function theRulesFiles(bool $addPath = false): array
+    public function path(): string
     {
-        $path = $this->theRulesPath();
-        $files = scandirNoPoints($path);
-
-        if ($addPath)
-            return \array_map(fn ($f) => "$path/$f");
-
-        return $files;
-    }
-
-    public function dataSetPath(): string
-    {
-        return self::_dataSetPath($this->group, $this->theRules, $this->qualifiers);
-    }
-
-    public function getTheId(): string
-    {
-        return self::_getTheId($this->group, $this->theRules, $this->qualifiers);
-    }
-
-    public function getId(): string
-    {
-        return self::_getId($this->group, $this->rules, $this->qualifiers);
-    }
-
-    public function qualifiersString(): string
-    {
-        return self::getQualifiersString($this->qualifiers);
+        return DataSets::pathOf($this);
     }
 
     // ========================================================================
-    public function allNotExists(bool $onlyRules = false): array
+    public function __toString(): string
     {
-        return self::getAllNotExists($this->group, $this->rules, $this->qualifiers, ! $onlyRules);
-    }
-
-    public static function getAllNotExists(string $group, array $rules, array $qualifiers = [], bool $checkDataSet = true): array
-    {
-        $ret = [];
-
-        if ($rules === null)
-            return [];
-
-        foreach ($rules as $theRules) {
-            if (! self::_exists($group, $theRules, $qualifiers, $checkDataSet))
-                $ret[] = self::_getTheId($group, $theRules, $qualifiers);
-        }
-        return $ret;
-    }
-
-    // ========================================================================
-    public static function getAllGroups(): array
-    {
-        $ret = \scandirNoPoints(self::getGroupsBasePath());
-        return \array_filter($ret, fn ($g) => $g[0] !== "#");
-    }
-
-    public function getAllRules(?string $group = null): array
-    {
-        $group = $group ?? $this->group;
-        $rules = \scandirNoPoints($this->rulesBasePath($group));
-        return $rules;
-    }
-
-    // ========================================================================
-    public static function getGroupsBasePath(): string
-    {
-        return getBenchmarkBasePath() . '/' . self::groupsBasePath;
-    }
-
-    public static function getRulesBasePath(string $group): string
-    {
-        return self::_groupPath($group) . '/' . self::ruleDir;
-    }
-
-    public static function getDataSetsBasePath(string $group): string
-    {
-        return self::_groupPath($group) . '/' . self::dataSetDir;
-    }
-
-    private static function parseDataSetId(string $id): array
-    {
-        preg_match("#^([^/]*)(?:/([^\[]*))?(?:\[(.*)\])?$#", $id, $matches);
-        list (, $group, $rules, $qualifiers) = $matches + \array_fill(0, 4, '');
-
-        return [
-            $group,
-            empty($rules) ? null : explode(',', $rules),
-            empty($qualifiers) ? [] : explode(',', $qualifiers)
-        ];
-    }
-
-    private static function getQualifiersString(array $qualifiers): string
-    {
-        if (empty($qualifiers))
-            return '';
-
-        $s = implode(',', $qualifiers);
-        return "[$s]";
-    }
-
-    // ========================================================================
-    private static function _groupPath(string $group): string
-    {
-        $base = self::getGroupsBasePath();
-        return "$base/$group";
-    }
-
-    private static function _theRulesPath(string $group, string $theRules): string
-    {
-        return self::getRulesBasePath($group) . "/$theRules";
-    }
-
-    private static function _dataSetPath(string $group, string $theRules, array $qualifiers): string
-    {
-        $q = self::getQualifiersString($qualifiers);
-        return self::getDataSetsBasePath($group) . "/$theRules$q";
-    }
-
-    private static function _getTheId(string $group, string $theRules, array $qualifiers): string
-    {
-        $q = self::getQualifiersString($qualifiers);
-
-        if (! empty($theRules))
-            return "$group/$theRules$q";
-
-        return "$group$q";
-    }
-
-    private static function _getId(string $group, array $rules, array $qualifiers): string
-    {
-        return self::_getTheId($group, implode(',', $rules), $qualifiers);
-    }
-
-    private static function _exists(string $group, string $theRules, array $qualifiers, bool $checkDataSet = true): bool
-    {
-        if (empty($group) && empty($theRules))
-            return true;
-        if (empty($theRules))
-            return self::_groupExists($group);
-        if (empty($group))
-            return false;
-
-        return self::_theRulesExists($group, $theRules) && //
-        (! $checkDataSet || self::_theDataSetExists($group, $theRules, $qualifiers));
-    }
-
-    private static function _groupExists(string $group): bool
-    {
-        return \is_dir(self::_groupPath($group));
-    }
-
-    private static function _theRulesExists(string $group, string $theRules): bool
-    {
-        return \is_dir(self::_theRulesPath($group, $theRules));
-    }
-
-    private static function _theDataSetExists(string $group, string $theRules, array $qualifiers): bool
-    {
-        return \is_dir(self::_dataSetPath($group, $theRules, $qualifiers));
+        return $this->id();
     }
 }

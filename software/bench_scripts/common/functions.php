@@ -7,6 +7,15 @@ if (! function_exists('array_is_list')) {
     }
 }
 
+function wdOp(string $workingDir, callable $exec)
+{
+    $wd = \getcwd();
+    \chdir($workingDir);
+    $ret = $exec();
+    \chdir($wd);
+    return $ret;
+}
+
 function scandirNoPoints(string $path)
 {
     $ret = \array_filter(\scandir($path), fn ($f) => $f[0] !== '.');
@@ -32,6 +41,8 @@ function parseArgvShift(array &$argv, string $endArg = ''): array
     $ret = [];
     while (null !== ($arg = \array_shift($argv))) {
 
+        if ($arg === $endArg)
+            break;
         if ($arg[0] === '+' || $arg[0] === '-') {
             $sign = $arg[0];
             $arg = \substr($arg, 1);
@@ -105,6 +116,16 @@ function argShift(array &$args, string $key, $default = null)
         unset($args[$keys[0]]);
     }
     return $v;
+}
+
+function array_partition(array $array, callable $filter): array
+{
+    $a = \array_filter($array, $filter);
+    $b = \array_diff_key($array, $a);
+    return [
+        $a,
+        $b
+    ];
 }
 
 function array_filter_shift(array &$array, ?callable $filter = null, int $mode): array
@@ -237,19 +258,4 @@ function getQueries(bool $getPath = true): array
     if ($getPath)
         return \array_map(fn ($f) => "$path/$f", $ret);
     return $ret;
-}
-
-function checkDataSetExists(DataSet $dataSet, bool $qualified = true, bool $onlyRules = false): void
-{
-    if (! $qualified) {
-        $q = $dataSet->getQualifiers();
-        $dataSet->setQualifiers([]);
-    }
-    if (! empty($error = $dataSet->allNotExists($onlyRules))) {
-        $error = implode(",\n", $error);
-        throw new \Exception("DataSet '$error' does not exists");
-    }
-
-    if (! $qualified)
-        $dataSet->setQualifiers($q);
 }

@@ -17,11 +17,8 @@ final class MongoImport
 
     public static function dropDatabase(DataSet $dataSet): void
     {
-        foreach ($dataSet->getRules() as $rulesDir) {
-            $dataSet->setTheRules($rulesDir);
-            $collectionName = self::getCollectionName($dataSet);
-            self::_dropDatabase($collectionName);
-        }
+        $collectionName = self::getCollectionName($dataSet);
+        self::_dropDatabase($collectionName);
     }
 
     private static function _dropDatabase(string $collectionName): void
@@ -51,38 +48,37 @@ final class MongoImport
 
     public static function importDataSet(DataSet $dataSet, bool $forceImport = false): void
     {
-        checkDataSetExists($dataSet);
-        echo "\nImporting {$dataSet->getId()}\n";
+        DataSets::checkNotExists([
+            $dataSet
+        ]);
+        echo "\nImporting $dataSet\n";
 
-        foreach ($dataSet->getRules() as $rulesDir) {
-            $dataSet->setTheRules($rulesDir);
-            $collectionName = self::getCollectionName($dataSet);
+        $collectionName = self::getCollectionName($dataSet);
 
-            if (self::collectionExists($collectionName)) {
-                echo "$collectionName exists\n";
-                continue;
-            }
-            $path = $dataSet->dataSetPath();
-            echo "CD $path\n";
-            \chdir($path);
+        if (self::collectionExists($collectionName)) {
+            echo "$collectionName exists\n";
+            return;
+        }
+        $path = $dataSet->path();
+        echo "CD $path\n";
+        \chdir($path);
 
-            self::_dropDatabase($collectionName);
+        self::_dropDatabase($collectionName);
 
-            $jsonFiles = \glob("*.json");
+        $jsonFiles = \glob("*.json");
 
-            if (empty($jsonFiles)) {
-                echo "!!$collectionName: no json files to load!!\n";
-                continue;
-            }
-            foreach ($jsonFiles as $json) {
-                echo "Importing $json\n";
-                echo \shell_exec("cat '$json' | mongoimport -d treeforce -c '$collectionName'");
-            }
+        if (empty($jsonFiles)) {
+            fwrite(STDERR, "!!$collectionName: no json files to load!!\n");
+            return;
+        }
+        foreach ($jsonFiles as $json) {
+            echo "Importing $json\n";
+            echo \shell_exec("cat '$json' | mongoimport -d treeforce -c '$collectionName'");
         }
     }
 
     public static function getCollectionName(DataSet $dataSet)
     {
-        return \str_replace('/', '_', $dataSet->getTheId());
+        return \str_replace('/', '_', $dataSet->id());
     }
 }

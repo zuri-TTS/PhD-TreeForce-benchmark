@@ -29,7 +29,7 @@ if (! function_exists('replaceJsonData')) {
     }
 }
 
-return function (string $ruleModel, XMark2Json $converter): callable {
+return function (DataSet $dataSet, XMark2Json $converter): callable {
     // We define an internal pseudo number generator to permit to generate an identical set of data for different persons.
     $pseudoGenerator = new class($converter->getSeed()) implements \Iterator {
 
@@ -75,7 +75,7 @@ return function (string $ruleModel, XMark2Json $converter): callable {
             return true;
         }
     };
-    $replacements = $converter->getRelabellings($ruleModel);
+    $replacements = $converter->getRelabellings($dataSet);
 
     return function (array $data) use ($replacements, $pseudoGenerator) {
         return replaceJsonData($data, $replacements, $pseudoGenerator);

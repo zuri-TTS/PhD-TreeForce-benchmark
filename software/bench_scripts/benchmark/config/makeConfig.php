@@ -18,9 +18,9 @@ function selectJavaProperties(array $cmdArg)
 
 function makeConfig(DataSet $dataSet, array $cmdArg) //
 {
-    $group = $dataSet->getGroup();
-    $rules = $dataSet->getTheRules();
-    $dataSetPath = $dataSet->dataSetPath();
+    $group = $dataSet->group();
+    $rules = $dataSet->rules();
+    $dataSetPath = $dataSet->path();
 
     $cmd = $cmdArg['cmd'];
     $cold = $cmdArg['cold'];
@@ -80,7 +80,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
 
     if ($hasRules)
         $ret['java.properties'] = array_merge($ret['java.properties'], [
-            'rules' => $dataSet->theRulesPath()
+            'rules' => $dataSet->rulesPath()
         ]);
     return $ret;
 }

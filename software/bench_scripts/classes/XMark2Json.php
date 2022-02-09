@@ -1,9 +1,13 @@
 <?php
 
-class XMark2Json
+final class XMark2Json
 {
 
-    private DataSet $dataSet;
+    private string $group;
+
+    private string $groupPath;
+
+    private array $dataSets;
 
     private array $config;
 
@@ -17,21 +21,28 @@ class XMark2Json
 
     private array $filesData;
 
-    private bool $simplifyObject = false;
+    private array $dataSets_exists;
 
     private array $doNotSimplify;
 
     private string $myBaseDir;
 
-    public function __construct(DataSet $dataSet, array $cmdConfig)
+    public function __construct(array $dataSets, array $cmdConfig)
     {
-        checkDataSetExists($dataSet, false, true);
+        $groups = [];
 
-        $basePath = getBenchmarkBasePath();
-        $dataSetPath = $dataSet->groupPath();
-        $configPath = "$dataSetPath/config.php";
-        $this->dataSet = $dataSet;
-        $this->myBaseDir = getBenchmarkBasePath() . '/software/bench_scripts/xmark_to_json';
+        foreach ($dataSets as $dataSet)
+            $groups[$group = $dataSet->group()] = null;
+
+        if (\count($groups) > 1)
+            throw new \Exception("Multiple groups given: " . \implode(',', $groups));
+
+        $basePath = \getBenchmarkBasePath();
+        $this->group = $group;
+        $this->groupPath = DataSets::getGroupPath($group);
+        $configPath = "$this->groupPath/config.php";
+        $this->dataSets = $dataSets;
+        $this->myBaseDir = \getBenchmarkBasePath() . '/software/bench_scripts/xmark_to_json';
         $this->config = include $configPath;
         $this->unwind = include "$this->myBaseDir/unwind.php";
         $this->cmdConfig = $cmdConfig;
@@ -47,34 +58,47 @@ class XMark2Json
         return $this->dataSet;
     }
 
-    public function simplifyObject($simplify = true, array $doNotSimplify): XMark2Json
+    public function doNotSimplify(array $doNotSimplify): XMark2Json
     {
-        $this->simplifyObject = $simplify;
         $this->doNotSimplify = $doNotSimplify;
         return $this;
     }
 
+    private function prepareDir(DataSet $dataSet)
+    {
+        $dataSetOutPath = $dataSet->path();
+
+        if (! \is_dir($dataSetOutPath)) {
+            \mkdir($dataSetOutPath, 0777, true);
+        }
+    }
+
     private function setPostProcesses()
     {
-        $this->_prepareDir();
-        $rules = $this->dataSet->getRules();
-        $this->filesData = [];
+        $rules = \array_map(fn ($d) => $d->rules(), $this->dataSets);
 
-        $this->filesData += \array_combine( //
-        $rules, //
-        \array_map(function ($d) {
-            $dataSet = (clone $this->dataSet)->setTheRules($d);
-            $theRulesFiles = $dataSet->theRulesFiles();
+        $filesData = \array_map(function ($dataSet) {
+            $this->prepareDir($dataSet);
+            $path = $dataSet->path();
+
+            $rulesFiles = $dataSet->rulesFilesPath();
+            $exists = \is_file("$path/end.json");
+
+            if ($exists)
+                return $dataSet;
 
             return [
-                'randomize' => empty($theRulesFiles) ? fn ($data) => $data : (include "$this->myBaseDir/json_postprocess-random_keys.php")($d, $this),
-                'path' => $dataSet->dataSetPath()
+                'randomize' => empty($rulesFiles) ? fn ($data) => $data : (include "$this->myBaseDir/json_postprocess-random_keys.php")($dataSet, $this),
+                'simplify' => $dataSet->isSimplified(),
+                'path' => $path,
+                'dataset' => $dataSet
             ];
-        }, $rules) //
-        );
-        $this->filesData = \array_filter($this->filesData, fn ($f) => ! \is_file("{$f['path']}/end.json"));
+        }, $this->dataSets);
+
+        list ($this->filesData, $this->dataSets_exists) = \array_partition($filesData, '\is_array');
 
         foreach ($this->filesData as $f) {
+
             if (! \is_dir($f['path']))
                 \mkdir($f['path']);
         }
@@ -82,24 +106,25 @@ class XMark2Json
 
     public function convert()
     {
+        echo "Processing group $this->group\n";
         $this->setPostProcesses();
 
-        if (! empty($this->filesData))
-            $this->_convertGroup();
-    }
+        if (! empty($this->dataSets_exists)) {
+            echo "These has already been generated:\n";
 
-    private function getAllDataSets()
-    {
-        $dataSets = \scandirNoPoints("$this->dataSetPath/rules");
-        $dataSets[] = 'original';
-        return $dataSets;
-    }
+            foreach ($this->dataSets_exists as $dataSet)
+                echo "$dataSet\n";
+        }
 
-    private function _convertGroup()
-    {
-        echo "Processing dataset {$this->dataSet->getId()}\n";
+        if (empty($this->filesData))
+            return;
 
-        $xmarkFilePath = "{$this->dataSet->groupPath()}/xmark.xml";
+        echo "Generating for:\n";
+
+        foreach ($this->filesData as $f)
+            echo "{$f['dataset']}\n";
+
+        $xmarkFilePath = "$this->groupPath/xmark.xml";
         $this->generateXMark($xmarkFilePath);
         $this->read(\XMLReader::open($xmarkFilePath));
 
@@ -121,54 +146,28 @@ class XMark2Json
         \system($cmd);
     }
 
-    public function delete($dataSets = null)
-    {
-        $rules = $this->dataSet->getRules();
-
-        foreach ($rules as $theRules) {
-            $this->dataSet->setTheRules($theRules);
-            $this->_clean();
-            @rmdir($this->dataSet->dataSetPath());
-        }
-        $this->dataSet->setRules($rules);
-    }
-
     public function clean()
     {
-        $rules = $this->dataSet->getRules();
-
-        foreach ($rules as $theRules) {
-            $this->dataSet->setTheRules($theRules);
-            $this->_clean();
-        }
-        $this->dataSet->setRules($rules);
-    }
-
-    private function _prepareDir()
-    {
-        $dataSetOutPath = $this->dataSet->dataSetPath();
-
-        if (! \is_dir($dataSetOutPath)) {
-            \mkdir($dataSetOutPath, 0777, true);
+        foreach ($this->dataSets as $dataSet) {
+            echo "Cleaning <$dataSet>\n";
+            self::cleanDataSet($dataSet);
         }
     }
 
-    private function _clean()
+    private static function cleanDataSet(DataSet $dataSet)
     {
-        $wd = \getcwd();
-        $dataSetId = $this->dataSet->getTheId();
-        echo "Cleaning $dataSetId\n";
-
-        $dataSetOutPath = $this->dataSet->dataSetPath();
+        $dataSetOutPath = $dataSet->path();
 
         if (\is_dir($dataSetOutPath)) {
-            \chdir($dataSetOutPath);
-
-            foreach (\glob("*.json") as $f) {
-                \is_file($f) && unlink($f);
-            }
+            $files = \wdOp($dataSetOutPath, fn () => self::cleanJsonFiles());
         }
-        \chdir($wd);
+    }
+
+    private static function cleanJsonFiles()
+    {
+        foreach (\glob("*.json") as $f) {
+            \is_file($f) && \unlink($f);
+        }
     }
 
     private function reachUnwind(string $path): ?string
@@ -186,7 +185,6 @@ class XMark2Json
     {
         $path = &$this->path;
         $path = [];
-        $outputPath = $this->dataSet->rulesPath();
         $rules = \array_keys($this->filesData);
 
         while ($reader->read()) {
@@ -226,7 +224,7 @@ class XMark2Json
     private function unwind(XMLReader $reader, array $unwind)
     {
         $path = &$this->path;
-        $keyPattern = $unwind[count($path)];
+        $keyPattern = $unwind[\count($path)];
 
         if ('$' === $keyPattern)
             $this->unwindUndefined($reader, $unwind);
@@ -280,12 +278,14 @@ class XMark2Json
     {
         $data = self::array_path($this->path, [
             $reader->name => [
-                self::toPHP(simplexml_load_string($reader->readOuterXml()))
+                self::toPHP(\simplexml_load_string($reader->readOuterXml()))
             ]
         ]);
 
-        foreach ($this->files as $d => $file)
-            $file->fwrite($this->toJsonString($data, $this->filesData[$d]['randomize']) . "\n");
+        foreach ($this->files as $d => $file) {
+            $fileData = $this->filesData[$d];
+            $file->fwrite($this->toJsonString($data, $fileData['simplify'], $fileData['randomize']) . "\n");
+        }
     }
 
     // ========================================================================
@@ -319,20 +319,18 @@ class XMark2Json
         return $ret;
     }
 
-    public function getRelabellings(string $theRules)
+    public function getRelabellings(DataSet $dataSet)
     {
-        $dataSet = clone $this->dataSet;
-        $dataSet->setTheRules($theRules);
-        $rulesPath = $dataSet->theRulesPath();
-        $rules = "$rulesPath/querying.txt";
+        $rulesPath = $dataSet->rulesPath();
+        $rulesFilePath = "$rulesPath/querying.txt";
 
-        if (! is_dir($rulesPath)) {
-            echo "Warning: rule file $rules does not exists (for {$dataSet->getTheId()})\n";
+        if (! \is_dir($rulesPath)) {
+            echo "Warning: rule file $rulesFilePath does not exists (for $dataSet)\n";
             $rel = [];
-        } else if (! is_file($rules)) {
+        } else if (! \is_file($rulesFilePath)) {
             $rel = [];
         } else
-            $rel = self::_getRelabellings($rules);
+            $rel = self::_getRelabellings($rulesFilePath);
 
         return $rel;
     }
@@ -420,12 +418,12 @@ class XMark2Json
 
         // Clean the one value array
         foreach ($obj as &$subObj) {
-            if (count($subObj) > 1)
+            if (\count($subObj) > 1)
                 continue;
 
             $val = $subObj[0] ?? null;
 
-            if (is_string($val))
+            if (\is_string($val))
                 $subObj = $val;
         }
         unset($subObj);
@@ -450,10 +448,11 @@ class XMark2Json
         return $attr;
     }
 
-    private function toJsonString(array $data, ?callable $postProcess = null): string
+    private function toJsonString(array $data, bool $simplify, ?callable $postProcess = null): string
     {
-        if ($this->simplifyObject)
+        if ($simplify)
             $this->doSimplifyObject($data);
+
         if (isset($postProcess)) {
             $data = $postProcess($data);
         }

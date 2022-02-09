@@ -16,8 +16,7 @@ $cmdArgsDef = [
     'pre-clean-db' => false,
     'post-clean' => false,
     'generate' => true,
-    'simplify.object' => false,
-    'simplify.object.useConfig' => true
+    'simplify_object_useConfig' => true
 ];
 
 if (empty($argv))
@@ -25,7 +24,7 @@ if (empty($argv))
 
 while (! empty($argv)) {
     $cmdParsed = $cmdArgsDef;
-    $cmdRemains = updateArray_getRemains(\parseArgvShift($argv, ';'), $cmdParsed);
+    $cmdRemains = \updateArray_getRemains(\parseArgvShift($argv, ';'), $cmdParsed);
 
     $dataSets = \array_filter_shift($cmdRemains, 'is_int', ARRAY_FILTER_USE_KEY);
 
@@ -40,49 +39,26 @@ while (! empty($argv)) {
     $cmdParsed += $javaProperties;
 
     if (\count($dataSets) == 0) {
-        echo "Convert ALL dataSets to json\n\n";
-        $dataSets = DataSet::getAllGroups();
+        $dataSets = [
+            null
+        ];
     }
+    $dataSets = \array_unique(DataSets::all($dataSets));
+    DataSets::checkNotExists($dataSets, false);
+
+    // Group by 'group'
     foreach ($dataSets as $dataSet) {
-        $ds = new DataSet($dataSet);
-        $group = $ds->getGroup();
-        $rules = $ds->getRules();
-
-        $ds_top = $toProcess[$group] ?? $ds;
-
-        $rules_top = array_unique(array_merge($ds_top->getRules(), $rules));
-        $ds_top->setRules($rules_top);
-        $toProcess[$group] = $ds_top;
+        $group = $dataSet->group();
+        $qualifiers = $dataSet->qualifiersString();
+        $toProcess["$group"][] = $dataSet;
     }
 
-    foreach ($toProcess as $dataSet) {
-        $qualifiers = $dataSet->getQualifiers();
-        $doNotSimplifyPath = __DIR__ . '/xmark_to_json/do_not_simplify.php';
+    $doNotSimplify = include __DIR__ . '/xmark_to_json/do_not_simplify.php';
 
-        if (\in_array('simplified', $qualifiers)) {
-            $simplifyObject = true;
-            $forceSimplify = include $doNotSimplifyPath;
-        } elseif (\in_array('simplified.all', $qualifiers)) {
-            $simplifyObject = true;
-            $forceSimplify = [];
-        } else {
-            $simplifyObject = $cmdParsed['simplify.object'];
-
-            if ($simplifyObject) {
-                $useConfig = $cmdParsed['simplify.object.useConfig'];
-                $qualifiers = $simplifyObject ? [
-                    $useConfig ? 'simplified' : 'simplified.all'
-                ] : [];
-                $forceSimplify = $useConfig ? (include $doNotSimplifyPath) : [];
-            } else {
-                $qualifiers = [];
-                $forceSimplify = [];
-            }
-            $dataSet->setQualifiers($qualifiers);
-        }
-        $dataSetId = $dataSet->getId();
-        echo "\n<$dataSetId>\n";
-        $converter = (new \XMark2Json($dataSet, $cmdConfig))->simplifyObject($simplifyObject, $forceSimplify);
+    foreach ($toProcess as $dataSets) {
+        echo "\n";
+        $qualifiers = $dataSets[0]->qualifiers();
+        $converter = (new \XMark2Json($dataSets, $cmdConfig))->doNotSimplify($doNotSimplify);
 
         if ($cmdParsed['pre-clean-db'])
             MongoImport::dropDatabase($dataSet);

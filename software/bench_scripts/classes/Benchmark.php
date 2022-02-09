@@ -185,7 +185,7 @@ final class Benchmark
         $dataSet = \array_slice(\explode('/', $this->qOutputPath), - 3, - 1);
         $csvFile->fputcsv([
             'dataSet',
-            $this->config['dataSet']->getTheId()
+            $this->config['dataSet']->id()
         ]);
         $csvFile->fputcsv([
             'datetime',
@@ -360,7 +360,7 @@ final class Benchmark
         return $config['bench.measures'][$queryFile] ?? $config['bench.measures']['default'];
     }
 
-    private function executeMeasures(string $queryFile, ?int $forceNbMeasures = null)
+    private function executeMeasures(string $queryFile, string $header, ?int $forceNbMeasures = null)
     {
         $config = $this->config;
         $cold = $config['bench.cold'];
@@ -383,7 +383,7 @@ final class Benchmark
             // if ($nbMeasures === 0)
             // $incVars['querying_config_print'] = 'y';
 
-            echo $totalMeasures - $nbMeasures, "/", $totalMeasures, "\n";
+            echo "\n", $totalMeasures - $nbMeasures, "/", $totalMeasures, "\n$header\n";
 
             $proc = \proc_open($this->cmd, $this->descriptors, $pipes);
             \fwrite($pipes[0], $this->writeJavaProperties($incVars));
@@ -425,18 +425,16 @@ final class Benchmark
         $this->createOutputDir();
         $queryFiles = $this->getFiles();
         $queries = $queryFiles['queries'];
-        $dataSet = $this->config['dataSet'];
 
         // Build the command
         echo $this->cmd, "\n\n";
 
         foreach ($queries as $query) {
             echo "==================================\n";
-            echo "<{$dataSet->getTheId()}>\n";
-            echo "$query\n\n";
+            $header = "<{$this->config['dataSet']}>\n$query\n";
 
             $queryFile = $query;
-            $measures = $this->executeMeasures($query, $forceNbMeasures);
+            $measures = $this->executeMeasures($query, $header, $forceNbMeasures);
 
             $this->writeCSV($query, $measures);
         }
