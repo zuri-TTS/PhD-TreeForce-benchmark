@@ -37,8 +37,7 @@ while (! empty($argv)) {
     if (! empty($cmdRemains)) {
         $usage = "\nValid cli arguments are:\n" . \var_export($cmdParsed, true) . //
         "\nor a Java property of the form P#prop=#val\n";
-        fwrite(STDERR, "Unknown cli argument(s):\n" . \var_export($cmdRemains, true) . $usage);
-        exit(1);
+        throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true) . $usage);
     }
     $cmdParsed += $javaProperties;
 

@@ -219,6 +219,14 @@ function get_ob(callable $f)
     return ob_get_clean();
 }
 
+function include_script(string $filename, array $argv)
+{
+    if (is_file($filename))
+        include $filename;
+
+    return false;
+}
+
 function get_include_contents(string $filename, array $variables, string $uniqueVar = '')
 {
     if (is_file($filename)) {

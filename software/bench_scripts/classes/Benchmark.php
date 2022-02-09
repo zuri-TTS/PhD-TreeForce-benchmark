@@ -17,6 +17,8 @@ final class Benchmark
 
     private array $javaOutput;
 
+    private string $plotTypes;
+
     private static $timeMeasure = [
         'r',
         'u',
@@ -31,6 +33,7 @@ final class Benchmark
         $jarPath = \escapeshellarg($config['jar.path']);
         $appCmd = \escapeshellarg($config['app.cmd']);
 
+        $plotTypes = $config['bench.plot.types'];
         $opt = $config['java.opt'];
         $this->cmd = "java $opt -jar $jarPath $appCmd -c std://in";
 
@@ -61,6 +64,9 @@ final class Benchmark
     public function getExistings(): array
     {
         $outPath = \dirname($this->qOutputPath);
+
+        if (! \is_dir($outPath))
+            return [];
 
         $regex = $this->config['bench.output.pattern'];
         $regex = \str_replace([
@@ -431,7 +437,7 @@ final class Benchmark
 
         foreach ($queries as $query) {
             echo "==================================\n";
-            $header = "<{$this->config['dataSet']}>\n$query\n";
+            $header = "<{$this->config['dataSet']}> ({$this->config['app.cmd']})\n$query\n";
 
             $queryFile = $query;
             $measures = $this->executeMeasures($query, $header, $forceNbMeasures);
@@ -453,9 +459,12 @@ final class Benchmark
 
     private function plot(): void
     {
+        if (empty($this->plotTypes))
+            return;
+
         $argv[] = 'plot.php';
         $argv[] = $this->qOutputPath;
-        $argv[] = 'types=each,group';
+        $argv[] = "types=$this->plotTypes";
 
         include __DIR__ . "/../plot.php";
     }

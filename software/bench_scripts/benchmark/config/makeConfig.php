@@ -39,12 +39,6 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     if ($hasSummary) {
         $summaryFileName = "summary-$summaryType.txt";
         $summaryPath = "$dataSetPath/$summaryFileName";
-
-        if (! \is_file($summaryPath) && ! \in_array($cmd, [
-            "summarize",
-            "config"
-        ]))
-            throw new \Exception("Summary '$summaryPath' does not exists");
     }
 
     $common = (include __DIR__ . '/common.php');
@@ -74,7 +68,8 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
         'bench.output.dir' => $outDir,
-        'bench.output.pattern' => $outDirPattern
+        'bench.output.pattern' => $outDirPattern,
+        'bench.plot.types' => $cmdArg['plot']
     ]);
     $ret['java.properties'] = $javaProperties;
 

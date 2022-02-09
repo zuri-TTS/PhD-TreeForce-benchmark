@@ -68,8 +68,7 @@ final class MongoImport
         $jsonFiles = \glob("*.json");
 
         if (empty($jsonFiles)) {
-            fwrite(STDERR, "!!$collectionName: no json files to load!!\n");
-            return;
+            throw new \Exception("$collectionName: no json files to load\n");
         }
         foreach ($jsonFiles as $json) {
             echo "Importing $json\n";
