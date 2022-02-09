@@ -10,12 +10,16 @@ $cmdConfig = [
 ];
 
 $cmdArgsDef = [
-    'clean' => false,
+    'drop-empty' => false,
+    'drop' => false,
+    'generate' => true,
     'load' => false,
     'pre-clean' => false,
     'pre-clean-db' => false,
+    'pre-clean-all' => false,
     'post-clean' => false,
-    'generate' => true,
+    'post-clean-xmark' => false,
+    'post-clean-all' => false,
     'simplify_object_useConfig' => true
 ];
 
@@ -47,6 +51,7 @@ while (! empty($argv)) {
     DataSets::checkNotExists($dataSets, false);
 
     // Group by 'group'
+    $toProcess = [];
     foreach ($dataSets as $dataSet) {
         $group = $dataSet->group();
         $qualifiers = $dataSet->qualifiersString();
@@ -60,22 +65,26 @@ while (! empty($argv)) {
         $qualifiers = $dataSets[0]->qualifiers();
         $converter = (new \XMark2Json($dataSets, $cmdConfig))->doNotSimplify($doNotSimplify);
 
-        if ($cmdParsed['pre-clean-db'])
+        if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
             MongoImport::dropDatabase($dataSet);
 
-        if ($cmdParsed['pre-clean'])
+        if ($cmdParsed['pre-clean'] || $cmdParsed['pre-clean-all'])
             $converter->clean();
 
-        if ($cmdParsed['generate']) {
-            $method = $cmdParsed['clean'] ? 'clean' : 'convert';
-            $converter->$method();
-        }
+        if ($cmdParsed['drop'])
+            $converter->drop();
+        elseif ($cmdParsed['drop-empty'])
+            $converter->dropEmpty();
+        elseif ($cmdParsed['generate'])
+            $converter->convert();
 
-        if ($cmdParsed['load']) {
+        if ($cmdParsed['load'])
             MongoImport::importDataSet($dataSet);
 
-            if ($cmdParsed['post-clean'])
-                $converter->clean();
-        }
+        if ($cmdParsed['post-clean'] || $cmdParsed['post-clean-all'])
+            $converter->clean();
+
+        if ($cmdParsed['post-clean-xmark'] || $cmdParsed['post-clean-all'])
+            $converter->deleteXMark();
     }
 }

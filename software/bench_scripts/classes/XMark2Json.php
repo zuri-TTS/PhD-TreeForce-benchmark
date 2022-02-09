@@ -124,7 +124,7 @@ final class XMark2Json
         foreach ($this->filesData as $f)
             echo "{$f['dataset']}\n";
 
-        $xmarkFilePath = "$this->groupPath/xmark.xml";
+        $xmarkFilePath = $this->XMarkFilePath();
         $this->generateXMark($xmarkFilePath);
         $this->read(\XMLReader::open($xmarkFilePath));
 
@@ -146,26 +146,68 @@ final class XMark2Json
         \system($cmd);
     }
 
+    private function XMarkFilePath(): string
+    {
+        return "$this->groupPath/xmark.xml";
+    }
+
+    public function deleteXMark()
+    {
+        $path = $this->XMarkFilePath();
+
+        if (\is_file($path))
+            \unlink($path);
+    }
+
+    public function dropEmpty()
+    {
+        foreach ($this->dataSets as $dataSet) {
+            echo "Trying to drop $dataSet: ";
+            echo self::rmDataSet($dataSet) ? 'Success' : '!!Failed!!';
+            echo "\n";
+        }
+    }
+
+    public function drop()
+    {
+        foreach ($this->dataSets as $dataSet) {
+            echo "Dropping $dataSet: ";
+            self::cleanDataSet($dataSet, "*");
+            echo self::rmDataSet($dataSet) ? 'Success' : '!!Failed!!';
+            echo "\n";
+        }
+    }
+
     public function clean()
     {
         foreach ($this->dataSets as $dataSet) {
             echo "Cleaning <$dataSet>\n";
-            self::cleanDataSet($dataSet);
+            self::cleanDataSet($dataSet, "*.json");
         }
     }
 
-    private static function cleanDataSet(DataSet $dataSet)
+    private static function rmDataSet(DataSet $dataSet): bool
+    {
+        $dataSetOutPath = $dataSet->path();
+
+        if (! \is_dir($dataSetOutPath))
+            return true;
+
+        return @\rmdir($dataSetOutPath);
+    }
+
+    private static function cleanDataSet(DataSet $dataSet, string $pattern)
     {
         $dataSetOutPath = $dataSet->path();
 
         if (\is_dir($dataSetOutPath)) {
-            $files = \wdOp($dataSetOutPath, fn () => self::cleanJsonFiles());
+            $files = \wdOp($dataSetOutPath, fn () => self::cleanGlob($pattern));
         }
     }
 
-    private static function cleanJsonFiles()
+    private static function cleanGlob(string $pattern): void
     {
-        foreach (\glob("*.json") as $f) {
+        foreach (\glob($pattern) as $f) {
             \is_file($f) && \unlink($f);
         }
     }
