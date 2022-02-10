@@ -10,6 +10,7 @@ $cmdConfig = [
 ];
 
 $cmdArgsDef = [
+    'cmd-display-output' => false,
     'drop-empty' => false,
     'drop' => false,
     'generate' => true,
@@ -60,12 +61,11 @@ while (! empty($argv)) {
     $doNotSimplify = include __DIR__ . '/xmark_to_json/do_not_simplify.php';
 
     foreach ($toProcess as $dataSets) {
-        echo "\n";
         $qualifiers = $dataSets[0]->qualifiers();
         $converter = (new \XMark2Json($dataSets, $cmdConfig))->doNotSimplify($doNotSimplify);
 
         if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
-            MongoImport::dropDatabase($dataSet);
+            MongoImport::dropCollections($dataSets);
 
         if ($cmdParsed['pre-clean'] || $cmdParsed['pre-clean-all'])
             $converter->clean();
@@ -78,7 +78,7 @@ while (! empty($argv)) {
             $converter->convert();
 
         if ($cmdParsed['load'])
-            MongoImport::importDataSet($dataSet);
+            \array_walk($dataSets, 'MongoImport::importDataSet');
 
         if ($cmdParsed['post-clean'] || $cmdParsed['post-clean-all'])
             $converter->clean();

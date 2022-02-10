@@ -7,6 +7,8 @@ require_once __DIR__ . '/common/functions.php';
 
 $cmdArgsDef = [
     'generate-dataset' => true,
+    'cmd-display-output' => false,
+    'clean-db' => false,
     'pre-clean-db' => false,
     'post-clean-db' => false,
     'summary' => "key",
@@ -59,11 +61,20 @@ while (! empty($argv)) {
     }
     $dataSets = \array_unique(DataSets::all($dataSets));
 
+    if ($cmdParsed['pre-clean-db'] || $cmdParsed['clean-db'])
+        MongoImport::dropCollections($dataSets);
+
     $errors = [];
     $cmdParsed_cpy = $cmdParsed;
 
     foreach ($dataSets as $dataSet) {
-        echo "\n<$dataSet>\n";
+
+        if ($cmdSummarize) {
+            echo "\nSummarizing $dataSet\n";
+        } else {
+            $header = \str_repeat('=', \strlen((string) $dataSet));
+            echo "\n$header\nTEST\n$dataSet\n";
+        }
         $generateDataSet = $cmdParsed['generate-dataset'];
 
         if ($dataSet->isSimplified()) {
@@ -96,9 +107,6 @@ while (! empty($argv)) {
             // ================================================================
             $collection = MongoImport::getCollectionName($dataSet);
             $collExists = MongoImport::collectionExists($collection);
-            
-            if ($cmdParsed['pre-clean-db'])
-                MongoImport::dropDatabase($dataSet);
 
             if ($generateDataSet && (! $dataSet->exists() || ! $collExists || //
             ($hasSummary && ! $cmdSummarize && ! \is_file($summaryPath)) //
@@ -114,9 +122,10 @@ while (! empty($argv)) {
                     '',
                     $dataSet->id(),
                     'cmd=summarize',
-                    '-skip-existings',
-                    'output' => \sys_get_temp_dir(),
-                    '-plot'
+                    '+skip-existing',
+                    '-generate-dataset',
+                    "output='{\sys_get_temp_dir()}'",
+                    '+plot'
                 ];
                 include_script(__DIR__ . '/benchmark.php', $vars);
                 \clearstatcache();
@@ -128,7 +137,7 @@ while (! empty($argv)) {
                 if (! $collExists)
                     throw new \Exception("The collection treeforce.$collection must exists in the database");
 
-                if ($hasSummary && ! \is_file($summaryPath))
+                if (! $cmdSummarize && $hasSummary && ! \is_file($summaryPath))
                     throw new \Exception("Summary '$summaryPath' does not exists");
             }
 
@@ -139,8 +148,8 @@ while (! empty($argv)) {
 
             end:
 
-            if ($cmdParsed['post-clean-db'])
-                MongoImport::dropDatabase($dataSet);
+            if ($cmdParsed['post-clean-db'] || $cmdParsed['clean-db'])
+                MongoImport::dropCollection($dataSet);
         } catch (\Exception $e) {
             $errors[] = [
                 'dataset' => $dataSet,

@@ -69,7 +69,8 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
         'dataSet' => $dataSet,
         'bench.output.dir' => $outDir,
         'bench.output.pattern' => $outDirPattern,
-        'bench.plot.types' => $cmdArg['plot']
+        'bench.plot.types' => $cmdArg['plot'],
+        'app.output.display' => $cmdArg['cmd-display-output']
     ]);
     $ret['java.properties'] = $javaProperties;
 

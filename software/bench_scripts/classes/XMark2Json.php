@@ -106,23 +106,15 @@ final class XMark2Json
 
     public function convert()
     {
-        echo "Processing group $this->group\n";
         $this->setPostProcesses();
 
-        if (! empty($this->dataSets_exists)) {
-            echo "These has already been generated:\n";
+        echo "Generating json:\n";
 
-            foreach ($this->dataSets_exists as $dataSet)
-                echo "$dataSet\n";
-        }
+        foreach ($this->dataSets as $d)
+            echo "$d", \in_array($d, $this->dataSets_exists) ? ' (Exists)' : '', "\n";
 
         if (empty($this->filesData))
             return;
-
-        echo "Generating for:\n";
-
-        foreach ($this->filesData as $f)
-            echo "{$f['dataset']}\n";
 
         $xmarkFilePath = $this->XMarkFilePath();
         $this->generateXMark($xmarkFilePath);

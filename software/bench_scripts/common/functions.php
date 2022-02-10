@@ -118,6 +118,17 @@ function argShift(array &$args, string $key, $default = null)
     return $v;
 }
 
+function array_delete(array &$array, ...$val): bool
+{
+    $k = \array_search($val, $array);
+
+    if (false !== $k) {
+        unset($array[$k]);
+        return true;
+    }
+    return false;
+}
+
 function array_partition(array $array, callable $filter): array
 {
     $a = \array_filter($array, $filter);
@@ -225,6 +236,41 @@ function include_script(string $filename, array $argv)
         include $filename;
 
     return false;
+}
+
+function simpleExec(string $cmd, &$output, &$err, ?string $input = null): int
+{
+    $parseDesc = fn ($d) => \in_array($d, [
+        STDOUT,
+        STDERR
+    ]) ? $d : [
+        'pipe',
+        'w'
+    ];
+    $descriptors = [
+        [
+            'pipe',
+            'r'
+        ],
+        $parseDesc($output),
+        $parseDesc($err)
+    ];
+    $proc = \proc_open($cmd, $descriptors, $pipes);
+
+    if (null !== $input)
+        \fwrite($pipes[0], $input);
+
+    \fclose($pipes[0]);
+
+    while (($status = \proc_get_status($proc))['running'])
+        \usleep(10);
+
+    if (isset($pipes[1]))
+        $output = \stream_get_contents($pipes[1]);
+    if (isset($pipes[2]))
+        $err = \stream_get_contents($pipes[2]);
+
+    return $status['exitcode'];
 }
 
 function get_include_contents(string $filename, array $variables, string $uniqueVar = '')
