@@ -124,7 +124,8 @@ while (! empty($argv)) {
                     'cmd=summarize',
                     '+skip-existing',
                     '-generate-dataset',
-                    "output='{\sys_get_temp_dir()}'",
+                    "output:",
+                    escapeshellarg(\sys_get_temp_dir()),
                     '+plot'
                 ];
                 include_script(__DIR__ . '/benchmark.php', $vars);
