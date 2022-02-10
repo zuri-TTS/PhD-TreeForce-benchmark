@@ -93,6 +93,10 @@ final class MongoImport
 
         $cmd = "mongosh treeforce --quiet --eval $script\n";
         \simpleExec($cmd, $output, $err);
+
+        if (empty($output))
+            return [];
+
         $output = \str_replace("'", '"', $output);
         return self::$collections_cache = \json_decode($output);
     }
