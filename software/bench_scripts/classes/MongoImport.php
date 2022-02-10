@@ -144,7 +144,7 @@ final class MongoImport
             else
                 echo "Failed ($nbFails documents)";
 
-            if (null === self::$collections_cache)
+            if (null !== self::$collections_cache)
                 self::$collections_cache[] = $collectionName;
         });
         echo "\n";
