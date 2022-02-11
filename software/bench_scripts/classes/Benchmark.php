@@ -386,7 +386,7 @@ final class Benchmark
             // if ($nbMeasures === 0)
             // $incVars['querying_config_print'] = 'y';
 
-            echo "\n", $totalMeasures - $nbMeasures, "/", $totalMeasures, "\n$header\n";
+            echo $totalMeasures - $nbMeasures, "/$totalMeasures $header\n";
 
             $proc = \proc_open($this->cmd, $this->descriptors, $pipes);
             \fwrite($pipes[0], $this->writeJavaProperties($incVars));
@@ -434,12 +434,13 @@ final class Benchmark
         echo $this->cmd, "\n\n";
 
         foreach ($queries as $query) {
-            $header = "<{$this->config['dataSet']}> ({$this->config['app.cmd']}) query: $query\n";
+            $header = "<{$this->config['dataSet']}> ({$this->config['app.cmd']}) query: $query";
 
             $queryFile = $query;
             $measures = $this->executeMeasures($query, $header, $forceNbMeasures);
 
             $this->writeCSV($query, $measures);
+            echo "\n";
         }
         $this->plot();
     }
