@@ -14,6 +14,7 @@ $cmdArgsDef = [
     'drop-empty' => false,
     'drop' => false,
     'generate' => true,
+    'summarize' => true,
     'load' => false,
     'pre-clean' => false,
     'pre-clean-db' => false,
@@ -62,7 +63,9 @@ while (! empty($argv)) {
 
     foreach ($toProcess as $dataSets) {
         $qualifiers = $dataSets[0]->qualifiers();
-        $converter = (new \XMark2Json($dataSets, $cmdConfig))->doNotSimplify($doNotSimplify);
+        $converter = (new \XMark2Json($dataSets, $cmdConfig))-> //
+        doNotSimplify($doNotSimplify)-> //
+        summarize($cmdParsed['summarize']);
 
         if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
             MongoImport::dropCollections($dataSets);

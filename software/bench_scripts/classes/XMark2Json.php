@@ -27,6 +27,12 @@ final class XMark2Json
 
     private string $myBaseDir;
 
+    private array $summary;
+
+    private int $summaryDepth;
+
+    private bool $summarize;
+
     public function __construct(array $dataSets, array $cmdConfig)
     {
         $groups = [];
@@ -46,6 +52,31 @@ final class XMark2Json
         $this->config = include $configPath;
         $this->unwind = include "$this->myBaseDir/unwind.php";
         $this->cmdConfig = $cmdConfig;
+
+        $this->summarize = false;
+    }
+
+    // ========================================================================
+    private function summaryExists(DataSet $dataSet)
+    {
+        foreach ($this->summaryPaths($dataSet) as $p) {
+            if (! \is_file($p))
+                return false;
+        }
+        return true;
+    }
+
+    private function summaryPaths(DataSet $dataSet): array
+    {
+        return [
+            $this->summaryPath($dataSet, 'key'),
+            $this->summaryPath($dataSet, 'key-type')
+        ];
+    }
+
+    private function summaryPath(DataSet $dataSet, string $type)
+    {
+        return "{$dataSet->path()}/summary-$type.txt";
     }
 
     public function getSeed(): int
@@ -58,12 +89,20 @@ final class XMark2Json
         return $this->dataSet;
     }
 
+    // ========================================================================
+    public function summarize(bool $summarize = true): XMark2Json
+    {
+        $this->summarize = $summarize;
+        return $this;
+    }
+
     public function doNotSimplify(array $doNotSimplify): XMark2Json
     {
         $this->doNotSimplify = $doNotSimplify;
         return $this;
     }
 
+    // ========================================================================
     private function prepareDir(DataSet $dataSet)
     {
         $dataSetOutPath = $dataSet->path();
@@ -75,6 +114,8 @@ final class XMark2Json
 
     private function setPostProcesses()
     {
+        $this->summary = [];
+        $this->summaryDepth = 0;
         $rules = \array_map(fn ($d) => $d->rules(), $this->dataSets);
 
         $filesData = \array_map(function ($dataSet) {
@@ -84,7 +125,7 @@ final class XMark2Json
             $rulesFiles = $dataSet->rulesFilesPath();
             $exists = \is_file("$path/end.json");
 
-            if ($exists)
+            if ($exists && (! $this->summarize || $this->summaryExists($dataSet)))
                 return $dataSet;
 
             return [
@@ -98,6 +139,8 @@ final class XMark2Json
         list ($this->filesData, $this->dataSets_exists) = \array_partition($filesData, '\is_array');
 
         foreach ($this->filesData as $f) {
+
+            $this->summary[$f['dataset']->id()] = [];
 
             if (! \is_dir($f['path']))
                 \mkdir($f['path']);
@@ -120,10 +163,17 @@ final class XMark2Json
         $this->generateXMark($xmarkFilePath);
         $this->read(\XMLReader::open($xmarkFilePath));
 
-        foreach ($this->filesData as $fd)
+        foreach ($this->filesData as $fd) {
             \touch("{$fd['path']}/end.json");
+
+            if ($this->summarize) {
+                \ksort($this->summary[$fd['dataset']->id()]);
+                $this->writeSummary($fd['dataset']);
+            }
+        }
     }
 
+    // ========================================================================
     private function generateXMark(string $xmarkFilePath)
     {
         if (\is_file($xmarkFilePath))
@@ -143,6 +193,7 @@ final class XMark2Json
         return "$this->groupPath/xmark.xml";
     }
 
+    // ========================================================================
     public function deleteXMark()
     {
         $path = $this->XMarkFilePath();
@@ -178,6 +229,7 @@ final class XMark2Json
         }
     }
 
+    // ========================================================================
     private static function rmDataSet(DataSet $dataSet): bool
     {
         $dataSetOutPath = $dataSet->path();
@@ -204,6 +256,7 @@ final class XMark2Json
         }
     }
 
+    // ========================================================================
     private function reachUnwind(string $path): ?string
     {
         $ret = [];
@@ -318,7 +371,7 @@ final class XMark2Json
 
         foreach ($this->files as $d => $file) {
             $fileData = $this->filesData[$d];
-            $file->fwrite($this->toJsonString($data, $fileData['simplify'], $fileData['randomize']) . "\n");
+            $file->fwrite($this->toJsonString($fileData['dataset'], $data, $fileData['simplify'], $fileData['randomize']) . "\n");
         }
     }
 
@@ -427,6 +480,68 @@ final class XMark2Json
         return $ret;
     }
 
+    private function addToSummary(DataSet $dataSet, array $data)
+    {
+        $depth = - 1;
+        $keys = [];
+        $toProcess = [
+            $data
+        ];
+        $summary = &$this->summary[$dataSet->id()];
+
+        while (! empty($toProcess)) {
+            $nextToProcess = [];
+            $incDepth = 0;
+
+            foreach ($toProcess as $array) {
+
+                if (! $incDepth && ! \array_is_list($array))
+                    $incDepth = 1;
+
+                foreach ($array as $label => $val) {
+                    $cdepth = $depth;
+
+                    if (\is_array($val))
+                        $nextToProcess[] = $val;
+
+                    $type = (\is_array($val) && \array_is_list($val)) ? 'ARRAY' : 'OBJECT';
+
+                    if (\is_string($label)) {
+
+                        if (! isset($summary[$label]))
+                            $summary[$label] = [];
+
+                        $t = &$summary[$label];
+
+                        if (! \in_array($type, $t))
+                            $t[] = $type;
+                    }
+                }
+            }
+            $depth += $incDepth;
+            $toProcess = $nextToProcess;
+        }
+        $this->summaryDepth = \max($this->summaryDepth, $depth);
+    }
+
+    private function writeSummary(DataSet $dataSet)
+    {
+        $summary = $this->summary[$dataSet->id()];
+        $fileType = \fopen($this->summaryPath($dataSet, 'key-type'), 'w');
+        $file = \fopen($this->summaryPath($dataSet, 'key'), 'w');
+
+        \fwrite($fileType, "$this->summaryDepth\n");
+        \fwrite($file, "$this->summaryDepth\n");
+
+        foreach ($summary as $key => $types) {
+            $typeStr = implode(',', $types);
+            \fwrite($fileType, "\"$key\":\"$typeStr\"\n");
+            \fwrite($file, "\"$key\"\n");
+        }
+        \fclose($file);
+        \fclose($fileType);
+    }
+
     private static function toPHP(SimpleXMLElement $element): array
     {
         $obj = [];
@@ -482,7 +597,7 @@ final class XMark2Json
         return $attr;
     }
 
-    private function toJsonString(array $data, bool $simplify, ?callable $postProcess = null): string
+    private function toJsonString(DataSet $dataSet, array $data, bool $simplify, ?callable $postProcess = null): string
     {
         if ($simplify)
             $this->doSimplifyObject($data);
@@ -490,6 +605,7 @@ final class XMark2Json
         if (isset($postProcess)) {
             $data = $postProcess($data);
         }
+        $this->addToSummary($dataSet, $data);
 
         return \json_encode($data);
     }
