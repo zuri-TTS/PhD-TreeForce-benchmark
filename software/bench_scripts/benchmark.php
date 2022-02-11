@@ -151,8 +151,16 @@ while (! empty($argv)) {
 
             end:
 
-            if ($cmdParsed['post-clean-db'] || $cmdParsed['clean-db'])
+            if ($cmdParsed['post-clean-db'] || $cmdParsed['clean-db']) {
                 MongoImport::dropCollection($dataSet);
+                $vars = [
+                    '',
+                    $dataSet->id(),
+                    '+drop',
+                    '+cmd-display-output'
+                ];
+                include_script(__DIR__ . '/xmark_to_json.php', $vars);
+            }
         } catch (\Exception $e) {
             $errors[] = [
                 'dataset' => $dataSet,
