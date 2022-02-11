@@ -43,14 +43,16 @@ while (! empty($argv)) {
     $cmdParsed += $javaProperties;
 
     if (\in_array($cmdParsed['cmd'], [
-        'summarize',
-        'config'
+        'summarize'
     ])) {
         $cmdParsed['doonce'] = true;
         $cmdSummarize = $cmdParsed['cmd'] === 'summarize';
     } elseif (\in_array($cmdParsed['cmd'], [
-        'generate'
+        'generate',
+        'config'
     ])) {
+        $cmdParsed['cmd-display-output'] = true;
+        $cmdParsed['plot'] = false;
         $forceNbMeasures = 1;
     }
 
