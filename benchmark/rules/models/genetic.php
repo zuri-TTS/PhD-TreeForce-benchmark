@@ -607,7 +607,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         $this->updateOne($p);
     }
 
-    private function mutate($population, int $nb): void
+    private function mutate(&$population, int $nb): void
     {
         while ($nb -- > 0) {
             $this->mutateOne($population[\array_rand($population)]);
