@@ -66,25 +66,12 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     // ========================================================================
     function usage(): string
     {
+        $params = \get_ob(fn() => $this->displayConfig());
         return <<<EOT
         Generate a model to reach a precise number of reformulations
         
         Parameters:
-        clean.solutions(false):
-        solutions.more(false):
-
-        Genetic options:
-        Gn($this->n): population size
-        GnbLoops($this->nbLoops): number of iterations
-        GnbTry($this->nbTry):
-        Gsort($this->sort):
-        Gmutation.factor($this->mutation_factor):
-        Gselect.factor($this->select_factor):
-        Gselect.factor.elite($this->select_factor_elite):
-        GstopOnSolution($this->stopOnSolution):
-        GuseModel($this->useModel): index of the model to use at the end
-        GrandMin($this->randMin):
-        GrandMax($this->randMax):
+        $params
 
         Query option:
         Q#query: number of reformulations for the query #query
@@ -291,7 +278,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     private function displayOne($p)
     {
         foreach ($p[self::i_qdistance] as $q => $dist)
-            printf("$q:%12.2f ", $dist);
+            printf("|$q:%7.2f", $dist);
 
         echo "|";
 
