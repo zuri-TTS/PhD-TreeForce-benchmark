@@ -25,7 +25,7 @@ while (! empty($exec = \parseArgvShift($argv, ";"))) {
         if (is_dir($outPath)) {
             $dir = new RecursiveDirectoryIterator($outPath);
             $ite = new RecursiveIteratorIterator($dir);
-            $reg = new RegexIterator($ite, "#/[^@][^/]+\.csv$#");
+            $reg = new RegexIterator($ite, "#/[^@][^/]*\.csv$#");
 
             foreach ($reg as $file)
                 $plotFiles[] = $file->getRealPath();
