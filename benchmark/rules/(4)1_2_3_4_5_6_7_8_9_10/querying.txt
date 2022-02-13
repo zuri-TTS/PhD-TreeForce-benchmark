@@ -1,0 +1,30 @@
+#regions 1
+
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#item 1
+
+'q_item_0'=?x? --> 'item'=?x?
+
+#category 3
+
+'q_category_2'=?x? --> 'category'=?x?
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
+#closed_auction 1
+
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#annotation 1
+
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#profile 1
+
+'q_profile_0'=?x? --> 'profile'=?x?
+
+#@income 1
+
+'q_@income_0'=?x? --> '@income'=?x?
+

@@ -1,0 +1,95 @@
+#site 4
+
+'q_site_3'=?x? --> 'site'=?x?
+'q_site_2'=?x? --> 'site'=?x?
+'q_site_1'=?x? --> 'site'=?x?
+'q_site_0'=?x? --> 'site'=?x?
+
+#regions 6
+
+'q_regions_5'=?x? --> 'regions'=?x?
+'q_regions_4'=?x? --> 'regions'=?x?
+'q_regions_3'=?x? --> 'regions'=?x?
+'q_regions_2'=?x? --> 'regions'=?x?
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#africa 4
+
+'q_africa_3'=?x? --> 'africa'=?x?
+'q_africa_2'=?x? --> 'africa'=?x?
+'q_africa_1'=?x? --> 'africa'=?x?
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#item 1
+
+'q_item_0'=?x? --> 'item'=?x?
+
+#categories 6
+
+'q_categories_5'=?x? --> 'categories'=?x?
+'q_categories_4'=?x? --> 'categories'=?x?
+'q_categories_3'=?x? --> 'categories'=?x?
+'q_categories_2'=?x? --> 'categories'=?x?
+'q_categories_1'=?x? --> 'categories'=?x?
+'q_categories_0'=?x? --> 'categories'=?x?
+
+#category 9
+
+'q_category_8'=?x? --> 'category'=?x?
+'q_category_7'=?x? --> 'category'=?x?
+'q_category_6'=?x? --> 'category'=?x?
+'q_category_5'=?x? --> 'category'=?x?
+'q_category_4'=?x? --> 'category'=?x?
+'q_category_3'=?x? --> 'category'=?x?
+'q_category_2'=?x? --> 'category'=?x?
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
+#closed_auctions 1
+
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+
+#closed_auction 6
+
+'q_closed_auction_5'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_4'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#annotation 4
+
+'q_annotation_3'=?x? --> 'annotation'=?x?
+'q_annotation_2'=?x? --> 'annotation'=?x?
+'q_annotation_1'=?x? --> 'annotation'=?x?
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#people 4
+
+'q_people_3'=?x? --> 'people'=?x?
+'q_people_2'=?x? --> 'people'=?x?
+'q_people_1'=?x? --> 'people'=?x?
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 6
+
+'q_person_5'=?x? --> 'person'=?x?
+'q_person_4'=?x? --> 'person'=?x?
+'q_person_3'=?x? --> 'person'=?x?
+'q_person_2'=?x? --> 'person'=?x?
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#@income 1
+
+'q_@income_0'=?x? --> '@income'=?x?
+
+#australia 4
+
+'q_australia_3'=?x? --> 'australia'=?x?
+'q_australia_2'=?x? --> 'australia'=?x?
+'q_australia_1'=?x? --> 'australia'=?x?
+'q_australia_0'=?x? --> 'australia'=?x?
+

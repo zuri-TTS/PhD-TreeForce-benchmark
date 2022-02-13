@@ -1,0 +1,35 @@
+#africa 4
+
+'q_africa_3'=?x? --> 'africa'=?x?
+'q_africa_2'=?x? --> 'africa'=?x?
+'q_africa_1'=?x? --> 'africa'=?x?
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#category 4
+
+'q_category_3'=?x? --> 'category'=?x?
+'q_category_2'=?x? --> 'category'=?x?
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
+#closed_auction 4
+
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#profile 4
+
+'q_profile_3'=?x? --> 'profile'=?x?
+'q_profile_2'=?x? --> 'profile'=?x?
+'q_profile_1'=?x? --> 'profile'=?x?
+'q_profile_0'=?x? --> 'profile'=?x?
+
+#australia 4
+
+'q_australia_3'=?x? --> 'australia'=?x?
+'q_australia_2'=?x? --> 'australia'=?x?
+'q_australia_1'=?x? --> 'australia'=?x?
+'q_australia_0'=?x? --> 'australia'=?x?
+

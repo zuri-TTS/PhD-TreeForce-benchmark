@@ -1,0 +1,70 @@
+#regions 1
+
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#africa 4
+
+'q_africa_3'=?x? --> 'africa'=?x?
+'q_africa_2'=?x? --> 'africa'=?x?
+'q_africa_1'=?x? --> 'africa'=?x?
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#item 2
+
+'q_item_1'=?x? --> 'item'=?x?
+'q_item_0'=?x? --> 'item'=?x?
+
+#categories 4
+
+'q_categories_3'=?x? --> 'categories'=?x?
+'q_categories_2'=?x? --> 'categories'=?x?
+'q_categories_1'=?x? --> 'categories'=?x?
+'q_categories_0'=?x? --> 'categories'=?x?
+
+#category 5
+
+'q_category_4'=?x? --> 'category'=?x?
+'q_category_3'=?x? --> 'category'=?x?
+'q_category_2'=?x? --> 'category'=?x?
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
+#closed_auctions 1
+
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+
+#closed_auction 4
+
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#annotation 2
+
+'q_annotation_1'=?x? --> 'annotation'=?x?
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#people 1
+
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 2
+
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#profile 4
+
+'q_profile_3'=?x? --> 'profile'=?x?
+'q_profile_2'=?x? --> 'profile'=?x?
+'q_profile_1'=?x? --> 'profile'=?x?
+'q_profile_0'=?x? --> 'profile'=?x?
+
+#australia 4
+
+'q_australia_3'=?x? --> 'australia'=?x?
+'q_australia_2'=?x? --> 'australia'=?x?
+'q_australia_1'=?x? --> 'australia'=?x?
+'q_australia_0'=?x? --> 'australia'=?x?
+

@@ -1,0 +1,7 @@
+^site(
+	people.person(
+		profile."@income" ,
+		name
+	),
+	open_auctions.open_auction.initial
+)

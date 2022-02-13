@@ -1,0 +1,41 @@
+#africa 2
+
+'q_africa_1'=?x? --> 'africa'=?x?
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#item 1
+
+'q_item_0'=?x? --> 'item'=?x?
+
+#categories 1
+
+'q_categories_0'=?x? --> 'categories'=?x?
+
+#category 2
+
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
+#closed_auctions 1
+
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+
+#closed_auction 2
+
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#people 2
+
+'q_people_1'=?x? --> 'people'=?x?
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 1
+
+'q_person_0'=?x? --> 'person'=?x?
+
+#australia 2
+
+'q_australia_1'=?x? --> 'australia'=?x?
+'q_australia_0'=?x? --> 'australia'=?x?
+

@@ -1,0 +1,36 @@
+#item 6
+
+'q_item_5'=?x? --> 'item'=?x?
+'q_item_4'=?x? --> 'item'=?x?
+'q_item_3'=?x? --> 'item'=?x?
+'q_item_2'=?x? --> 'item'=?x?
+'q_item_1'=?x? --> 'item'=?x?
+'q_item_0'=?x? --> 'item'=?x?
+
+#categories 6
+
+'q_categories_5'=?x? --> 'categories'=?x?
+'q_categories_4'=?x? --> 'categories'=?x?
+'q_categories_3'=?x? --> 'categories'=?x?
+'q_categories_2'=?x? --> 'categories'=?x?
+'q_categories_1'=?x? --> 'categories'=?x?
+'q_categories_0'=?x? --> 'categories'=?x?
+
+#closed_auction 6
+
+'q_closed_auction_5'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_4'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#@income 6
+
+'q_@income_5'=?x? --> '@income'=?x?
+'q_@income_4'=?x? --> '@income'=?x?
+'q_@income_3'=?x? --> '@income'=?x?
+'q_@income_2'=?x? --> '@income'=?x?
+'q_@income_1'=?x? --> '@income'=?x?
+'q_@income_0'=?x? --> '@income'=?x?
+

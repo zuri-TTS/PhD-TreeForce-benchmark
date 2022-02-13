@@ -1,0 +1,20 @@
+#regions 2
+
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#category 2
+
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
+#annotation 2
+
+'q_annotation_1'=?x? --> 'annotation'=?x?
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#@income 2
+
+'q_@income_1'=?x? --> '@income'=?x?
+'q_@income_0'=?x? --> '@income'=?x?
+

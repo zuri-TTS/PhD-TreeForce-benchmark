@@ -1,0 +1,4 @@
+^site.closed_auctions.closed_auction(
+	annotation.description.parlist.listitem.parlist.listitem.text.emph.keyword,
+	seller."@person" 
+)

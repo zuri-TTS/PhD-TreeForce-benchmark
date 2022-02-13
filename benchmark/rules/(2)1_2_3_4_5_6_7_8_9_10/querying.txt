@@ -1,0 +1,20 @@
+#africa 1
+
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#category 1
+
+'q_category_0'=?x? --> 'category'=?x?
+
+#annotation 1
+
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#person 1
+
+'q_person_0'=?x? --> 'person'=?x?
+
+#australia 1
+
+'q_australia_0'=?x? --> 'australia'=?x?
+

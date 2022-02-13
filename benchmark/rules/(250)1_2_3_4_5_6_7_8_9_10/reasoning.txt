@@ -1,0 +1,36 @@
+#site 0
+
+
+#regions 0
+
+
+#africa 0
+
+
+#item 0
+
+
+#categories 0
+
+
+#category 0
+
+
+#closed_auctions 0
+
+
+#closed_auction 0
+
+
+#people 0
+
+
+#profile 0
+
+
+#@income 0
+
+
+#australia 0
+
+
