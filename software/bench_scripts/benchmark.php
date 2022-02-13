@@ -8,7 +8,7 @@ require_once __DIR__ . '/common/functions.php';
 $cmdArgsDef = [
     'generate-dataset' => true,
     'cmd-display-output' => false,
-    'clean-db' => false,
+    'clean-db' => true,
     'pre-clean-db' => false,
     'post-clean-db' => false,
     'summary' => "key",
@@ -126,8 +126,9 @@ while (! empty($argv)) {
                     'cmd=summarize',
                     '+skip-existing',
                     '-generate-dataset',
+                    '-clean-db',
                     "output:",
-                    escapeshellarg(\sys_get_temp_dir()),
+                    \escapeshellarg(\sys_get_temp_dir()),
                     '+plot'
                 ];
                 include_script(__DIR__ . '/benchmark.php', $vars);
