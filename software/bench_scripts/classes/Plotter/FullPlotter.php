@@ -134,7 +134,31 @@ final class FullPlotter implements IPlotter
                 $ret["{$group}_$query"] = \array_values($dd);
             }
         }
+
+        \uksort($ret, function ($a, $b) {
+            $a = FullPlotter::nbFromGroupName($a);
+            $b = FullPlotter::nbFromGroupName($b);
+            $diff = $a - $b;
+
+            if ($diff)
+                return $diff;
+
+            return \strnatcasecmp($a, $b);
+        });
         return $ret;
+    }
+
+    private const factors = [
+        'K' => 10 ** 3,
+        'M' => 10 ** 6,
+        'G' => 10 ** 9
+    ];
+
+    private static function nbFromGroupName(string $groupName)
+    {
+        if (\preg_match('#^(\d+)([KMG])#', $groupName, $matches))
+            return (int) $matches[1] * (self::factors[$matches[2]] ?? 0);
+        return 0;
     }
 
     private function echoDat(array $csvFiles)

@@ -29,6 +29,9 @@ $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
 $multiColLayout = "$nbYPlots, $nbXPlots";
 $plotSize = (1.0 / $nbXPlots) . "," . (1.0 / $nbYPlots);
 
+$legendXMore = 300;
+$graphics['w'] += $legendXMore;
+
 $graphics['w'] *= $nbXPlots;
 $graphics['h'] *= $nbYPlots;
 $h = $graphics['h'];
@@ -44,8 +47,6 @@ $yrange = "$yMin:$yRange";
 
 $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
 ?>
-set key title "Times" bottom
-
 set logscale y
 
 set style data histograms
@@ -54,7 +55,7 @@ set style histogram gap 1
 set xtics rotate by 30 right
 
 set key autotitle columnheader
-set key outside above	
+set key lmargin top title "Times"
 
 set style fill pattern border -1
 
