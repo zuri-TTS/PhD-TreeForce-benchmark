@@ -51,9 +51,6 @@ $boxwidth = 0.25;
 ?>
 set logscale y
 
-#set style data histograms
-#set style histogram gap 1
-
 set xtics rotate by 30 right
 
 set key autotitle columnheader
