@@ -8,6 +8,8 @@ final class FullPlotter implements IPlotter
 
     private \Plot $plot;
 
+    private bool $xtics_pretty = true;
+
     public function __construct(\Plot $plot)
     {
         $this->plot = $plot;
@@ -98,8 +100,19 @@ final class FullPlotter implements IPlotter
     // ========================================================================
     private function makeXTic(string $dirName)
     {
-        \preg_match("#^\[.+\]\[.+\]#U", $dirName, $matches);
-        return \Plot::gnuplotSpecialChars($matches[0]);
+        if (\preg_match("#^\[.+\]\[(.+)\]#U", $dirName, $matches)) {
+
+            if ($this->xtics_pretty) {
+                if (\preg_match("#^\((\d+)\)#U", $matches[1], $smatches))
+                    $ret = $smatches[1];
+                else
+                    $ret = $matches[1];
+            } else
+                $ret = $matches[0];
+        } else
+            $ret = $dirName;
+
+        return \Plot::gnuplotSpecialChars($ret);
     }
 
     private static function cutData_group_query(array $csvFiles): array
