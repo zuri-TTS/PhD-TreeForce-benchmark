@@ -482,7 +482,7 @@ final class XMark2Json
 
     private function addToSummary(DataSet $dataSet, array $data)
     {
-        $depth = - 1;
+        $depth = 0;
         $keys = [];
         $toProcess = [
             $data
