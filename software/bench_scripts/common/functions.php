@@ -170,10 +170,22 @@ function array_filter_shift(array &$array, ?callable $filter = null, int $mode):
     return $ret;
 }
 
+function mapArgKey_replace($search, $replace, ?callable $onCondition = null): callable
+{
+    return fn ($k) => ($onCondition ? $onCondition($k) : true) ? //
+    \str_replace($search, $replace, $k) : //
+    $k;
+}
+
+function mapArgKey_default(?callable $onCondition = null): callable
+{
+    return \mapArgKey_replace('.', '_', fn ($k) => ! \is_int($k) && ($onCondition ? $onCondition($k) : true));
+}
+
 function updateArray(array $args, array &$array, ?callable $onUnexists = null, ?callable $mapKey = null)
 {
     if (null === $mapKey)
-        $mapKey = fn ($k) => \is_int($k) ? $k : \str_replace('.', '_', $k);
+        $mapKey = \mapArgKey_default();
 
     foreach ($args as $k => $v) {
         $k = $mapKey($k);

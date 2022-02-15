@@ -26,7 +26,7 @@ if (empty($argv))
 
 while (! empty($argv)) {
     $cmdParsed = $cmdArgsDef;
-    $cmdRemains = \updateArray_getRemains(\parseArgvShift($argv, ';'), $cmdParsed);
+    $cmdRemains = \updateArray_getRemains(\parseArgvShift($argv, ';'), $cmdParsed, mapArgKey_default(fn($k) => ($k[0] ?? '') !== 'P'));
 
     $dataSets = \array_filter_shift($cmdRemains, 'is_int', ARRAY_FILTER_USE_KEY);
 
