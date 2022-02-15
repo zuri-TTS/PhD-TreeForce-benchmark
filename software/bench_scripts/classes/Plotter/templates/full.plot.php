@@ -77,8 +77,11 @@ $ls = 1;
 $nbPlots = 0;
 
 foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
+    $csvData = $PLOTTER->getCsvData($csvPaths[0]);
+    $nbAnswers = $csvData['answers']['total'];
     $title = $PLOT->gnuplotSpecialChars($fname);
-    echo "set title \"$title\"\n";
+
+    echo "set title \"$title\\n($nbAnswers answers)\"\n";
     echo "set yrange [$yrange]\n";
     echo "set ylabel \"time (ms)\\n[$yrange]\"\n";
 
