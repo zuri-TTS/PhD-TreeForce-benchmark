@@ -137,9 +137,9 @@ final class FullPlotter implements IPlotter
         }
 
         \uksort($ret, function ($a, $b) {
-            $a = FullPlotter::nbFromGroupName($a);
-            $b = FullPlotter::nbFromGroupName($b);
-            $diff = $a - $b;
+            $ga = FullPlotter::nbFromGroupName($a);
+            $gb = FullPlotter::nbFromGroupName($b);
+            $diff = $ga - $gb;
 
             if ($diff)
                 return $diff;
