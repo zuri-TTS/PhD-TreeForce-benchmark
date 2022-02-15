@@ -46,11 +46,13 @@ while ($yRange < $yMax)
 $yrange = "$yMin:$yRange";
 
 $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
+
+$boxwidth = 0.25;
 ?>
 set logscale y
 
-set style data histograms
-set style histogram gap 1
+#set style data histograms
+#set style histogram gap 1
 
 set xtics rotate by 30 right
 
@@ -58,6 +60,7 @@ set key autotitle columnheader
 set key lmargin top title "Times"
 
 set style fill pattern border -1
+set boxwidth <?=$boxwidth?>
 
 set style line 1 lc rgb 'black' lt 1 lw 1.5
 
@@ -68,6 +71,7 @@ set multiplot layout <?=$multiColLayout?> title "<?=$theTitle?>"
 <?php
 $plot_lines = $graphics->plotYLines($yMax);
 $ls = 1;
+$nbPlots = 0;
 
 foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
     $title = $PLOT->gnuplotSpecialChars($fname);
@@ -75,17 +79,39 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
     echo "set yrange [$yrange]\n";
     echo "set ylabel \"time (ms)\\n[$yrange]\"\n";
 
-    $i = 2;
+    $nb = 0;
     $pattern = 0;
     $tmp = [];
 
-    foreach ($PLOTTER->getMeasuresToPlot() as $measure) {
-        $measure = $PLOT->gnuplotSpecialChars($measure);
-        $tmp[] = "'$fname.dat' u $i:xtic(1) title '$measure' ls $ls fs pattern $pattern \\\n";
-        $i ++;
-        $pattern ++;
+    $stacked = [
+        [
+            3 => 'rewriting.total.r',
+            2 => 'rewriting.rules.apply.r'
+        ],
+        [
+            4 => 'stats.db.time.r'
+        ]
+    ];
+    $xtics = ':xtic(1)';
+
+    foreach ($stacked as $stack) {
+        $offset = $nb * $boxwidth;
+
+        foreach ($stack as $pos => $measure) {
+            $measure = $PLOT->gnuplotSpecialChars($measure);
+            $tmp[] = "'$fname.dat' u ($0 + $offset):$pos$xtics with boxes title '$measure' ls $ls fs pattern $pattern \\\n";
+            $xtics = null;
+            $pattern ++;
+        }
+        $nb ++;
     }
-    $ls ++;
+    $nbPlots ++;
+
+    if (($nbPlots % $nbXPlots) === 0)
+        $ls = 1;
+    else
+        $ls ++;
+
     echo "plot $plot_lines\\\n,", implode(',', $tmp), "\n";
 }
 

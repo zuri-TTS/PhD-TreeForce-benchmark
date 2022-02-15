@@ -24,6 +24,7 @@ final class FullPlotter implements IPlotter
     }
 
     private array $toPlot = [
+        'rewriting.rules.apply' => 'r',
         'rewriting.total' => 'r',
         'stats.db.time' => 'r'
     ];
