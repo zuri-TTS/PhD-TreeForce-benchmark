@@ -13,7 +13,6 @@ final class GroupPlotter implements IPlotter
     private string $basePath;
 
     private array $data;
-    
 
     public function __construct(\Plot $plot)
     {
@@ -29,20 +28,22 @@ final class GroupPlotter implements IPlotter
     {
         return \Plot::PROCESS_GROUP;
     }
-    
-    public function getCSVPaths():array{
+
+    public function getCSVPaths(): array
+    {
         return $this->csvPaths;
     }
-    
-    public function getGroupPath():string{
+
+    public function getGroupPath(): string
+    {
         return $this->basePath;
     }
 
-    public function getOutFileName(string $suffix = ""):string
+    public function getOutFileName(string $suffix = ""): string
     {
         return "all_time$suffix";
     }
-    
+
     public function plot(array $csvPaths): void
     {
         $this->csvPaths = $csvPaths;
@@ -54,13 +55,18 @@ final class GroupPlotter implements IPlotter
         ]);
         $plotFilePath = $this->getOutFileName('.plot');
         \file_put_contents($plotFilePath, $contents);
-        
+
         $outFilePath = $this->getOutFileName('.png');
         $cmd = "gnuplot '$plotFilePath' > '$outFilePath'";
         echo "writing $outFilePath\n";
-        
+
         system($cmd);
     }
 
     // ========================================================================
+    public static function extractFirstNb(string $s): int
+    {
+        \preg_match("#\((\d+)\)#", $s, $matches);
+        return $matches[1] ?? 0;
+    }
 }

@@ -7,6 +7,12 @@ $yMax = 0;
 $yMin = PHP_INT_MAX;
 $nbMeasures = 0;
 
+$dirname = \basename(\dirname(\getcwd()));
+$nbQueries = Plotter\GroupPlotter::extractFirstNb($dirname);
+
+if ($nbQueries > 0)
+    $graphics['plots.max.x'] = $nbQueries;
+
 foreach ($PLOTTER->getCsvData() as $csvData) {
 
     foreach ($PLOTTER->toPlot() as $what => $measure) {
