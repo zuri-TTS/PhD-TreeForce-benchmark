@@ -34,14 +34,14 @@ while (! empty($argv)) {
     $cmdSummarize = false;
     $forceNbMeasures = null;
 
-    $javaProperties = \array_filter_shift($cmdRemains, fn ($k) => ($k[0] ?? '') === 'P', ARRAY_FILTER_USE_KEY);
+    $javaProperties = shiftJavaProperties($cmdRemains);
 
     if (! empty($cmdRemains)) {
         $usage = "\nValid cli arguments are:\n" . \var_export($cmdParsed, true) . //
-        "\nor a Java property of the form P#prop=#val\n";
-        throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true) . $usage);
+        "\nor a Java property of the form P#prop=#val:\n" . \var_export(\getDefaultJavaProperties(), true) . "\n";
+        fwrite(STDERR, $usage);
+        throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true) );
     }
-    $cmdParsed += $javaProperties;
 
     if (\in_array($cmdParsed['cmd'], [
         'summarize'
@@ -87,7 +87,7 @@ while (! empty($argv)) {
             $cmdParsed = $cmdParsed_cpy;
             $cmdParsed['summary'] = 'key-type';
         }
-        $config = \makeConfig($dataSet, $cmdParsed);
+        $config = \makeConfig($dataSet, $cmdParsed, $javaProperties);
         $summaryPath = $config['java.properties']['summary'];
         $hasSummary = ! empty($summaryPath);
         $bench = new \Benchmark($config);

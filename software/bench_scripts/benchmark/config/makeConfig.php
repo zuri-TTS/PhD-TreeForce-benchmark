@@ -16,7 +16,34 @@ function selectJavaProperties(array $cmdArg)
     return $ret;
 }
 
-function makeConfig(DataSet $dataSet, array $cmdArg) //
+function getDefaultJavaProperties(): array
+{
+    return (include __DIR__ . '/common.php')['java.properties'];
+}
+
+function shiftJavaProperties(array &$args): array
+{
+    $ret = getDefaultJavaProperties();
+
+    foreach ($cp = $args as $k => $v) {
+        if (! is_string($k))
+            continue;
+        if ($k[0] !== 'P')
+            continue;
+
+        $prop = substr($k, 1);
+        if (! \array_key_exists($prop, $ret))
+            continue;
+        if (is_bool($v))
+            $v = $v ? 'y' : 'n';
+
+        $ret[$prop] = $v;
+        unset($args[$k]);
+    }
+    return $ret;
+}
+
+function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
 {
     $group = $dataSet->group();
     $rules = $dataSet->rules();
@@ -44,7 +71,6 @@ function makeConfig(DataSet $dataSet, array $cmdArg) //
     $common = (include __DIR__ . '/common.php');
     $basePath = getBenchmarkBasePath();
 
-    $javaProperties = selectJavaProperties($cmdArg);
     $javaProperties = array_merge([
         'db.collection' => MongoImport::getCollectionName($dataSet),
         'summary.type' => $summaryType,
