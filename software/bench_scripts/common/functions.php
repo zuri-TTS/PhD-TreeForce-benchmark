@@ -7,6 +7,24 @@ if (! function_exists('array_is_list')) {
     }
 }
 
+function rrmdir(string $dir, bool $rmRoot = true)
+{
+    $paths = new \RecursiveIteratorIterator( //
+    new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS), //
+    \RecursiveIteratorIterator::CHILD_FIRST);
+
+    foreach ($paths as $pathInfo) {
+        $p = $pathInfo->getRealPath();
+
+        if ($pathInfo->isFile())
+            \unlink($p);
+        else
+            \rmdir($p);
+    }
+    if ($rmRoot)
+        \rmdir($dir);
+}
+
 function wdOp(string $workingDir, callable $exec)
 {
     $wd = \getcwd();

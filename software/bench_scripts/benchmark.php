@@ -18,7 +18,8 @@ $cmdArgsDef = [
     'cold' => false,
     'output' => null,
     'skip-existing' => true,
-    'plot' => 'each,group'
+    'plot' => 'each,group',
+    'forget-results' => false
 ];
 
 if (empty($argv))
@@ -55,6 +56,9 @@ while (! empty($argv)) {
         $cmdParsed['plot'] = false;
         $forceNbMeasures = 1;
     }
+
+    if ($cmdParsed['forget-results'])
+        $cmdParsed['plot'] = false;
 
     if (\count($dataSets) == 0) {
         $dataSets = [
@@ -162,6 +166,9 @@ while (! empty($argv)) {
                 ];
                 include_script(__DIR__ . '/xmark_to_json.php', $vars);
             }
+
+            if ($cmdParsed['forget-results'])
+                \rrmdir($config['java.properties']['output.path']);
         } catch (\Exception $e) {
             $errors[] = [
                 'dataset' => $dataSet,
