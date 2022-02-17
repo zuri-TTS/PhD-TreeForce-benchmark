@@ -70,6 +70,7 @@ final class Check
             foreach ($queriesFiles as &$f)
                 \uksort($f, 'strnatcasecmp');
         }
+        unset($f, $queriesFiles);
 
         foreach ($csvGroups as $group => $queriesFiles) {
             echo "[$group]\n";
@@ -125,6 +126,7 @@ final class Check
             foreach ($queriesFiles as &$f)
                 \uksort($f, 'strnatcasecmp');
         }
+        unset($f, $queriesFiles);
 
         foreach ($csvGroups as $group => $rules_queries) {
             foreach ($rules_queries as $rules => $queriesGroup) {
