@@ -33,6 +33,10 @@ function printPHPFile(string $path, $data)
 function wdOp(string $workingDir, callable $exec)
 {
     $wd = \getcwd();
+
+    if (! \is_dir($workingDir))
+        throw new \Exception("Cannot chdir to $workingDir: not a directory");
+
     \chdir($workingDir);
     $ret = $exec();
     \chdir($wd);

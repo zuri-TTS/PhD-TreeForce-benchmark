@@ -8,5 +8,5 @@ include __DIR__ . '/generate_rules/ModelGen.php';
 $modelPath = \array_shift($argv);
 $args = \parseArgv($argv);
 
-$generator = new ModelGen($modelPath, $args);
+$generator = new \Generator\ModelGen($modelPath, $args);
 $generator->generate() && $generator->generateRules();

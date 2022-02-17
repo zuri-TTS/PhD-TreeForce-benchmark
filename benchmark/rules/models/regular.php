@@ -1,4 +1,6 @@
 <?php
+namespace Generator;
+
 return fn (array $args) => new class($args) implements IModelGenerator {
 
     private int $k = - 1, $q = - 1;
@@ -25,7 +27,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         EOT;
     }
 
-    function generate(\SplFileObject $writeTo)
+    function generate(string $filePath)
     {
         $k = $this->k;
         $q = $this->q;
@@ -53,7 +55,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         emailaddress $k $q
         homepage $k $q
         EOT;
-        $writeTo->fwrite($s);
+        \file_put_contents($filePath, $s);
         return true;
     }
 

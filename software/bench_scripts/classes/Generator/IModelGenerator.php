@@ -1,4 +1,5 @@
 <?php
+namespace Generator;
 
 interface IModelGenerator
 {
@@ -9,5 +10,5 @@ interface IModelGenerator
 
     function usage(): string;
 
-    function generate(\SplFileObject $writeTo);
+    function generate(string $filePath);
 }

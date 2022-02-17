@@ -1,4 +1,6 @@
 <?php
+namespace Generator;
+
 return fn (array $args) => new class($args) implements IModelGenerator {
 
     private const default_nbRefs_range = [
@@ -66,7 +68,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     // ========================================================================
     function usage(): string
     {
-        $params = \get_ob(fn() => $this->displayConfig());
+        $params = \get_ob(fn () => $this->displayConfig());
         return <<<EOT
         Generate a model to reach a precise number of reformulations
         
@@ -169,7 +171,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         }
 
         if ($mustGenerate && ! empty($model)) {
-            $file = new SPLFileObject($geneticModelPath, 'w');
+            $file = new \SplFileObject($geneticModelPath, 'w');
             $this->writeGeneticModelFile($file, $model);
         }
         // must be after writeGeneticModelFile that uniquify solutions
@@ -200,8 +202,9 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         $this->$name = $val;
     }
 
-    public function generate(\SplFileObject $writeTo)
+    public function generate(string $filePath)
     {
+        $writeTo = new \SplFileObject($filePath, 'w');
         $model = $this->getGeneticModel();
 
         if (! empty($model)) {
@@ -260,16 +263,15 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private function getGeneticModelFilePath()
     {
-        return __DIR__ . '/' . $this->getGeneticModelFileName();
+        return 'php/' . $this->getGeneticModelFileName();
     }
 
     private function getGeneticModelFileName(): string
     {
-        $s = $this->getSuffixName();
-        return "genetic_{$s}.php";
+        return "{$this->getSuffixName()}.php";
     }
 
-    function getOutputFileName(): string
+    public function getOutputFileName(): string
     {
         $s = $this->getSuffixName();
         return "{$s}";
