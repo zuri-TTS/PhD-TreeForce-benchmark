@@ -8,7 +8,7 @@ final class Queries
 
     public static function getAll(bool $getPath = true): array
     {
-        $path = \getQueriesBasePath();
+        $path = self::getBasePath();
         $queries = \scandirNoPoints($path);
         $ret = \array_filter($queries, fn ($f) => \is_file("$path/$f"));
         \sort($ret);
