@@ -98,7 +98,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     function __construct(array $args)
     {
         $this->query_nbRewritings = [];
-        $this->queries = getQueries(false);
+        $this->queries = \Queries::getAll(false);
         // Prepare queries' range
         {
             $user_q = argPrefixed($args, 'Q');
@@ -341,7 +341,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     private function init(): void
     {
         $this->labels = [];
-        $path = getQueriesBasePath();
+        $path = \Queries::getBasePath();
 
         foreach ($this->queries as $query) {
             $fpath = "$path/$query";
