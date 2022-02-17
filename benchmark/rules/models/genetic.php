@@ -4,8 +4,8 @@ namespace Generator;
 return fn (array $args) => new class($args) implements IModelGenerator {
 
     private const default_nbRefs_range = [
-        100,
-        110
+        1,
+        1000000
     ];
 
     private array $queries;
@@ -21,22 +21,22 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private float $crossOver_nbLabels_factor_min = 0;
 
-    private float $crossOver_nbLabels_factor_max = 0.8;
+    private float $crossOver_nbLabels_factor_max = 0.6;
 
     private float $select_factor = .5;
 
-    private float $select_factor_elite = .3;
+    private float $select_factor_elite = .45;
 
-    private float $mutation_factor = .8;
+    private float $mutation_factor = .2;
 
-    private float $reproduction_factor = .6;
+    private float $reproduction_factor = .8;
 
-    private float $fresh_factor = .15;
+    private float $fresh_factor = 0;
 
     private bool $skip_existing = true;
 
     private bool $stopOnSolution = true;
-    
+
     private bool $forceRetry = false;
 
     private bool $solutions_more = true;
@@ -51,13 +51,13 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private int $sort = 1;
 
-    private int $init_rand_max = 10;
+    private int $init_rand_max = 7;
 
-    private int $mutation_nb_max = 5;
+    private int $mutation_nb_max = 4;
 
     private int $mutation_rand_min = 1;
 
-    private int $mutation_rand_max = 5;
+    private int $mutation_rand_max = 3;
 
     private $display = 0;
 
