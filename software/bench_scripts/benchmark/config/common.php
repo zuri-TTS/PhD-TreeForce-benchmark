@@ -90,6 +90,8 @@ return [
             $outDir .= '[toNative.useSummary]';
         if ($javaProperties['querying.mode'] === 'each')
             $outDir .= '[each]';
+        elseif ($javaProperties['querying.mode'] === 'stats')
+            $outDir .= '[stats]';
         if ($javaProperties['toNative.dots'] === 'y')
             $outDir .= '[dots]';
         if ($cold)
