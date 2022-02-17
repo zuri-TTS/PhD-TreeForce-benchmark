@@ -85,7 +85,13 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
 
     $outDir = sprintf($outDirPattern, $common['bench.datetime']->format('Y-m-d H:i:s v'));
 
-    $outputPath = \realpath($cmdArg['output'] ?? $common['bench.output.base.path']) . "/$outDir";
+    $pp = $cmdArg['output'] ?? $common['bench.output.base.path'];
+    $bpath = \realpath($pp);
+
+    if (false === $bpath)
+        throw new \Exception("Error output path '$pp' does not exists");
+
+    $outputPath = $bpath . "/$outDir";
     $javaProperties['output.path'] = $outputPath;
 
     $ret = array_merge($common, [
