@@ -85,8 +85,8 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
 
     $outDir = sprintf($outDirPattern, $common['bench.datetime']->format('Y-m-d H:i:s v'));
 
-    $outputPath = ($cmdArg['output'] ?? $common['bench.output.base.path']) . "/$outDir";
-    $javaProperties['output.path'] = "$outputPath";
+    $outputPath = \realpath($cmdArg['output'] ?? $common['bench.output.base.path']) . "/$outDir";
+    $javaProperties['output.path'] = $outputPath;
 
     $ret = array_merge($common, [
         'app.cmd' => $cmd,
@@ -94,6 +94,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
         'bench.output.dir' => $outDir,
+        'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
         'bench.plot.types' => $cmdArg['plot'],
         'app.output.display' => $cmdArg['cmd-display-output']
