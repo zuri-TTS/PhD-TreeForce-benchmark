@@ -61,7 +61,6 @@ final class Check
     // ========================================================================
     public function checkNbAnswers()
     {
-        echo "ppppp";
         $csvGroups = self::getCSVGroups($this->paths, 'Check::groupBy_data_query_rules');
         \uksort($csvGroups, 'strnatcasecmp');
 
@@ -71,7 +70,6 @@ final class Check
             foreach ($queriesFiles as &$f)
                 \uksort($f, 'strnatcasecmp');
         }
-        print_r($csvGroups);
 
         foreach ($csvGroups as $group => $queriesFiles) {
             echo "[$group]\n";
