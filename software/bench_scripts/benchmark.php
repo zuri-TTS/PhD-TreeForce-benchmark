@@ -134,7 +134,7 @@ while (! empty($argv)) {
                     '-generate-dataset',
                     '-clean-db',
                     "output:",
-                    \escapeshellarg(\sys_get_temp_dir()),
+                    \sys_get_temp_dir(),
                     '+plot'
                 ];
                 include_script(__DIR__ . '/benchmark.php', $vars);
