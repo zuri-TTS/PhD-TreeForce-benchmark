@@ -33,6 +33,10 @@ final class XMark2Json
 
     private bool $summarize;
 
+    private array $stats = [
+        'documents.nb' => 0
+    ];
+
     public function __construct(array $dataSets, array $cmdConfig)
     {
         $groups = [];
@@ -171,6 +175,7 @@ final class XMark2Json
                 $this->writeSummary($fd['dataset']);
             }
         }
+        \printPHPFile("$this->groupPath/stats.php", $this->stats);
     }
 
     // ========================================================================
@@ -606,6 +611,7 @@ final class XMark2Json
             $data = $postProcess($data);
         }
         $this->addToSummary($dataSet, $data);
+        $this->stats['documents.nb'] ++;
 
         return \json_encode($data);
     }

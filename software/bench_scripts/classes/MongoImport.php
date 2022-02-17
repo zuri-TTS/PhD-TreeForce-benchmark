@@ -7,6 +7,8 @@ final class MongoImport
 
     private static ?array $collections_cache = null;
 
+    private static ?array $collections_stats_cache = null;
+
     public function __construct(DataSet $dataSet)
     {
         $this->dataSet = $dataSet;
@@ -15,6 +17,26 @@ final class MongoImport
     public static function import(): void
     {
         $this->importDataSet($this->dataSet);
+    }
+
+    public static function countDocuments(DataSet $dataSet, bool $forceEval = false): int
+    {
+        if (! $forceEval) {
+            $v = self::$collections_stats_cache[$dataSet->group()] ?? null;
+
+            if (isset($v))
+                return $v;
+        }
+        $collName = self::getCollectionName($dataSet);
+        $cmd = "mongosh treeforce --quiet --eval 'db.getCollection(\"$collName\").estimatedDocumentCount()'";
+
+        if (0 === ($exitCode = \simpleExec($cmd, $output, $err))) {
+            $ret = (int) ($output);
+            self::$collections_stats_cache[$dataSet->group()] = $ret;
+            return $ret;
+        } else {
+            throw new \Exception("Error on command: $cmd\nexit code: $exitCode\n");
+        }
     }
 
     public static function dropCollection(DataSet $dataSet): void

@@ -7,6 +7,8 @@ final class DataSet
 
     private string $rules;
 
+    private array $stats;
+
     private array $qualifiers = [];
 
     // ========================================================================
@@ -70,6 +72,24 @@ final class DataSet
     public function exists(): bool
     {
         return DataSets::exists($this);
+    }
+
+    public function stats(): array
+    {
+        $path = $this->stats_filePath();
+
+        $def = [
+            'documents.nb' => -1
+        ];
+        if (\is_file($path))
+            return (include $path) + $def;
+
+        return $def;
+    }
+
+    private function stats_filePath(): string
+    {
+        return $this->groupPath() . '/stats.php';
     }
 
     // ========================================================================

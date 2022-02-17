@@ -25,6 +25,11 @@ function rrmdir(string $dir, bool $rmRoot = true)
         \rmdir($dir);
 }
 
+function printPHPFile(string $path, $data)
+{
+    return \file_put_contents($path, "<?php return\n" . var_export($data, true) . ';');
+}
+
 function wdOp(string $workingDir, callable $exec)
 {
     $wd = \getcwd();
