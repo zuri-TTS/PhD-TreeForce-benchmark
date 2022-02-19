@@ -10,12 +10,25 @@ final class ModelGen
 
     private string $outFileName;
 
+    private string $ns;
+
     private \Generator\IModelGenerator $generator;
 
-    public function __construct(string $modelPath, array $args)
+    public function __construct(string $modelPath, array $args, string $mode = 'rules')
     {
-        $this->basePath = \Rules::getStoragePath();
-        $this->modelBasePath = \Rules::getModelsBasePath() . "/$modelPath";
+        switch (\strtolower($mode)) {
+            case 'rules':
+                $ns = '\Rules';
+                break;
+            case 'queries':
+                $ns = '\Queries';
+                break;
+            default:
+                throw new \Exception(__CLASS__ . "; Invalid mode: $mode");
+        }
+        $this->ns = $ns;
+        $this->basePath = $ns::getStoragePath();
+        $this->modelBasePath = $ns::getModelsBasePath() . "/$modelPath";
         $modelFilePath = "$this->modelBasePath.php";
 
         if (! \is_file($modelFilePath))
@@ -42,6 +55,11 @@ final class ModelGen
             if ($this->generator->validArgs()) {
                 echo "Generating model/$this->outFileName\n";
                 $this->generator->generate("$this->outFileName.model");
+
+                if ($this->ns === '\Rules')
+                    $this->generateRules();
+                else
+                    $this->generateQueries();
                 return true;
             }
             echo $this->generator->usage();
@@ -49,7 +67,96 @@ final class ModelGen
         });
     }
 
-    public function generateRules()
+    // ========================================================================
+    private function generateQueries()
+    {
+        return \wdOp($this->basePath, function () {
+            $outDirPath = "$this->basePath/$this->outFileName";
+
+            echo "Generate queries in $outDirPath\n";
+
+            echo "$this->modelBasePath/$this->outFileName.model\n";
+            $model = $this->readQueriesModel("$this->modelBasePath/$this->outFileName.model");
+
+            foreach ($model as $group => $queries) {
+                $dirPath = "$outDirPath/$group";
+
+                if (! \is_dir($dirPath))
+                    \mkdir($dirPath, 0777, true);
+                else
+                    \rrmdir($dirPath, false);
+
+                $i = 1;
+                foreach ($queries as $query) {
+                    $filePath = "$dirPath/$i";
+                    $trad = '^' . $this->tradQuery($query);
+                    \file_put_contents($filePath, $trad);
+                    $i ++;
+                }
+            }
+        });
+    }
+
+    private function tradQuery($query): string
+    {
+        $parts = [];
+
+        foreach ($query as $key => $val) {
+            $s = "";
+
+            if (! empty($s))
+                $s .= ',';
+
+            if (! \preg_match('#^[\d\w_]+$#', $key))
+                $key = "\"$key\"";
+
+            $s .= $key;
+
+            if (\is_scalar($val))
+                $s .= "=\"$val\"";
+            elseif (null === $val);
+            else {
+                $nbChilds = count($val);
+
+                if (1 == $nbChilds)
+                    $s .= '.' . $this->tradQuery($val[0]);
+                else {
+                    $tmp = [];
+
+                    foreach ($val as $sub)
+                        $tmp[] = $this->tradQuery($sub);
+
+                    $s .= '(' . implode(',', $tmp) . ')';
+                }
+            }
+            $parts[] = $s;
+        }
+        if (\count($parts) === 1)
+            return $parts[0];
+
+        return '(' . implode(',', $parts) . ')';
+    }
+
+    private function readQueriesModel(string $modelPath): array
+    {
+        $queries = [];
+        $group = null;
+
+        foreach (\file($modelPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            if (($line[0] ?? '#') === '#')
+                continue;
+
+            if (\preg_match('#^\[(.+)\]$#', $line, $matches))
+                $group = $matches[1];
+            else {
+                $queries[$group][] = \json_decode($line, true);
+            }
+        }
+        return $queries;
+    }
+
+    // ========================================================================
+    private function generateRules()
     {
         return \wdOp($this->basePath, function () {
             $outDirPath = "$this->basePath/$this->outFileName";
@@ -57,7 +164,7 @@ final class ModelGen
             echo "Generate rules in $outDirPath\n";
 
             echo "$this->modelBasePath/$this->outFileName.model\n";
-            $model = $this->readModel("$this->modelBasePath/$this->outFileName.model");
+            $model = $this->readRulesModel("$this->modelBasePath/$this->outFileName.model");
 
             if (empty($model))
                 echo "Nothing to generate, retry another time\n";
@@ -88,7 +195,7 @@ final class ModelGen
         $file->fwrite("\n");
     }
 
-    private function readModel(string $modelPath): array
+    private function readRulesModel(string $modelPath): array
     {
         $ret = [];
 

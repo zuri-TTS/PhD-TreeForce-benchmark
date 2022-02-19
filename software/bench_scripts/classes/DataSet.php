@@ -79,12 +79,22 @@ final class DataSet
         $path = $this->stats_filePath();
 
         $def = [
-            'documents.nb' => -1
+            'documents.nb' => - 1
         ];
         if (\is_file($path))
             return (include $path) + $def;
 
         return $def;
+    }
+
+    public function config(): array
+    {
+        return include $this->config_filePath();
+    }
+
+    private function config_filePath(): string
+    {
+        return $this->groupPath() . '/config.php';
     }
 
     private function stats_filePath(): string

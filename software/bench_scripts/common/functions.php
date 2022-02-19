@@ -7,6 +7,22 @@ if (! function_exists('array_is_list')) {
     }
 }
 
+if (! function_exists('str_starts_with')) {
+
+    function str_starts_with(string $haystack, string $needle)
+    {
+        return strpos($haystack, $needle) === 0;
+    }
+}
+
+function srange($min, $max): string
+{
+    if ($min === $max)
+        return "$min";
+
+    return "$min,$max";
+}
+
 function rrmdir(string $dir, bool $rmRoot = true)
 {
     $paths = new \RecursiveIteratorIterator( //
@@ -25,9 +41,14 @@ function rrmdir(string $dir, bool $rmRoot = true)
         \rmdir($dir);
 }
 
-function printPHPFile(string $path, $data)
+function printPHPFile(string $path, $data, bool $compact = false)
 {
-    return \file_put_contents($path, "<?php return\n" . var_export($data, true) . ';');
+    $s = var_export($data, true);
+
+    if ($compact)
+        $s = \preg_replace('#\s#', '', $s);
+
+    return \file_put_contents($path, "<?php return $s;");
 }
 
 function wdOp(string $workingDir, callable $exec)
@@ -56,6 +77,11 @@ function removePrefix(string $s, string $prefix): string
         return \substr($s, \strlen($prefix));
 
     return $s;
+}
+
+function in_range($val, $min, $max)
+{
+    return $min <= $val && $val <= $max;
 }
 
 function parseArgv(array $argv): array
@@ -145,15 +171,83 @@ function argShift(array &$args, string $key, $default = null)
     return $v;
 }
 
-function array_delete(array &$array, ...$val): bool
+function array_map_key(?callable $callback, array $array): array
 {
-    $k = \array_search($val, $array);
+    return \array_combine(\array_map($callback, \array_keys($array)), $array);
+}
 
-    if (false !== $k) {
-        unset($array[$k]);
-        return true;
+function &array_follow(array &$array, array $path, $default = null)
+{
+    $p = &$array;
+
+    while (\array_key_exists($k = \array_shift($path), $p)) {
+        $p = &$p[$k];
+
+        if (! is_array($p))
+            break;
     }
-    return false;
+
+    if (! empty($path))
+        return $default;
+
+    return $p;
+}
+
+function array_kdelete_get(array &$array, $key, $default = null)
+{
+    if (! \array_key_exists($key, $array))
+        return $default;
+
+    $ret = $array[$key];
+    unset($array[$key]);
+    return $ret;
+}
+
+function array_delete(array &$array, ...$vals): bool
+{
+    $ret = true;
+
+    foreach ($vals as $val) {
+        $k = \array_search($val, $array);
+
+        if (false === $k)
+            $ret = false;
+        else
+            unset($array[$k]);
+    }
+    return $ret;
+}
+
+function array_delete_branches(array &$array, array $branches): bool
+{
+    $ret = true;
+
+    foreach ($branches as $branch)
+        $ret = \array_delete_branch($array, $branch) && $ret;
+
+    return $ret;
+}
+
+function array_delete_branch(array &$array, array $branch): bool
+{
+    $def = (object) [];
+    $p = \array_pop($branch);
+    $a = &\array_follow($array, $branch, $def);
+
+    if ($a === $def)
+        return false;
+
+    do {
+        unset($a[$p]);
+
+        if (\count($a) > 0) {
+            break;
+        }
+        $p = \array_pop($branch);
+        $a = &\array_follow($array, $branch);
+    } while (null !== $p);
+
+    return true;
 }
 
 function array_partition(array $array, callable $filter): array
@@ -166,7 +260,7 @@ function array_partition(array $array, callable $filter): array
     ];
 }
 
-function array_filter_shift(array &$array, ?callable $filter = null, int $mode): array
+function array_filter_shift(array &$array, ?callable $filter = null, int $mode = 0): array
 {
     $drop = [];
     $ret = [];
@@ -194,6 +288,129 @@ function array_filter_shift(array &$array, ?callable $filter = null, int $mode):
     foreach ($drop as $d)
         unset($array[$d]);
 
+    return $ret;
+}
+
+function array_walk_branches(array &$data, callable $walk, ?callable $fdown = null): void
+{
+    $ret = [];
+
+    $toProcess = [
+        [
+            [],
+            &$data
+        ]
+    ];
+    if (null === $fdown)
+        $fdown = fn () => true;
+
+    while (! empty($toProcess)) {
+        $nextToProcess = [];
+
+        foreach ($toProcess as $tp) {
+            $path = $tp[0];
+            $array = &$tp[1];
+
+            foreach ($array as $k => &$val) {
+                $path[] = $k;
+
+                if (\is_array($val) && ! empty($val)) {
+
+                    if ($fdown($path, $val))
+                        $nextToProcess[] = [
+                            $path,
+                            &$val
+                        ];
+                } else
+                    $walk($path, $val);
+
+                \array_pop($path);
+            }
+        }
+        $toProcess = $nextToProcess;
+    }
+}
+
+function array_delete_branches_end(array &$array, array $branches, $delVal = null): void
+{
+    foreach ($branches as $branch)
+        \array_delete_branch_end($array, $branch, $delVal);
+}
+
+function array_delete_branch_end(array &$array, array $branch, $delVal = null): void
+{
+    $a = &\array_follow($array, $branch);
+    $a = $delVal;
+}
+
+function array_walk_depth(array &$data, callable $walk): void
+{
+    $ret = [];
+
+    $toProcess = [
+        &$data
+    ];
+
+    while (! empty($toProcess)) {
+        $nextToProcess = [];
+
+        foreach ($toProcess as &$item) {
+            $walk($item);
+
+            if (\is_array($item))
+                foreach ($item as $k => &$val)
+                    $nextToProcess[] = &$val;
+        }
+        $toProcess = $nextToProcess;
+    }
+}
+
+function array_is_almost_list(array $array)
+{
+    $notInt = \array_filter(\array_keys($array), fn ($k) => ! \is_int($k));
+    return empty($notInt);
+}
+
+function array_reindex_list(array &$array)
+{
+    if (! \array_is_almost_list($array))
+        return;
+
+    $array = \array_values($array);
+}
+
+function array_reindex_lists_recursive(array &$array)
+{
+    \array_walk_depth($array, function (&$val) {
+        if (\is_array($val))
+            \array_reindex_list($val);
+    });
+}
+
+function array_depth(array $data): int
+{
+    $ret = 0;
+    array_walk_branches($data, function ($path) use (&$ret) {
+        $ret = \max($ret, \count($path));
+    });
+    return $ret;
+}
+
+function array_nb_branches(array $data): int
+{
+    $ret = 0;
+    array_walk_branches($data, function () use (&$ret) {
+        $ret ++;
+    });
+    return $ret;
+}
+
+function array_branches(array $data): array
+{
+    $ret = [];
+    array_walk_branches($data, function ($path) use (&$ret) {
+        $ret[] = $path;
+    });
     return $ret;
 }
 
@@ -239,11 +456,11 @@ function updateArray_getRemains(array $args, array &$array, ?callable $mapKey = 
     return $remains;
 }
 
-function updateObject(array $args, object &$obj)
+function updateObject(array $args, object &$obj, string $k_prefix = '')
 {
     foreach ($args as $k => $v) {
         $k = \str_replace('.', '_', $k);
-        $obj->$k = $v;
+        $obj->{"$k_prefix$k"} = $v;
     }
 }
 
@@ -272,7 +489,7 @@ function get_ob(callable $f)
 function include_script(string $filename, array $argv)
 {
     if (is_file($filename))
-        include $filename;
+        return include $filename;
 
     return false;
 }
@@ -326,6 +543,11 @@ function get_include_contents(string $filename, array $variables, string $unique
         return ob_get_clean();
     }
     return false;
+}
+
+function getPHPScriptsBasePath(): string
+{
+    return getBenchmarkBasePath() . '/software/bench_scripts';
 }
 
 function getBenchmarkBasePath(): string

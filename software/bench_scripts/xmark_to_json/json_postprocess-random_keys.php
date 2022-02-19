@@ -31,50 +31,7 @@ if (! function_exists('replaceJsonData')) {
 
 return function (DataSet $dataSet, XMark2Json $converter): callable {
     // We define an internal pseudo number generator to permit to generate an identical set of data for different persons.
-    $pseudoGenerator = new class($converter->getSeed()) implements \Iterator {
-
-        // LCG
-        private $a = 1103515245;
-
-        private $b = 12345;
-
-        private $c = 1024 ** 3 * 2;
-
-        private $seed;
-
-        private $randValue;
-
-        function __construct(int $seed)
-        {
-            $this->seed = $seed;
-            $this->randValue = $seed;
-        }
-
-        public function rewind()
-        {
-            $this->randValue = $this->seed;
-        }
-
-        public function current()
-        {
-            return (int) $this->randValue;
-        }
-
-        public function key()
-        {
-            return null;
-        }
-
-        public function next()
-        {
-            $this->randValue = ($this->randValue * $this->a + $this->b) % $this->c;
-        }
-
-        public function valid()
-        {
-            return true;
-        }
-    };
+    $pseudoGenerator = new \PseudoGenerator\OfInt($converter->getSeed());
     $replacements = $converter->getRelabellings($dataSet);
 
     return function (array $data) use ($replacements, $pseudoGenerator) {

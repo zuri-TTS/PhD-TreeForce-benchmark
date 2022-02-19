@@ -23,4 +23,14 @@ final class Queries
     {
         return \getBenchmarkBasePath() . '/benchmark/queries_conf/queries';
     }
+
+    public static function getStoragePath()
+    {
+        return \getBenchmarkBasePath() . '/benchmark/queries';
+    }
+
+    public static function getModelsBasePath()
+    {
+        return \getBenchmarkBasePath() . '/benchmark/queries/models';
+    }
 }

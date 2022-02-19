@@ -1,8 +1,8 @@
 <?php
 array_shift($argv);
 
-include __DIR__ . '/common/functions.php';
-include __DIR__ . '/generate_rules/ModelGen.php';
+require_once __DIR__ . '/classes/autoload.php';
+require_once __DIR__ . '/common/functions.php';
 
 $modelPath = 'genetic';
 
@@ -13,18 +13,18 @@ $ranges = [
         1, // increment
         0 // result range
     ],
-    [
-        10,
-        100,
-        20,
-        10
-    ],
-    [
-        100,
-        550,
-        50,
-        25
-    ]
+//     [
+//         10,
+//         100,
+//         20,
+//         0//10
+//     ],
+//     [
+//         100,
+//         550,
+//         50,
+//         0//25
+//     ]
 ];
 
 $options = [
@@ -44,7 +44,7 @@ foreach ($ranges as $range) {
             $max
         ];
         echo "\n[$i, $max]\n";
-        $generator = new ModelGen($modelPath, $args);
-        $generator->generate() && $generator->generateRules();
+        $generator = new \Generator\ModelGen($modelPath, $args);
+        $generator->generate();
     }
 }
