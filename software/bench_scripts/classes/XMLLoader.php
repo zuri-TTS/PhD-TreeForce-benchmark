@@ -1,6 +1,6 @@
 <?php
 
-final class XMark2Json
+final class XMLLoader
 {
 
     private string $group;
@@ -83,7 +83,7 @@ final class XMark2Json
     }
 
     // ========================================================================
-    public function summarize(bool $summarize = true): XMark2Json
+    public function summarize(bool $summarize = true): self
     {
         $this->summarize = $summarize;
         return $this;

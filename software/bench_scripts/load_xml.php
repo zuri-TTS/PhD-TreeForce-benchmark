@@ -57,7 +57,7 @@ while (! empty($argv)) {
 
     foreach ($toProcess as $dataSets) {
         $qualifiers = $dataSets[0]->qualifiers();
-        $converter = (new \XMark2Json($dataSets))-> //
+        $converter = (new \XMLLoader($dataSets))-> //
         summarize($cmdParsed['summarize']);
 
         if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
