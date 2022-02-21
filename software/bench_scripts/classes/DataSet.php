@@ -3,6 +3,8 @@
 final class DataSet
 {
 
+    private \Data\ILoader $loader;
+
     private string $group;
 
     private string $rules;
@@ -94,12 +96,20 @@ final class DataSet
 
     private function config_filePath(): string
     {
-        return $this->groupPath() . '/config.php';
+        return DataSets::getGroupConfigPath($this->group);
     }
 
     private function stats_filePath(): string
     {
         return $this->groupPath() . '/stats.php';
+    }
+
+    public function getGroupLoader(): \Data\ILoader
+    {
+        if (isset($this->loader))
+            return $this->loader;
+
+        return $this->loader = DataSets::getGroupLoader($this->group);
     }
 
     // ========================================================================

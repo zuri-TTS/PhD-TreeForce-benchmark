@@ -10,10 +10,19 @@ final class ObjectArgs
 
     private array $objArgs;
 
+    private $fmapKeyToProperty;
+
     public function __construct(object $obj)
     {
         $this->obj = $obj;
         $this->makeArgs();
+        $this->mapKeyToProperty = fn ($k) => $k;
+    }
+
+    public function mapKeyToProperty(callable $mapKeyToProperty): ObjectArgs
+    {
+        $this->fmapKeyToProperty = $mapKeyToProperty;
+        return $this;
     }
 
     public function setPrefix(string $prefix): ObjectArgs
@@ -41,6 +50,17 @@ final class ObjectArgs
         return $this->objArgs;
     }
 
+    public function checkEmpty(array $args, string $msg = '')
+    {
+        if (! empty($args)) {
+
+            if (empty($msg))
+                $msg = "\nValid cli arguments are:\n" . \get_ob(fn () => $this->display());
+
+            throw new \Exception("Unknown argument(s):\n" . \var_export($args, true) . $msg);
+        }
+    }
+
     private function makeArgs(): void
     {
         $this->objArgs = [];
@@ -66,6 +86,7 @@ final class ObjectArgs
 
     private function keyToProperty(string $key): string
     {
+        $key = ($this->fmapKeyToProperty)($key);
         return "$this->prefix$key";
     }
 

@@ -15,6 +15,11 @@ if (! function_exists('str_starts_with')) {
     }
 }
 
+function str_format(string $s, array $vars): string
+{
+    return \str_replace(\array_map(fn ($k) => "%$k", \array_keys($vars)), \array_values($vars), $s);
+}
+
 function srange($min, $max): string
 {
     if ($min === $max)
@@ -543,6 +548,11 @@ function get_include_contents(string $filename, array $variables, string $unique
         return ob_get_clean();
     }
     return false;
+}
+
+function getSoftwareBinBasePath(): string
+{
+    return getBenchmarkBasePath() . '/software/bin';
 }
 
 function getPHPScriptsBasePath(): string

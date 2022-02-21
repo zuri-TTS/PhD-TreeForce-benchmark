@@ -9,12 +9,6 @@ final class XMark2Json
 
     private array $dataSets;
 
-    private array $config;
-
-    private array $cmdConfig;
-
-    private array $unwind;
-
     private array $path = [];
 
     private array $files;
@@ -37,7 +31,9 @@ final class XMark2Json
         'documents.nb' => 0
     ];
 
-    public function __construct(array $dataSets, array $cmdConfig)
+    private \Data\ILoader $groupLoader;
+
+    public function __construct(array $dataSets)
     {
         $groups = [];
 
@@ -50,14 +46,12 @@ final class XMark2Json
         $basePath = \getBenchmarkBasePath();
         $this->group = $group;
         $this->groupPath = DataSets::getGroupPath($group);
-        $configPath = "$this->groupPath/config.php";
         $this->dataSets = $dataSets;
         $this->myBaseDir = \getBenchmarkBasePath() . '/software/bench_scripts/xmark_to_json';
-        $this->config = include $configPath;
-        $this->unwind = include "$this->myBaseDir/unwind.php";
-        $this->cmdConfig = $cmdConfig;
 
         $this->summarize = false;
+        $this->groupLoader = DataSets::getGroupLoader($this->group);
+        $this->doNotSimplify = $this->groupLoader->getDoNotSimplifyConfig();
     }
 
     // ========================================================================
@@ -83,11 +77,6 @@ final class XMark2Json
         return "{$dataSet->path()}/summary-$type.txt";
     }
 
-    public function getSeed(): int
-    {
-        return $this->config['seed'];
-    }
-
     public function getDataSet(): DataSet
     {
         return $this->dataSet;
@@ -97,12 +86,6 @@ final class XMark2Json
     public function summarize(bool $summarize = true): XMark2Json
     {
         $this->summarize = $summarize;
-        return $this;
-    }
-
-    public function doNotSimplify(array $doNotSimplify): XMark2Json
-    {
-        $this->doNotSimplify = $doNotSimplify;
         return $this;
     }
 
@@ -133,7 +116,7 @@ final class XMark2Json
                 return $dataSet;
 
             return [
-                'randomize' => empty($rulesFiles) ? fn ($data) => $data : (include "$this->myBaseDir/json_postprocess-random_keys.php")($dataSet, $this),
+                'randomize' => empty($rulesFiles) ? fn ($data) => $data : $this->groupLoader->getLabelReplacerForDataSet($dataSet),
                 'simplify' => $dataSet->isSimplified(),
                 'path' => $path,
                 'dataset' => $dataSet
@@ -163,9 +146,8 @@ final class XMark2Json
         if (empty($this->filesData))
             return;
 
-        $xmarkFilePath = $this->XMarkFilePath();
-        $this->generateXMark($xmarkFilePath);
-        $this->read(\XMLReader::open($xmarkFilePath));
+        $xmlFilePath = $this->groupLoader->getXMLFilePath();
+        $this->read(\XMLReader::open($xmlFilePath));
 
         foreach ($this->filesData as $fd) {
             \touch("{$fd['path']}/end.json");
@@ -179,32 +161,9 @@ final class XMark2Json
     }
 
     // ========================================================================
-    private function generateXMark(string $xmarkFilePath)
+    public function deleteXMLFile()
     {
-        if (\is_file($xmarkFilePath))
-            return;
-
-        echo "Generate $xmarkFilePath\n";
-        $basePath = getBenchmarkBasePath();
-        $xmarkCmd = $this->cmdConfig['xmark.program.path'];
-        $factor = $this->config['xmark.factor'];
-        $cmd = "'$basePath/$xmarkCmd' -f $factor -o '$xmarkFilePath'";
-        echo "Execute $cmd";
-        \system($cmd);
-    }
-
-    private function XMarkFilePath(): string
-    {
-        return "$this->groupPath/xmark.xml";
-    }
-
-    // ========================================================================
-    public function deleteXMark()
-    {
-        $path = $this->XMarkFilePath();
-
-        if (\is_file($path))
-            \unlink($path);
+        return $this->groupLoader->deleteXMLFile();
     }
 
     public function dropEmpty()
@@ -266,7 +225,7 @@ final class XMark2Json
     {
         $ret = [];
 
-        foreach ($this->unwind as $u) {
+        foreach ($this->groupLoader->getUnwindConfig() as $u) {
             if (0 === \strpos($u, $path))
                 $ret[] = $u;
         }
@@ -381,52 +340,6 @@ final class XMark2Json
     }
 
     // ========================================================================
-    private static function _getRelabellings($ruleFile): array
-    {
-        $lines = file($ruleFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $ret = [];
-
-        foreach ($lines as $line) {
-            if (\trim($line)[0] === '#')
-                continue;
-
-            [
-                $body,
-                $head
-            ] = \array_map('trim', explode('->', $line));
-            $body = \explode('=', $body, 2)[0];
-            $head = \explode('=', $head, 2)[0];
-
-            $body = \trim($body, "'\"");
-            $head = \trim($head, "'\"");
-
-            // The head is in the replacement set
-            if (! isset($ret[$head]))
-                $ret[$head] = [
-                    $head
-                ];
-
-            $ret[$head][] = $body;
-        }
-        return $ret;
-    }
-
-    public function getRelabellings(DataSet $dataSet)
-    {
-        $rulesPath = $dataSet->rulesPath();
-        $rulesFilePath = "$rulesPath/querying.txt";
-
-        if (! \is_dir($rulesPath)) {
-            echo "Warning: rule file $rulesFilePath does not exists (for $dataSet)\n";
-            $rel = [];
-        } else if (! \is_file($rulesFilePath)) {
-            $rel = [];
-        } else
-            $rel = self::_getRelabellings($rulesFilePath);
-
-        return $rel;
-    }
-
     private static function getFileFromUnwind(string $unwind, string $baseDir = ""): string
     {
         if (! empty($baseDir))
@@ -456,10 +369,6 @@ final class XMark2Json
 
             if ($doNotSimplify)
                 $e = (array) $e;
-
-            // Add a value to be recognized as an array by TreeForce-Demo
-            // if (\count($e) === 1)
-            // $e[] = null;
 
             if (\is_array($e)) {
 

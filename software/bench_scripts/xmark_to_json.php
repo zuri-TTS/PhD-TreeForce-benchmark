@@ -5,10 +5,6 @@ include_once __DIR__ . '/common/functions.php';
 
 \array_shift($argv);
 
-$cmdConfig = [
-    'xmark.program.path' => 'software/bin/xmlgen.Linux'
-];
-
 $cmdArgsDef = [
     'cmd-display-output' => false,
     'drop-empty' => false,
@@ -20,7 +16,7 @@ $cmdArgsDef = [
     'pre-clean-db' => false,
     'pre-clean-all' => false,
     'post-clean' => false,
-    'post-clean-xmark' => false,
+    'post-clean-xml' => false,
     'post-clean-all' => false,
     'simplify_object_useConfig' => true
 ];
@@ -59,12 +55,9 @@ while (! empty($argv)) {
         $toProcess["$group"][] = $dataSet;
     }
 
-    $doNotSimplify = include __DIR__ . '/xmark_to_json/do_not_simplify.php';
-
     foreach ($toProcess as $dataSets) {
         $qualifiers = $dataSets[0]->qualifiers();
-        $converter = (new \XMark2Json($dataSets, $cmdConfig))-> //
-        doNotSimplify($doNotSimplify)-> //
+        $converter = (new \XMark2Json($dataSets))-> //
         summarize($cmdParsed['summarize']);
 
         if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
@@ -86,7 +79,7 @@ while (! empty($argv)) {
         if ($cmdParsed['post-clean'] || $cmdParsed['post-clean-all'])
             $converter->clean();
 
-        if ($cmdParsed['post-clean-xmark'] || $cmdParsed['post-clean-all'])
-            $converter->deleteXMark();
+        if ($cmdParsed['post-clean-xml'] || $cmdParsed['post-clean-all'])
+            $converter->deleteXMLFile();
     }
 }

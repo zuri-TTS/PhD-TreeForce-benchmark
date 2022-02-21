@@ -92,6 +92,30 @@ final class DataSets
         return (array) $s;
     }
 
+    public static function getGroupConfig(string $group): array
+    {
+        return include self::getGroupPath($group) . '/config.php';
+    }
+
+    public static function getGroupConfigPath(string $group): string
+    {
+        return self::getGroupPath($group) . '/config.php';
+    }
+
+    public static function getGroupLoader(string $group): \Data\ILoader
+    {
+        $config = self::getGroupConfig($group);
+
+        if (! isset($config['loader']))
+            throw new \Exception("The field 'loader' must be defined in $group/config.php");
+        if (! \class_exists($config['loader']))
+            throw new \Exception("The class {$config['loader']} does not exists");
+
+        $loader = $config['loader'];
+        unset($config['loader']);
+        return new $loader($group, $config);
+    }
+
     // ========================================================================
     public static function exists(DataSet $dataset, bool $checkDataSet = true): bool
     {
