@@ -325,10 +325,11 @@ final class XMLLoader
 
     private function writeJson(XMLReader $reader)
     {
+        $destVal = [];
+        self::toPHP(\simplexml_load_string($reader->readOuterXml()), $destVal);
+
         $data = self::array_path($this->path, [
-            $reader->name => [
-                self::toPHP(\simplexml_load_string($reader->readOuterXml()))
-            ]
+            $reader->name => $destVal
         ]);
 
         foreach ($this->files as $d => $file) {
@@ -454,26 +455,27 @@ final class XMLLoader
         \fclose($fileType);
     }
 
-    private static function toPHP(\SimpleXMLElement $element): array
+    private static function toPHP(\SimpleXMLElement $element, array &$out): void
     {
         $obj = [];
 
         foreach ($element->children() as $name => $val) {
             if (\count($val) != 0) {
-                $php = self::toPHP($val);
-                $obj[$name][] = $php;
+                $php = [];
+                self::toPHP($val, $php);
+                $obj[$name] = $php;
             } else {
                 $attr = self::getAttributes($val);
                 $sval = (string) $val;
 
                 if (empty($attr))
                     $obj[$name][] = $sval;
-                elseif (\strlen($sval) > 0)
-                    $obj[$name][] = $attr + [
-                        '#value' => $sval
-                    ];
-                else
+                elseif (empty($sval)) {
                     $obj[$name][] = $attr;
+                } else {
+                    $obj[$name][] = $attr;
+                    $obj[$name][] = $sval;
+                }
             }
         }
 
@@ -490,12 +492,15 @@ final class XMLLoader
         unset($subObj);
 
         $name = $element->getName();
+        $attr = self::getAttributes($element);
+
+        if (! empty($attr))
+            $obj = $attr + $obj;
+
+        $out[] = $obj;
 
         if ($name === "text")
-            $obj["#value"] = $element->asXML();
-
-        $attr = self::getAttributes($element);
-        return $attr + $obj;
+            $out[] = $element->asXML();
     }
 
     private static function getAttributes(SimpleXMLElement $element): array
