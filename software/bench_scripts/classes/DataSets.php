@@ -9,6 +9,56 @@ final class DataSets
 
     private const groupsBasePath = 'benchmark/data';
 
+    // ========================================================================
+    public static function allGroups(array $ids): array
+    {
+        $groups = [];
+
+        foreach ($ids as $id)
+            $groups = \array_merge($groups, DataSets::allGroupsFromId($id));
+
+        \natcasesort($groups);
+        return $groups;
+    }
+
+    public static function allGroupsFromId(?string $id = null): array
+    {
+        $groups = empty($id) ? self::getAllGroups() : \explode(',', $id);
+
+        $groups = \array_merge(...\array_map(fn ($g) => self::expand($g, 'DataSets::getAllGroups'), $groups));
+
+        \natcasesort($groups);
+        return $groups;
+    }
+
+    // ========================================================================
+    public static function groupExists(string $group): bool
+    {
+        return self::_groupExists($group);
+    }
+
+    public static function allGroupsNotExists(array $groups)
+    {
+        $notExists = [];
+
+        foreach ($groups as $gr)
+            if (! self::groupExists($gr))
+                $notExists[] = $gr;
+
+        return $notExists;
+    }
+
+    public static function checkGroupsNotExists(array $groups): void
+    {
+        $notExists = DataSets::allGroupsNotExists($groups);
+
+        if (! empty($notExists)) {
+            $s = implode("\n", $notExists);
+            throw new \Exception("Some groups do not exists:\n$s\n");
+        }
+    }
+
+    // ========================================================================
     public static function all(array $ids): array
     {
         $dataSets = [];
@@ -27,15 +77,11 @@ final class DataSets
             preg_match("#^(.*)(?:/(.*))?(?:\[(.*)\])?$#U", $id, $matches);
             list (, $groups, $rulesSets, $qualifierss) = $matches + \array_fill(0, 4, '');
         }
-        $groups = empty($groups) ? self::getAllGroups() : \explode(',', $groups);
+        $groups = self::allGroupsFromId($groups);
         $rulesSets = empty($rulesSets) ? [] : \explode(',', $rulesSets);
         $qualifierss = empty($qualifierss) ? [
             ''
         ] : \explode(';', $qualifierss);
-
-        $groups = \array_merge(...\array_map(fn ($g) => self::expand($g, 'DataSets::getAllGroups'), $groups));
-
-        \natcasesort($groups);
 
         foreach ($qualifierss as &$q) {
             $q = \array_values(\array_filter(\explode(',', $q)));
@@ -156,6 +202,15 @@ final class DataSets
 
         if (! \is_dir($dir))
             return [];
+        return \scandirNoPoints($dir);
+    }
+
+    public function getAllQueries(string $group): array
+    {
+        $dir = self::getQueriesBasePath($group);
+
+        if (! \is_dir($dir))
+            return [];
 
         return \scandirNoPoints($dir);
     }
@@ -168,7 +223,12 @@ final class DataSets
 
     public static function getRulesBasePath(string $group): string
     {
-        return self::_groupPath($group) . '/' . self::ruleDir;
+        return getBenchmarkBasePath() . "/benchmark/rules_conf/symlinks/$group";
+    }
+
+    public static function getQueriesBasePath(string $group): string
+    {
+        return getBenchmarkBasePath() . "/benchmark/queries_conf/symlinks/$group";
     }
 
     public static function getGroupPath(string $group): string

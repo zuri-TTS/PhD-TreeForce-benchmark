@@ -74,7 +74,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
     $javaProperties = array_merge([
         'db.collection' => MongoImport::getCollectionName($dataSet),
         'summary.type' => $summaryType,
-        'queries.dir' => \Queries::getBasePath(),
+        'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
         'summary' => $summaryPath ?? '',
         'toNative.useSummary' => ($cmd !== 'summarize' && $dataSet->isSimplified()) ? 'y' : 'n'
