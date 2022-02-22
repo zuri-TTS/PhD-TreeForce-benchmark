@@ -125,7 +125,7 @@ while (! empty($argv)) {
                     $dataSet->id(),
                     '+load'
                 ];
-                include_script(__DIR__ . '/xmark_to_json.php', $vars);
+                include_script(__DIR__ . '/load_xml.php', $vars);
                 $vars = [
                     '',
                     $dataSet->id(),
@@ -166,7 +166,7 @@ while (! empty($argv)) {
                     '+drop',
                     '+cmd-display-output'
                 ];
-                include_script(__DIR__ . '/xmark_to_json.php', $vars);
+                include_script(__DIR__ . '/load_xml.php', $vars);
             }
 
             if ($cmdParsed['forget-results'])
