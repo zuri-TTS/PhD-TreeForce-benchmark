@@ -19,8 +19,6 @@ final class XMLLoader
 
     private array $doNotSimplify;
 
-    private string $myBaseDir;
-
     private array $summary;
 
     private int $summaryDepth;
@@ -47,7 +45,6 @@ final class XMLLoader
         $this->group = $group;
         $this->groupPath = DataSets::getGroupPath($group);
         $this->dataSets = $dataSets;
-        $this->myBaseDir = \getBenchmarkBasePath() . '/software/bench_scripts/xmark_to_json';
 
         $this->summarize = false;
         $this->groupLoader = DataSets::getGroupLoader($this->group);
