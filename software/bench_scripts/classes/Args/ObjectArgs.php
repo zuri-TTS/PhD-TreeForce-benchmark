@@ -16,7 +16,7 @@ final class ObjectArgs
     {
         $this->obj = $obj;
         $this->makeArgs();
-        $this->mapKeyToProperty = fn ($k) => $k;
+        $this->fmapKeyToProperty = fn ($k) => $k;
     }
 
     public function mapKeyToProperty(callable $mapKeyToProperty): ObjectArgs
