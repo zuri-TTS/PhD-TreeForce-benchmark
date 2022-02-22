@@ -10,9 +10,9 @@ interface ILoader
 
     function getDoNotSimplifyConfig(): array;
 
-    function getXMLFilePath(): string;
+    function getXMLReader(): \XMLReader;
 
     function deleteXMLFile(): bool;
 
-    function getLabelReplacerForDataSet(\DataSet $dataSet): LabelReplacer;
+    function getLabelReplacerForDataSet(\DataSet $dataSet): callable;
 }

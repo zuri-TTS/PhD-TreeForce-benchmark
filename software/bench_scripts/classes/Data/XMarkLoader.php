@@ -76,7 +76,12 @@ final class XMarkLoader implements ILoader
         return true;
     }
 
-    public function getXMLFilePath(): string
+    public function getXMLReader(): \XMLReader
+    {
+        return \XMLReader::open($this->getXMLFilePath());
+    }
+
+    private function getXMLFilePath(): string
     {
         $xmarkFilePath = $this->XMarkFilePath();
         $this->generateXMark($xmarkFilePath);
@@ -103,7 +108,7 @@ final class XMarkLoader implements ILoader
         \system($cmd);
     }
 
-    public function getLabelReplacerForDataSet(\DataSet $dataSet): LabelReplacer
+    public function getLabelReplacerForDataSet(\DataSet $dataSet): callable
     {
         return LabelReplacer::getReplacerForDataSet($dataSet, $this->conf_seed);
     }

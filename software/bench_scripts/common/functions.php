@@ -56,6 +56,33 @@ function printPHPFile(string $path, $data, bool $compact = false)
     return \file_put_contents($path, "<?php return $s;");
 }
 
+function &wdStack(): array
+{
+    static $ret = [];
+    return $ret;
+}
+
+function wdPush(string $path): void
+{
+    $stack = &wdStack();
+    $wd = \getcwd();
+
+    if (! \chdir($path))
+        throw new \Exception("Cannot chdir to $path");
+
+    \array_push($stack, $path);
+}
+
+function wdPop(): void
+{
+    $stack = &wdStack();
+
+    if (empty($stack))
+        throw new \Exception("WD stack is empty");
+
+    \chdir(\array_pop($stack));
+}
+
 function wdOp(string $workingDir, callable $exec)
 {
     $wd = \getcwd();

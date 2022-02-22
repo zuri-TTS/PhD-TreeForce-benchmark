@@ -146,8 +146,7 @@ final class XMLLoader
         if (empty($this->filesData))
             return;
 
-        $xmlFilePath = $this->groupLoader->getXMLFilePath();
-        $this->read(\XMLReader::open($xmlFilePath));
+        $this->read($this->groupLoader->getXMLReader());
 
         foreach ($this->filesData as $fd) {
             \touch("{$fd['path']}/end.json");
@@ -238,6 +237,7 @@ final class XMLLoader
         $path = [];
         $rules = \array_keys($this->filesData);
 
+        \wdPush($this->groupPath);
         while ($reader->read()) {
             switch ($reader->nodeType) {
                 case XMLReader::TEXT:
@@ -270,6 +270,7 @@ final class XMLLoader
                 default:
             }
         }
+        \wdPop();
     }
 
     private function unwind(XMLReader $reader, array $unwind)
@@ -456,7 +457,7 @@ final class XMLLoader
         \fclose($fileType);
     }
 
-    private static function toPHP(SimpleXMLElement $element): array
+    private static function toPHP(\SimpleXMLElement $element): array
     {
         $obj = [];
 
@@ -472,7 +473,7 @@ final class XMLLoader
                     $obj[$name][] = $sval;
                 elseif (\strlen($sval) > 0)
                     $obj[$name][] = $attr + [
-                        '#value' => $Sval
+                        '#value' => $sval
                     ];
                 else
                     $obj[$name][] = $attr;

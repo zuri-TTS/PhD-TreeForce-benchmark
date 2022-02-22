@@ -1,0 +1,25 @@
+mastersthesis=?x? ---> document=?x?
+publication=?x?   ---> document=?x?
+proceedings=?x?   ---> document=?x?
+phdthesis=?x?     ---> document=?x?
+
+number=?x? ---> datatypeField=?x?
+volume=?x? ---> datatypeField=?x?
+pages=?x?  ---> datatypeField=?x?
+
+isbn=?x?          ---> publication=?x?
+volume=?x?        ---> publication=?x?
+pages=?x?         ---> publication=?x?
+month=?x?         ---> publication=?x?
+inproceedings=?x? ---> publication=?x?
+incollection=?x?  ---> publication=?x?
+book=?x?          ---> publication=?x?
+article=?x?       ---> publication=?x?
+series=?x?        ---> publication=?x?
+
+journal=?x?             ---> objectField=?x?
+series=?x?              ---> objectField=?x?
+'foaf:maker'=?x?   ---> 'objectField'=?x?
+
+editor=?x?   ---> 'purl:creator'=?x?
+'purl:creator'=?x?   ---> 'foaf:maker'=?x?

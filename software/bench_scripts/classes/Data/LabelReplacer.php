@@ -14,7 +14,7 @@ final class LabelReplacer
         $this->intGen = new \PseudoGenerator\OfInt($seed);
     }
 
-    public function getReplacement(array $data): array
+    private function getReplacement(array $data): array
     {
         $ret = [];
 
@@ -40,9 +40,9 @@ final class LabelReplacer
         return $ret;
     }
 
-    public function __invoke(...$args)
+    public function __invoke($data)
     {
-        return $this->getReplacement(...$args);
+        return $this->getReplacement($data);
     }
 
     private static function _getRelabellings($ruleFile): array
@@ -75,7 +75,7 @@ final class LabelReplacer
         return $ret;
     }
 
-    public static function getReplacerForDataSet(\DataSet $dataSet, int $seed): LabelReplacer
+    public static function getReplacerForDataSet(\DataSet $dataSet, int $seed): callable
     {
         $rulesPath = $dataSet->rulesPath();
         $rulesFilePath = "$rulesPath/querying.txt";
@@ -88,6 +88,9 @@ final class LabelReplacer
         } else
             $rel = self::_getRelabellings($rulesFilePath);
 
-        return new LabelReplacer($rel, $seed);
+        if (empty($rel))
+            return fn ($d) => $d;
+        else
+            return new LabelReplacer($rel, $seed);
     }
 }
