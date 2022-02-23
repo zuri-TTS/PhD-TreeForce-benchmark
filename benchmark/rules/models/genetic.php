@@ -1,139 +1,102 @@
 <?php
 namespace Generator;
 
-return fn (array $args) => new class($args) implements IModelGenerator {
+return fn (array $args) => new class($args) extends AbstractModelGenerator {
 
-    private const default_nbRefs_range = [
-        1,
-        1000000
-    ];
+    private array $queriesPath;
 
     private array $queries;
 
     private array $query_nbRewritings;
 
-    private bool $validArgs = true;
-
     // ========================================================================
-    private int $n = 150;
+    public array $range = [];
 
-    private int $nbLoops = 1000;
+    public int $n = 150;
 
-    private float $crossOver_nbLabels_factor_min = 0;
+    public int $nbLoops = 1000;
 
-    private float $crossOver_nbLabels_factor_max = 0.6;
+    public float $crossOver_nbLabels_factor_min = 0;
 
-    private float $select_factor = .5;
+    public float $crossOver_nbLabels_factor_max = 0.6;
 
-    private float $select_factor_elite = .45;
+    public float $select_factor = .5;
 
-    private float $mutation_factor = .2;
+    public float $select_factor_elite = .5;
 
-    private float $reproduction_factor = .8;
+    public float $mutation_factor = .25;
 
-    private float $fresh_factor = 0;
+    public float $reproduction_factor = .3;
 
-    private bool $skip_existing = true;
+    public float $fresh_factor = 0;
 
-    private bool $stopOnSolution = true;
+    public bool $skip_existing = true;
 
-    private bool $forceRetry = false;
+    public bool $stopOnSolution = true;
 
-    private bool $solutions_more = true;
+    public bool $forceRetry = false;
 
-    private bool $clean_solutions = false;
+    public bool $solutions_more = true;
 
-    private int $nbTry = 1;
+    public bool $clean_solutions = false;
 
-    private int $currentTry = 1;
+    public int $nbTry = 1;
 
-    private int $useModel = 0;
+    public int $currentTry = 1;
 
-    private int $sort = 1;
+    public int $useModel = 0;
 
-    private int $init_rand_max = 7;
+    public int $sort = 1;
 
-    private int $mutation_nb_max = 4;
+    public int $init_rand_max = 1;
 
-    private int $mutation_rand_min = 1;
+    public int $mutation_nb_max = 3;
 
-    private int $mutation_rand_max = 3;
+    public int $mutation_rand_min = 1;
 
-    private $display = 0;
+    public int $mutation_rand_max = 4;
 
-    private $display_offset = 0;
+    public $display = 0;
+
+    public $display_qperline = 5;
+
+    public $display_offset = 0;
+
+    public string $prefix = '';
 
     private $it;
 
     // ========================================================================
-    function usage(): string
-    {
-        $params = \get_ob(fn () => $this->displayConfig());
-        return <<<EOT
-        Generate a model to reach a precise number of reformulations
-        
-        Parameters:
-        $params
-
-        Query option:
-        Q#query: number of reformulations for the query #query
-        EOT;
-    }
-
-    private function displayConfig(): void
-    {
-        foreach (\get_object_vars($this) as $k => $v)
-            if (\is_numeric($v))
-                echo "$k($v)\n";
-            elseif (\is_bool($v)) {
-                $v = $v ? 'true' : 'false';
-                echo "$k($v)\n";
-            }
-    }
-
-    function validArgs(): bool
-    {
-        return $this->validArgs;
-    }
-
-    // ========================================================================
     function __construct(array $args)
     {
+        parent::__construct($args, '');
+
+        $queriesPaths = \array_filter_shift($this->invalidArgs, 'is_int', ARRAY_FILTER_USE_KEY);
+        $queriesPath = [];
+
+        foreach ($queriesPaths as $path) {
+            $path = \getBenchmarkBasePath() . "/$path";
+
+            if (! \is_dir($path))
+                throw new \Exception("$path is not a directory");
+
+            $queriesPath = \array_merge($queriesPath, \scandirNoPoints($path, true));
+        }
+        $this->queriesPath = $queriesPath;
+        $this->queries = \array_map('basename', $queriesPath);
+        // \array_combine($groups, \array_map('\DataSets::getAllQueries', $groups));
         $this->query_nbRewritings = [];
-        $this->queries = \Queries::getAll(false);
+        $this->range = self::expandRange($this->range);
+
         // Prepare queries' range
         {
-            $user_q = argPrefixed($args, 'Q');
-
-            foreach ($user_q as &$q) {
-
-                if (\is_array($q))
-                    continue;
-
-                $tmp = \explode(',', $q);
-                $q = [
-                    (int) $tmp[0],
-                    (int) ($tmp[1] ?? $tmp[0])
-                ];
-            }
             foreach ($this->queries as $query) {
 
-                $range = $user_q[$query] ?? $user_q['default'] ?? self::default_nbRefs_range;
-                $this->query_nbRewritings[$query] = $range;
-                $this->query_nbRewritings[$query]['range'] = ($range[1] - $range[0]);
-                $this->query_nbRewritings[$query]['frange'] = (float) ($range[1] - $range[0] + 1);
-            }
-        }
-
-        // Prepare object's properties
-        {
-            $myParams = argPrefixed($args, 'G');
-            try {
-                updateObject($myParams, $this);
-            } catch (\Exception $e) {
-                echo $e->getMessage(), "\n";
-                $this->validArgs = false;
-                return;
+                $range = $this->range;
+                $k = "$query";
+                $this->query_nbRewritings[$k] = $range;
+                $this->query_nbRewritings[$k]['range'] = ($range[1] - $range[0]);
+                $this->query_nbRewritings[$k]['frange'] = (float) ($range[1] - $range[0] + 1);
             }
         }
         $this->init();
@@ -177,6 +140,18 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         // must be after writeGeneticModelFile that uniquify solutions
         $nb = \count($model);
         echo "total solutions: $nb\n";
+    }
+
+    private static function expandRange(array $range): array
+    {
+        $c = \count($range);
+
+        if ($c === 0)
+            throw new \Exception("'range must be set");
+        if ($c === 1)
+            $range[] = $range[0];
+
+        return \array_map(fn ($v) => (int) $v, $range);
     }
 
     private static function cmpResult($a, $b): int
@@ -248,7 +223,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
         foreach ($groups as $r => $queries) {
             $s[] = "($r)" . implode('_', $queries);
         }
-        return implode('-', $s);
+        return $this->prefix . implode('-', $s);
     }
 
     private function getGeneticModel(): array
@@ -263,7 +238,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private function getGeneticModelFilePath()
     {
-        return 'php/' . $this->getGeneticModelFileName();
+        return "php/{$this->getGeneticModelFileName()}";
     }
 
     private function getGeneticModelFileName(): string
@@ -279,10 +254,18 @@ return fn (array $args) => new class($args) implements IModelGenerator {
 
     private function displayOne($p)
     {
-        foreach ($p[self::i_qdistance] as $q => $dist)
-            printf("|$q:%7.2f", $dist);
+        $nb = 0;
 
-        echo "|";
+        foreach ($p[self::i_qdistance] as $q => $dist) {
+
+            if ($nb ++ === $this->display_qperline) {
+                echo "\n";
+                $nb = 1;
+            }
+            printf("|$q:%7.2f", $dist);
+        }
+
+        echo "\n";
 
         foreach ($p["#nb"] ?? [] as $q => $nb)
             printf(" $q:%5d", $nb);
@@ -343,14 +326,13 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     private function init(): void
     {
         $this->labels = [];
-        $path = \Queries::getBasePath();
 
-        foreach ($this->queries as $query) {
-            $fpath = "$path/$query";
+        foreach ($this->queriesPath as $k => $fpath) {
 
             if (! \is_file($fpath))
                 continue;
 
+            $query = $this->queries[$k];
             $q = \file_get_contents($fpath);
             \preg_match_all("#[\w@]+#", $q, $labels);
             $labels = \array_shift($labels);
@@ -493,7 +475,7 @@ return fn (array $args) => new class($args) implements IModelGenerator {
     {
         $this->currentTry ++;
         echo "<", $this->getGeneticModelFileName(), ">\n";
-        echo $this->displayConfig();
+        echo $this->getObjectArgs()->display();
         echo "Try $this->currentTry/$this->nbTry\n";
 
         $solutions = [];

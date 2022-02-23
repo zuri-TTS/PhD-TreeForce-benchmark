@@ -8,9 +8,9 @@ abstract class AbstractModelGenerator implements IModelGenerator
 
     protected array $invalidArgs = [];
 
-    public function __construct(array $args)
+    public function __construct(array $args, string $argPrefix = '_arg')
     {
-        $this->oargs = (new \Args\ObjectArgs($this))->setPrefix('arg_');
+        $this->oargs = (new \Args\ObjectArgs($this))->setPrefix($argPrefix);
         $this->oargs->updateAndShift($args);
 
         if (! empty($args))
