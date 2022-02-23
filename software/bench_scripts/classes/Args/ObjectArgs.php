@@ -39,7 +39,12 @@ final class ObjectArgs
             $prop = $this->keyToProperty($k);
 
             if (\property_exists($this->obj, $prop)) {
-                $this->obj->{$prop} = $val;
+
+                if (isset($this->obj->{$prop}) && \is_array($this->obj->{$prop}))
+                    $this->obj->{$prop} = \explode(',', $val);
+                else
+                    $this->obj->{$prop} = $val;
+
                 unset($args[$k]);
             }
         }
@@ -93,8 +98,8 @@ final class ObjectArgs
     public function display(): void
     {
         foreach ($this->get() as $k => $v) {
-            if (! is_scalar($v))
-                $v = "#!scalar";
+            if (!\is_scalar($v))
+                $v = \var_export($v, true);
             elseif (\is_bool($v))
                 $v = $v ? 'true' : 'false';
 
