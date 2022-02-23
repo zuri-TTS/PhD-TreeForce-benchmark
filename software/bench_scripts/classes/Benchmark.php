@@ -140,34 +140,6 @@ final class Benchmark
         return $measures;
     }
 
-    private function getFiles(): array
-    {
-        $config = $this->config;
-        $dir = $config['java.properties']['queries.dir'];
-
-        if (\is_file($dir)) {
-            $queries = [
-                \basename($dir)
-            ];
-            $dir = \dirname($dir);
-        } else {
-            $files = \scandir($dir);
-            $queries = \array_filter($files, fn ($f) => \is_file("$dir/$f"));
-
-            // Filter queries already processed in the output dir
-            $tmpFiles = \scandir($this->qOutputPath);
-            $tmpResultFiles = \array_values(iterator_to_array(new \RegexIterator(new \ArrayIterator($tmpFiles), "#^.+\.csv$#")));
-            $queries = \array_filter($queries, function ($e) use ($tmpResultFiles): bool {
-                return ! \in_array("$e.csv", $tmpResultFiles);
-            });
-            \natsort($queries);
-        }
-        return [
-            'queries' => $queries,
-            'rule' => $config['java.properties']['rules']
-        ];
-    }
-
     private static function avg(array $vals): int
     {
         $c = count($vals);
@@ -428,8 +400,7 @@ final class Benchmark
     public function doTheBenchmark(?int $forceNbMeasures = null)
     {
         $this->createOutputDir();
-        $queryFiles = $this->getFiles();
-        $queries = $queryFiles['queries'];
+        $queries = $this->config['dataSet']->getQueries();
 
         echo $this->cmd, "\n\n";
 
