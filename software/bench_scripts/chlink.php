@@ -8,7 +8,7 @@ include_once __DIR__ . '/common/functions.php';
 $args = new class() extends stdClass {
 
     public string $target = '';
-    
+
     public string $mode = 'rules';
 };
 $cmdArgsDef = [];
@@ -25,8 +25,6 @@ $oargs->checkEmpty($cmdParsed);
 
 if (empty($args->target))
     throw new \Exception("Argument 'target' must be set");
-if (! \is_dir($args->target))
-    throw new \Exception("$args->target is not a directory");
 
 if (\count($groups) == 0) {
     $groups = [
@@ -35,15 +33,21 @@ if (\count($groups) == 0) {
 }
 $groups = \array_unique(DataSets::allGroups($groups));
 DataSets::checkGroupsNotExists($groups, false);
-$target = \realpath($args->target);
 
 foreach ($groups as $group) {
     $link = "benchmark/{$args->mode}_conf/symlinks/$group";
-    
+    $target = \str_replace('{}', $group, $args->target);
+
     echo "$link --> $target\n";
-    
-    if(\is_link($link))
+
+    if (! \is_dir($target)) {
+        fwrite(STDERR, "WARNING! $target is not a directory\n");
+        continue;
+    }
+    $target = \realpath($target);
+
+    if (\is_link($link))
         \unlink($link);
-    
+
     \symlink($target, $link);
 }
