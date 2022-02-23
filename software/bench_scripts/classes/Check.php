@@ -22,6 +22,18 @@ final class Check
         $groups[$dataGroup][$query][$rules] = $fileInfo->getRealPath();
     }
 
+    private static function groupBy_data_rules_query(array &$groups, \SplFileInfo $fileInfo): void
+    {
+        $query = \basename($fileInfo, '.csv');
+        $bname = \basename(\dirname($fileInfo));
+
+        \preg_match("#^\[(.+)\]\[(.+)\]#U", $bname, $matches);
+        $dataGroup = $matches[1];
+        $rules = $matches[2];
+
+        $groups[$dataGroup][$rules][$query][] = $fileInfo->getRealPath();
+    }
+
     private static function stats_data_rules_query(array &$groups, \SplFileInfo $fileInfo): void
     {
         $query = \basename($fileInfo, '.csv');
@@ -46,10 +58,11 @@ final class Check
             if (is_dir($outPath)) {
                 $dir = new RecursiveDirectoryIterator($outPath);
                 $ite = new RecursiveIteratorIterator($dir);
-                $reg = new RegexIterator($ite, "#/[^@/][^/]*\.csv$#");
+                $reg = new RegexIterator($ite, "#/[^/@]*\.csv$#");
 
-                foreach ($reg as $fileInfo)
+                foreach ($reg as $fileInfo) {
                     $fgroup($csvGroups, $fileInfo);
+                }
             } else {
                 fputs(STDERR, "Can't handle '$outPath'!\n");
                 continue;
@@ -59,6 +72,34 @@ final class Check
     }
 
     // ========================================================================
+    public function checkNbRefs()
+    {
+        $csvGroups = $this->getCSVGroups($this->paths, 'Check::groupBy_data_rules_query');
+
+        foreach ($csvGroups as &$queriesFiles) {
+            \uksort($queriesFiles, 'strnatcasecmp');
+
+            foreach ($queriesFiles as &$f)
+                \uksort($f, 'strnatcasecmp');
+        }
+        unset($f, $queriesFiles);
+
+        foreach ($csvGroups as $group => $rules_queries) {
+            foreach ($rules_queries as $rules => $queriesGroup) {
+                echo "[$group/query]\n";
+
+                foreach ($queriesGroup as $query => $queries) {
+
+                    foreach ($queries as $file) {
+                        $csvData = CSVReader::read($file);
+
+                        echo "query.$query: {$csvData['reformulations']['nb']}\n";
+                    }
+                }
+            }
+        }
+    }
+
     public function checkNbAnswers()
     {
         $csvGroups = self::getCSVGroups($this->paths, 'Check::groupBy_data_query_rules');

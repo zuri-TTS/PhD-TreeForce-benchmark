@@ -20,6 +20,10 @@ if (! empty($cmdRemains)) {
 $checker = new \Check($paths);
 
 switch ($mode = $cmdParsed['mode']) {
+    case 'reformulations_nb':
+    case 'reformulations.nb':
+        $checker->checkNbRefs();
+        break;
     case 'stats':
         $checker->checkStats();
         break;
