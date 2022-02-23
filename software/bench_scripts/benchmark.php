@@ -44,6 +44,14 @@ while (! empty($argv)) {
     }
 
     if (\in_array($cmdParsed['cmd'], [
+        'generate',
+        'config'
+    ]))
+        $needDatabase = false;
+    else
+        $needDatabase = true;
+
+    if (\in_array($cmdParsed['cmd'], [
         'summarize'
     ])) {
         $cmdParsed['doonce'] = true;
@@ -69,7 +77,7 @@ while (! empty($argv)) {
     }
     $dataSets = \array_unique(DataSets::all($dataSets));
 
-    if ($cmdParsed['pre-clean-db'] || $cmdParsed['clean-db'])
+    if ($needDatabase && ($cmdParsed['pre-clean-db'] || $cmdParsed['clean-db']))
         MongoImport::dropCollections($dataSets);
 
     $errors = [];
@@ -142,7 +150,7 @@ while (! empty($argv)) {
             }
             // ================================================================
 
-            if (! $generateDataSet) {
+            if ($needDatabase && ! $generateDataSet) {
 
                 if (! $collExists)
                     throw new \Exception("The collection treeforce.$collection must exists in the database");
