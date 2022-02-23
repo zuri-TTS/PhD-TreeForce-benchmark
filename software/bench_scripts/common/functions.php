@@ -96,10 +96,14 @@ function wdOp(string $workingDir, callable $exec)
     return $ret;
 }
 
-function scandirNoPoints(string $path)
+function scandirNoPoints(string $path, bool $getPath = false)
 {
     $ret = \array_filter(\scandir($path), fn ($f) => $f[0] !== '.');
     \natcasesort($ret);
+
+    if ($getPath)
+        $ret = \array_map(fn ($v) => "$path/$v", $ret);
+
     return $ret;
 }
 
@@ -201,6 +205,11 @@ function argShift(array &$args, string $key, $default = null)
         unset($args[$keys[0]]);
     }
     return $v;
+}
+
+function array_map_merge(callable $callback, array $array): array
+{
+    return \array_merge(...\array_map($callback, $array));
 }
 
 function array_map_key(?callable $callback, array $array): array
