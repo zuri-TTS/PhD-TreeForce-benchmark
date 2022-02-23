@@ -1,1 +1,1 @@
-^dblp.document.(objectField,title,editor,'purl:creator')
+^dblp.document.(entityProperty="Algorithmica",title,author,year,month)

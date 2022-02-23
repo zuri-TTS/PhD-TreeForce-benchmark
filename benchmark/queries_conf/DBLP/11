@@ -1,1 +1,1 @@
-^dblp.document.(objectField,title,editor,author="Alison Cawsey"$,year,pages)
+^dblp.document.(dataProperty="Algorithmica",title,author,year,month)
