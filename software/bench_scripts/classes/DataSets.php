@@ -10,25 +10,47 @@ final class DataSets
     private const groupsBasePath = 'benchmark/data';
 
     // ========================================================================
-    public static function allGroups(array $ids): array
+    private static function allThings(callable $getAllThings, ...$args): array
     {
-        $groups = [];
+        $ids = \array_pop($args);
+
+        if (empty($ids))
+            return $getAllThings(...$args);
+
+        if (\is_string($ids))
+            $ids = (array) $ids;
+
+        $things = [];
+        $allThings = $getAllThings(...$args);
 
         foreach ($ids as $id)
-            $groups = \array_merge($groups, DataSets::allGroupsFromId($id));
+            $things = \array_merge($things, self::oneThing($id, $allThings));
 
-        \natcasesort($groups);
-        return $groups;
+        \natcasesort($things);
+        return \array_unique($things);
     }
 
-    public static function allGroupsFromId(?string $id = null): array
+    private static function oneThing(string $id, $allThings): array
     {
-        $groups = empty($id) ? self::getAllGroups() : \explode(',', $id);
+        $things = empty($id) ? $allThings : \explode(',', $id);
+        $things = \array_map_merge(fn ($t) => self::expand($t, fn () => $allThings), $things);
+        return $things;
+    }
 
-        $groups = \array_merge(...\array_map(fn ($g) => self::expand($g, 'DataSets::getAllGroups'), $groups));
+    // ========================================================================
+    public static function allGroups($ids = null): array
+    {
+        return self::allThings('DataSets::_getAllGroups', $ids);
+    }
 
-        \natcasesort($groups);
-        return $groups;
+    public static function allRules(string $group, $ids = null): array
+    {
+        return self::allThings('DataSets::_getAllRules', $group, $ids);
+    }
+
+    public static function allQueries(string $group, $ids = null): array
+    {
+        return self::allThings('DataSets::_getAllQueries', $group, $ids);
     }
 
     // ========================================================================
@@ -59,26 +81,24 @@ final class DataSets
     }
 
     // ========================================================================
-    public static function all(array $ids): array
+    public static function all($ids): array
     {
-        $dataSets = [];
+        if (! \is_array($ids))
+            $ids = (array) $ids;
+        if (empty($ids))
+            $ids = (array) '';
 
-        foreach ($ids as $id)
-            $dataSets = \array_merge($dataSets, DataSets::allFromId($id));
-
-        return $dataSets;
+        return \array_map_merge(fn ($k) => DataSets::one($k), $ids);
     }
 
-    public static function allFromId(?string $id = null): array
+    private static function one(string $id): array
     {
-        if (null === $id)
-            $groups = $rulesSets = $qualifierss = [];
-        else {
-            preg_match("#^(.*)(?:/(.*))?(?:\[(.*)\])?$#U", $id, $matches);
-            list (, $groups, $rulesSets, $qualifierss) = $matches + \array_fill(0, 4, '');
-        }
-        $groups = self::allGroupsFromId($groups);
-        $rulesSets = empty($rulesSets) ? [] : \explode(',', $rulesSets);
+        preg_match("#^(.*)(?:\[(.*)\])?$#U", $id, $matches);
+        list (, $id, $qualifierss) = $matches + \array_fill(0, 3, '');
+
+        list ($groups, $rules, $queries) = explode('/', $id) + \array_fill(0, 3, '');
+
+        $groups = self::allGroups($groups);
         $qualifierss = empty($qualifierss) ? [
             ''
         ] : \explode(';', $qualifierss);
@@ -92,20 +112,14 @@ final class DataSets
         $ret = [];
 
         foreach ($groups as $group) {
-
-            if (empty($rulesSets))
-                $eRulesSets = self::getAllRules($group);
-            else {
-                $eRulesSets = \array_merge(...\array_map(fn ($g) => self::expand($g, fn () => self::getAllRules($group)), $rulesSets));
-                \natcasesort($eRulesSets);
-            }
+            $eRulesSets = self::allRules($group, $rules);
 
             if (empty($eRulesSets))
                 $eRulesSets = (array) '#no_rules';
 
             foreach ($eRulesSets as $rulesSet) {
                 foreach ($qualifierss as $q)
-                    $ret[] = DataSet::create($group, $rulesSet, $q);
+                    $ret[] = DataSet::create($group, $rulesSet, $q)->setQueriesId($queries);
             }
         }
         return $ret;
@@ -113,7 +127,7 @@ final class DataSets
 
     public static function fromId(string $id): DataSet
     {
-        $ret = self::allFromId($id);
+        $ret = self::all($id);
 
         if (\count($ret) > 1)
             throw new Exception("$id represents multiple DataSets");
@@ -190,22 +204,23 @@ final class DataSets
     }
 
     // ========================================================================
-    public static function getAllGroups(): array
+    private static function _getAllGroups(): array
     {
         $ret = \scandirNoPoints(self::getGroupsBasePath());
         return \array_filter($ret, fn ($g) => $g[0] !== "#");
     }
 
-    public function getAllRules(string $group): array
+    private static function _getAllRules(string $group): array
     {
         $dir = self::getRulesBasePath($group);
 
         if (! \is_dir($dir))
             return [];
+
         return \scandirNoPoints($dir);
     }
 
-    public function getAllQueries(string $group): array
+    private static function _getAllQueries(string $group): array
     {
         $dir = self::getQueriesBasePath($group);
 
@@ -313,7 +328,8 @@ final class DataSets
 
     private static function _theRulesExists(string $group, string $theRules): bool
     {
-        return \is_dir(self::_theRulesPath($group, $theRules));
+        $path = self::_theRulesPath($group, $theRules);
+        return \is_file($path) || \is_dir($path);
     }
 
     private static function _theDataSetExists(string $group, string $theRules, array $qualifiers): bool

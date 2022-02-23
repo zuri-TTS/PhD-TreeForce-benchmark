@@ -9,6 +9,8 @@ final class DataSet
 
     private string $rules;
 
+    private string $queriesId = '';
+
     private array $stats;
 
     private array $qualifiers = [];
@@ -26,18 +28,18 @@ final class DataSet
         return $ret;
     }
 
-    public static function getAll(): array
+    // ========================================================================
+    public function setQueriesId(string $id): self
     {
-        $ret = [];
-
-        foreach (DataSet::getAllGroups() as $group) {
-            $ret[] = new DataSet($group);
-        }
-
-        return $ret;
+        $this->queriesId = $id;
+        return $this;
     }
 
-    // ========================================================================
+    public function getQueries(): array
+    {
+        return DataSets::allQueries($this->group, $this->queriesId);
+    }
+
     public function id(): string
     {
         return DataSets::idOf($this);
@@ -130,7 +132,12 @@ final class DataSet
 
     public function rulesFilesPath(): array
     {
-        return wdOp($this->rulesPath(), fn () => \glob("*.txt"));
+        $path = $this->rulesPath();
+
+        if (\is_file($path))
+            return (array) $path;
+
+        return wdOp($path, fn () => \glob("*.txt"));
     }
 
     public function path(): string
