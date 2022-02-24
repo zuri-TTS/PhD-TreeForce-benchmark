@@ -65,12 +65,11 @@ function &wdStack(): array
 function wdPush(string $path): void
 {
     $stack = &wdStack();
-    $wd = \getcwd();
+    \array_push($stack, \getcwd());
 
     if (! \chdir($path))
         throw new \Exception("Cannot chdir to $path");
 
-    \array_push($stack, $path);
 }
 
 function wdPop(): void
