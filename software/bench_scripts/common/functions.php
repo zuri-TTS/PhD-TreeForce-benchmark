@@ -307,7 +307,9 @@ function array_filter_shift(array &$array, ?callable $filter = null, int $mode =
     $ret = [];
 
     if ($mode === 0)
-        $fmakeParams = fn ($k, $v) => (array) $v;
+        $fmakeParams = fn ($k, $v) => [
+            $v
+        ];
     elseif ($mode === ARRAY_FILTER_USE_KEY)
         $fmakeParams = fn ($k, $v) => (array) $k;
     elseif ($mode === ARRAY_FILTER_USE_BOTH)
