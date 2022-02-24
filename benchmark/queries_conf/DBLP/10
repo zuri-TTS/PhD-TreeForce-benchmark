@@ -1,1 +1,1 @@
-^dblp.document.(entityProperty="Algorithmica",title,author,year,month)
+^dblp.document.(entityProperty="Algorithmica"$,title,author,year)

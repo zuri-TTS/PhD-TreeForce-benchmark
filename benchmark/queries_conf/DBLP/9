@@ -1,1 +1,1 @@
-^dblp.document.(creator="Grzegorz Rozenberg",title,year,pages,journal)
+^dblp.document.(creator="Grzegorz Rozenberg"$,title,year,pages,journal)

@@ -1,1 +1,1 @@
-^dblp.content.(title="Home Page",creator,url)
+^dblp.content.(title="Home Page"$,creator,url)
