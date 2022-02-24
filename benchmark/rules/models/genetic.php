@@ -18,17 +18,17 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
 
     public float $crossOver_nbLabels_factor_min = 0;
 
-    public float $crossOver_nbLabels_factor_max = 0.6;
+    public float $crossOver_nbLabels_factor_max = 0.5;
 
     public float $select_factor = .5;
 
     public float $select_factor_elite = .5;
 
-    public float $mutation_factor = .25;
+    public float $mutation_factor = .2;
 
-    public float $reproduction_factor = .3;
+    public float $reproduction_factor = .5;
 
-    public float $fresh_factor = 0;
+    public float $fresh_factor = 0.01;
 
     public bool $skip_existing = true;
 
@@ -48,13 +48,65 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
 
     public int $sort = 1;
 
-    public int $init_rand_max = 1;
+    public array $init_ranges = [
+        [
+            1,
+            50
+        ],
+        // [
+        // 90,
+        // 100,
+        // .1
+        // ],
+        [
+            200,
+            500,
+            .02
+        ],
+        [
+            100,
+            200,
+            .3
+        ]
+    ];
 
-    public int $mutation_nb_max = 3;
+    public array $mutation_ranges = [
+        [
+            1,
+            10
+        ],
+        [
+            10,
+            30,
+            .5
+        ],
+        [
+            90,
+            100,
+            .25
+        ],
+//         [
+//             400,
+//             500,
+//             .1
+//         ]
+    ];
 
-    public int $mutation_rand_min = 1;
-
-    public int $mutation_rand_max = 4;
+    public array $mutation_nb_ranges = [
+        [
+            2,
+            5
+        ],
+        [
+            10,
+            15,
+            .2
+        ],
+//         [
+//             30,
+//             .1
+//         ]
+    ];
 
     public $display = 0;
 
@@ -65,6 +117,12 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
     public string $prefix = '';
 
     private $it;
+
+    private \PseudoGenerator\PRanges $init_gen;
+
+    private \PseudoGenerator\PRanges $mutation_gen;
+
+    private \PseudoGenerator\PRanges $mutation_nb_gen;
 
     // ========================================================================
     function __construct(array $args)
@@ -87,6 +145,9 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
         // \array_combine($groups, \array_map('\DataSets::getAllQueries', $groups));
         $this->query_nbRewritings = [];
         $this->range = self::expandRange($this->range);
+        $this->init_gen = new \PseudoGenerator\PRanges(...$this->init_ranges);
+        $this->mutation_gen = new \PseudoGenerator\PRanges(...$this->mutation_ranges);
+        $this->mutation_nb_gen = new \PseudoGenerator\PRanges(...$this->mutation_nb_ranges);
 
         // Prepare queries' range
         {
@@ -349,6 +410,29 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
         $this->mutations_nb = (int) ($this->reproduction_nb * $this->mutation_factor);
     }
 
+    private function initHPopulation(): array
+    {
+        $max = \max(\array_merge(...$this->init_ranges));
+
+        $ret = [];
+
+        while ($max > 0) {
+            $one = [];
+
+            foreach ($this->labels as $label)
+                $one[$label] = \max(1, $max --);
+
+            $one = [
+                'o' => $one
+            ];
+            $this->updateOne($one);
+
+            $ret[] = $one;
+        }
+        $this->updateNotes($ret);
+        return $ret;
+    }
+
     private function initPopulation(int $nb): array
     {
         $ret = [];
@@ -357,7 +441,7 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
             $one = [];
 
             foreach ($this->labels as $label)
-                $one[$label] = \mt_rand(1, $this->init_rand_max);
+                $one[$label] = $this->init_gen->rand();
 
             $one = [
                 'o' => $one
@@ -480,6 +564,7 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
 
         $solutions = [];
         $population = $this->initPopulation($this->n);
+        // $population = \array_merge($population, $this->initHPopulation());
         $this->sortPopulation($population);
         $this->it = 0;
 
@@ -510,9 +595,8 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
     private function evolution($population): array
     {
         $select = $this->selection($population, $this->select_nb, $this->select_elites_nb);
-        $childs = $this->reproduction($select, $this->reproduction_nb);
-
         $fresh = $this->initPopulation($this->fresh_nb);
+        $childs = $this->reproduction(\array_merge($select, $fresh), $this->reproduction_nb);
 
         $nbPadding = $this->n - ($this->select_nb + \count($childs) + $this->fresh_nb);
         $padding = $nbPadding > 0 ? $this->initPopulation($nbPadding) : [];
@@ -564,14 +648,15 @@ return fn (array $args) => new class($args) extends AbstractModelGenerator {
     {
         $one = &$p['o'];
 
-        $minv = \min($p[self::i_qdistance]);
-        $add = ($minv < 0) ? - 1 : 1;
-        $nbMut = \mt_rand(1, $this->mutation_nb_max);
+        // $minv = \min($p[self::i_qdistance]);
+        // $add = ($minv < 0) ? - 1 : 1;
+        $nbMut = $this->mutation_nb_gen->rand();
 
         for (; $nbMut;) {
+            $add = \mt_rand(0, 1) ? - 1 : 1;
             $label = self::randomItem($this->labels);
             $val = &$one[$label];
-            $addf = \mt_rand($this->mutation_rand_min, $this->mutation_rand_max);
+            $addf = $this->mutation_gen->rand();
             $val = \max(1, $val + $add * $addf);
             $nbMut --;
         }
