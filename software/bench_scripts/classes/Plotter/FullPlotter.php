@@ -37,6 +37,13 @@ final class FullPlotter implements IPlotter
 
     private array $csvPaths;
 
+    private array $queries;
+
+    public function getQueries(): array
+    {
+        return $this->queries;
+    }
+
     public function getCutData(): array
     {
         return $this->cutData;
@@ -63,6 +70,7 @@ final class FullPlotter implements IPlotter
         $this->csvPaths = $csvPaths;
         $this->cleanCurrentDir();
         $this->queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvPaths));
+
         $this->dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvPaths));
         \natsort($this->dirs);
 

@@ -8,7 +8,7 @@ $yMin = PHP_INT_MAX;
 $nbMeasures = 0;
 
 $dirname = \basename(\dirname(\getcwd()));
-$nbQueries = Plotter\GroupPlotter::extractFirstNb($dirname);
+$nbQueries = \count($PLOTTER->getQueries());
 
 if ($nbQueries > 0)
     $graphics['plots.max.x'] = $nbQueries;
