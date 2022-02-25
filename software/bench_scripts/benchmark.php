@@ -95,7 +95,9 @@ while (! empty($argv)) {
 
         if ($dataSet->isSimplified()) {
             $cmdParsed = $cmdParsed_cpy;
-            $cmdParsed['summary'] = 'key-type';
+
+            if ($cmdParsed['summary'] === 'key')
+                $cmdParsed['summary'] = 'key-type';
         }
         $config = \makeConfig($dataSet, $cmdParsed, $javaProperties);
         $summaryPath = $config['java.properties']['summary'];
@@ -141,6 +143,7 @@ while (! empty($argv)) {
                     '+skip-existing',
                     '-generate-dataset',
                     '-clean-db',
+                    "summary={$cmdParsed['summary']}",
                     "output:",
                     \sys_get_temp_dir(),
                     '+plot'
@@ -158,7 +161,6 @@ while (! empty($argv)) {
                 if (! $cmdSummarize && $hasSummary && ! \is_file($summaryPath))
                     throw new \Exception("Summary '$summaryPath' does not exists");
             }
-
             if ($cmdParsed['doonce'])
                 $bench->executeOnce();
             else
