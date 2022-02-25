@@ -8,7 +8,7 @@ require_once __DIR__ . '/common/functions.php';
 $cmdArgsDef = [
     'generate-dataset' => true,
     'cmd-display-output' => false,
-    'clean-db' => true,
+    'clean-db' => false,
     'pre-clean-db' => false,
     'post-clean-db' => false,
     'summary' => "key",
