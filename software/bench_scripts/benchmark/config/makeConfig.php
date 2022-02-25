@@ -51,7 +51,6 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
 
     $cmd = $cmdArg['cmd'];
     $cold = $cmdArg['cold'];
-    $summaryType = $cmdArg['summary'] ?? '';
 
     if ($rules === 'original') {
         $hasRules = false;
@@ -60,24 +59,31 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
         $hasRules = true;
         $native = $cmdArg['native'] ?? '';
     }
-    $hasSummary = ! empty($summaryType);
     $hasNative = ! empty($native);
 
-    if ($hasSummary) {
+    $summaryPath = function (string $summaryType) use ($dataSetPath) {
+
+        if (empty($summaryType))
+            return null;
+
         $summaryFileName = "summary-$summaryType.txt";
-        $summaryPath = "$dataSetPath/$summaryFileName";
-    }
+        return "$dataSetPath/$summaryFileName";
+    };
 
     $common = (include __DIR__ . '/common.php');
     $basePath = getBenchmarkBasePath();
 
+    if (null === $cmdArg['toNative_summary'])
+        $cmdArg['toNative_summary'] = $cmdArg['summary'];
+
     $javaProperties = array_merge([
         'db.collection' => MongoImport::getCollectionName($dataSet),
-        'summary.type' => $summaryType,
         'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
-        'summary' => $summaryPath ?? '',
-        'toNative.useSummary' => ($cmd !== 'summarize' && $dataSet->isSimplified()) ? 'y' : 'n'
+        'summary' => $summaryPath($cmdArg['summary']),
+        'summary.type' => $cmdArg['summary'],
+        'toNative.summary' => $summaryPath($cmdArg['toNative_summary']),
+        'toNative.summary.type' => $cmdArg['toNative_summary']
     ], $javaProperties) + $common['java.properties'];
 
     $outputDirGenerator = $common['bench.output.dir.generator'];

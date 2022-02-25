@@ -11,7 +11,8 @@ $cmdArgsDef = [
     'clean-db' => false,
     'pre-clean-db' => false,
     'post-clean-db' => false,
-    'summary' => "key",
+    'summary' => 'key',
+    'toNative_summary' => null,
     'native' => '',
     'cmd' => 'querying',
     'doonce' => false,
@@ -96,8 +97,8 @@ while (! empty($argv)) {
         if ($dataSet->isSimplified()) {
             $cmdParsed = $cmdParsed_cpy;
 
-            if ($cmdParsed['summary'] === 'key')
-                $cmdParsed['summary'] = 'key-type';
+            if (null === $cmdParsed['toNative_summary'] || 'key' === $cmdParsed['toNative_summary'])
+                $cmdParsed['toNative_summary'] = 'key-type';
         }
         $config = \makeConfig($dataSet, $cmdParsed, $javaProperties);
         $summaryPath = $config['java.properties']['summary'];

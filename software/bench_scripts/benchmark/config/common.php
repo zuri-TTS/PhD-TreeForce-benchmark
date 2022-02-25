@@ -49,9 +49,9 @@ return [
         $cmd = $cmdArg['cmd'];
         $cold = $cmdArg['cold'];
         $executeEach = $cmdArg['each'] ?? false;
-        $summaryType = $cmdArg['summary'] ?? '';
 
-        $hasSummary = ! empty($summaryType);
+        $hasSummary = ! empty($cmdArg['summary']);
+        $has2Summary = ! empty($cmdArg['toNative_summary']);
         $hasNative = ! empty($native);
 
         if ($theRules === 'original') {
@@ -71,12 +71,12 @@ return [
 
         $outDir .= '[%s]';
 
+        if ($hasSummary)
+            $outDir .= "[summary-{$cmdArg['summary']}]";
+        if ($has2Summary)
+            $outDir .= "[toNative-{$cmdArg['toNative_summary']}]";
         if ($hasNative)
             $outDir .= "[native-$native]";
-        if ($hasSummary)
-            $outDir .= "[summary-$summaryType]";
-        if ($javaProperties['toNative.useSummary'] === 'y')
-            $outDir .= '[toNative.useSummary]';
         if ($javaProperties['querying.mode'] === 'each')
             $outDir .= '[each]';
         elseif ($javaProperties['querying.mode'] === 'stats')
