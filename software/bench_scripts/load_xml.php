@@ -38,13 +38,7 @@ while (! empty($argv)) {
         throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true) . $usage);
     }
     $cmdParsed += $javaProperties;
-
-    if (\count($dataSets) == 0) {
-        $dataSets = [
-            null
-        ];
-    }
-    $dataSets = \array_unique(DataSets::all($dataSets));
+    $dataSets = DataSets::all($dataSets);
     DataSets::checkNotExists($dataSets, false);
 
     // Group by 'group'
