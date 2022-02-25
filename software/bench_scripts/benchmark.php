@@ -19,7 +19,7 @@ $cmdArgsDef = [
     'cold' => false,
     'output' => null,
     'skip-existing' => true,
-    'plot' => 'each,group',
+    'plot' => '',
     'forget-results' => false
 ];
 
