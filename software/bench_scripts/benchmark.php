@@ -40,7 +40,7 @@ while (! empty($argv)) {
         $usage = "\nValid cli arguments are:\n" . \var_export($cmdParsed, true) . //
         "\nor a Java property of the form P#prop=#val:\n" . \var_export(\getDefaultJavaProperties(), true) . "\n";
         fwrite(STDERR, $usage);
-        throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true) );
+        throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true));
     }
 
     if (\in_array($cmdParsed['cmd'], [
@@ -179,7 +179,7 @@ while (! empty($argv)) {
                 include_script(__DIR__ . '/load_xml.php', $vars);
             }
 
-            if ($cmdParsed['forget-results'])
+            if ($cmdParsed['forget-results'] && \is_dir($config['java.properties']['output.path']))
                 \rrmdir($config['java.properties']['output.path']);
         } catch (\Exception $e) {
             $errors[] = [
