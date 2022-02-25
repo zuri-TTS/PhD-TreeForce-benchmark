@@ -10,6 +10,10 @@ final class FullPlotter implements IPlotter
 
     private bool $xtics_pretty = true;
 
+    private bool $xtics_infos = true;
+
+    private bool $xtics_infos_answers_nb = true;
+
     public function __construct(\Plot $plot)
     {
         $this->plot = $plot;
@@ -106,7 +110,7 @@ final class FullPlotter implements IPlotter
     }
 
     // ========================================================================
-    private function makeXTic(string $dirName)
+    private function makeXTic(string $dirName, int $nbReformulations, int $nbAnswers)
     {
         if (\preg_match("#^\[.+\]\[(.+)\]#U", $dirName, $matches)) {
 
@@ -120,6 +124,18 @@ final class FullPlotter implements IPlotter
         } else
             $ret = $dirName;
 
+        $infos = '';
+
+        if ($this->xtics_infos) {
+
+            if ($nbReformulations != $ret)
+                $infos .= "$nbReformulations";
+
+            if ($this->xtics_infos_answers_nb)
+                $infos .= ",$nbAnswers";
+
+            $ret = "$ret($infos)";
+        }
         return \Plot::gnuplotSpecialChars($ret);
     }
 
@@ -196,8 +212,10 @@ final class FullPlotter implements IPlotter
         foreach ($csvFiles as $csvPath) {
             $dirName = \basename(\dirname($csvPath));
             $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
+            $nbReformulations = $data['queries']['total'];
+            $nbAnswers = $data['answers']['total'];
 
-            $xtic = $this->makeXTic($dirName);
+            $xtic = $this->makeXTic($dirName, $nbReformulations, $nbAnswers);
             echo "\"$xtic\" ";
 
             foreach ($this->toPlot as $what => $times) {
