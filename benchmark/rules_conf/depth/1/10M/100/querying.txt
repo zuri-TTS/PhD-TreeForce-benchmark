@@ -1,0 +1,96 @@
+#site 4
+
+'q_site_3'=?x? --> 'site'=?x?
+'q_site_2'=?x? --> 'site'=?x?
+'q_site_1'=?x? --> 'site'=?x?
+'q_site_0'=?x? --> 'site'=?x?
+
+#category 4
+
+'q_category_3'=?x? --> 'category'=?x?
+'q_category_2'=?x? --> 'category'=?x?
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
+#description 3
+
+'q_description_2'=?x? --> 'description'=?x?
+'q_description_1'=?x? --> 'description'=?x?
+'q_description_0'=?x? --> 'description'=?x?
+
+#regions 4
+
+'q_regions_3'=?x? --> 'regions'=?x?
+'q_regions_2'=?x? --> 'regions'=?x?
+'q_regions_1'=?x? --> 'regions'=?x?
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#location 3
+
+'q_location_2'=?x? --> 'location'=?x?
+'q_location_1'=?x? --> 'location'=?x?
+'q_location_0'=?x? --> 'location'=?x?
+
+#open_auction 4
+
+'q_open_auction_3'=?x? --> 'open_auction'=?x?
+'q_open_auction_2'=?x? --> 'open_auction'=?x?
+'q_open_auction_1'=?x? --> 'open_auction'=?x?
+'q_open_auction_0'=?x? --> 'open_auction'=?x?
+
+#personref 3
+
+'q_personref_2'=?x? --> 'personref'=?x?
+'q_personref_1'=?x? --> 'personref'=?x?
+'q_personref_0'=?x? --> 'personref'=?x?
+
+#watches 3
+
+'q_watches_2'=?x? --> 'watches'=?x?
+'q_watches_1'=?x? --> 'watches'=?x?
+'q_watches_0'=?x? --> 'watches'=?x?
+
+#watch 4
+
+'q_watch_3'=?x? --> 'watch'=?x?
+'q_watch_2'=?x? --> 'watch'=?x?
+'q_watch_1'=?x? --> 'watch'=?x?
+'q_watch_0'=?x? --> 'watch'=?x?
+
+#end 3
+
+'q_end_2'=?x? --> 'end'=?x?
+'q_end_1'=?x? --> 'end'=?x?
+'q_end_0'=?x? --> 'end'=?x?
+
+#payment 3
+
+'q_payment_2'=?x? --> 'payment'=?x?
+'q_payment_1'=?x? --> 'payment'=?x?
+'q_payment_0'=?x? --> 'payment'=?x?
+
+#happiness 3
+
+'q_happiness_2'=?x? --> 'happiness'=?x?
+'q_happiness_1'=?x? --> 'happiness'=?x?
+'q_happiness_0'=?x? --> 'happiness'=?x?
+
+#time 3
+
+'q_time_2'=?x? --> 'time'=?x?
+'q_time_1'=?x? --> 'time'=?x?
+'q_time_0'=?x? --> 'time'=?x?
+
+#shipping 3
+
+'q_shipping_2'=?x? --> 'shipping'=?x?
+'q_shipping_1'=?x? --> 'shipping'=?x?
+'q_shipping_0'=?x? --> 'shipping'=?x?
+
+#closed_auctions 4
+
+'q_closed_auctions_3'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_2'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_1'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+

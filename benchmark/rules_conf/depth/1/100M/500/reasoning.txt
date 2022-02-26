@@ -1,0 +1,36 @@
+#open_auction 0
+
+
+#namerica 0
+
+
+#city 0
+
+
+#street 0
+
+
+#zipcode 0
+
+
+#samerica 0
+
+
+#country 0
+
+
+#australia 0
+
+
+#africa 0
+
+
+#closed_auction 0
+
+
+#asia 0
+
+
+#category 0
+
+

@@ -1,0 +1,235 @@
+#item 1
+
+'q_item_0'=?x? --> 'item'=?x?
+
+#location 9
+
+'q_location_8'=?x? --> 'location'=?x?
+'q_location_7'=?x? --> 'location'=?x?
+'q_location_6'=?x? --> 'location'=?x?
+'q_location_5'=?x? --> 'location'=?x?
+'q_location_4'=?x? --> 'location'=?x?
+'q_location_3'=?x? --> 'location'=?x?
+'q_location_2'=?x? --> 'location'=?x?
+'q_location_1'=?x? --> 'location'=?x?
+'q_location_0'=?x? --> 'location'=?x?
+
+#mailbox 4
+
+'q_mailbox_3'=?x? --> 'mailbox'=?x?
+'q_mailbox_2'=?x? --> 'mailbox'=?x?
+'q_mailbox_1'=?x? --> 'mailbox'=?x?
+'q_mailbox_0'=?x? --> 'mailbox'=?x?
+
+#profile 99
+
+'q_profile_98'=?x? --> 'profile'=?x?
+'q_profile_97'=?x? --> 'profile'=?x?
+'q_profile_96'=?x? --> 'profile'=?x?
+'q_profile_95'=?x? --> 'profile'=?x?
+'q_profile_94'=?x? --> 'profile'=?x?
+'q_profile_93'=?x? --> 'profile'=?x?
+'q_profile_92'=?x? --> 'profile'=?x?
+'q_profile_91'=?x? --> 'profile'=?x?
+'q_profile_90'=?x? --> 'profile'=?x?
+'q_profile_89'=?x? --> 'profile'=?x?
+'q_profile_88'=?x? --> 'profile'=?x?
+'q_profile_87'=?x? --> 'profile'=?x?
+'q_profile_86'=?x? --> 'profile'=?x?
+'q_profile_85'=?x? --> 'profile'=?x?
+'q_profile_84'=?x? --> 'profile'=?x?
+'q_profile_83'=?x? --> 'profile'=?x?
+'q_profile_82'=?x? --> 'profile'=?x?
+'q_profile_81'=?x? --> 'profile'=?x?
+'q_profile_80'=?x? --> 'profile'=?x?
+'q_profile_79'=?x? --> 'profile'=?x?
+'q_profile_78'=?x? --> 'profile'=?x?
+'q_profile_77'=?x? --> 'profile'=?x?
+'q_profile_76'=?x? --> 'profile'=?x?
+'q_profile_75'=?x? --> 'profile'=?x?
+'q_profile_74'=?x? --> 'profile'=?x?
+'q_profile_73'=?x? --> 'profile'=?x?
+'q_profile_72'=?x? --> 'profile'=?x?
+'q_profile_71'=?x? --> 'profile'=?x?
+'q_profile_70'=?x? --> 'profile'=?x?
+'q_profile_69'=?x? --> 'profile'=?x?
+'q_profile_68'=?x? --> 'profile'=?x?
+'q_profile_67'=?x? --> 'profile'=?x?
+'q_profile_66'=?x? --> 'profile'=?x?
+'q_profile_65'=?x? --> 'profile'=?x?
+'q_profile_64'=?x? --> 'profile'=?x?
+'q_profile_63'=?x? --> 'profile'=?x?
+'q_profile_62'=?x? --> 'profile'=?x?
+'q_profile_61'=?x? --> 'profile'=?x?
+'q_profile_60'=?x? --> 'profile'=?x?
+'q_profile_59'=?x? --> 'profile'=?x?
+'q_profile_58'=?x? --> 'profile'=?x?
+'q_profile_57'=?x? --> 'profile'=?x?
+'q_profile_56'=?x? --> 'profile'=?x?
+'q_profile_55'=?x? --> 'profile'=?x?
+'q_profile_54'=?x? --> 'profile'=?x?
+'q_profile_53'=?x? --> 'profile'=?x?
+'q_profile_52'=?x? --> 'profile'=?x?
+'q_profile_51'=?x? --> 'profile'=?x?
+'q_profile_50'=?x? --> 'profile'=?x?
+'q_profile_49'=?x? --> 'profile'=?x?
+'q_profile_48'=?x? --> 'profile'=?x?
+'q_profile_47'=?x? --> 'profile'=?x?
+'q_profile_46'=?x? --> 'profile'=?x?
+'q_profile_45'=?x? --> 'profile'=?x?
+'q_profile_44'=?x? --> 'profile'=?x?
+'q_profile_43'=?x? --> 'profile'=?x?
+'q_profile_42'=?x? --> 'profile'=?x?
+'q_profile_41'=?x? --> 'profile'=?x?
+'q_profile_40'=?x? --> 'profile'=?x?
+'q_profile_39'=?x? --> 'profile'=?x?
+'q_profile_38'=?x? --> 'profile'=?x?
+'q_profile_37'=?x? --> 'profile'=?x?
+'q_profile_36'=?x? --> 'profile'=?x?
+'q_profile_35'=?x? --> 'profile'=?x?
+'q_profile_34'=?x? --> 'profile'=?x?
+'q_profile_33'=?x? --> 'profile'=?x?
+'q_profile_32'=?x? --> 'profile'=?x?
+'q_profile_31'=?x? --> 'profile'=?x?
+'q_profile_30'=?x? --> 'profile'=?x?
+'q_profile_29'=?x? --> 'profile'=?x?
+'q_profile_28'=?x? --> 'profile'=?x?
+'q_profile_27'=?x? --> 'profile'=?x?
+'q_profile_26'=?x? --> 'profile'=?x?
+'q_profile_25'=?x? --> 'profile'=?x?
+'q_profile_24'=?x? --> 'profile'=?x?
+'q_profile_23'=?x? --> 'profile'=?x?
+'q_profile_22'=?x? --> 'profile'=?x?
+'q_profile_21'=?x? --> 'profile'=?x?
+'q_profile_20'=?x? --> 'profile'=?x?
+'q_profile_19'=?x? --> 'profile'=?x?
+'q_profile_18'=?x? --> 'profile'=?x?
+'q_profile_17'=?x? --> 'profile'=?x?
+'q_profile_16'=?x? --> 'profile'=?x?
+'q_profile_15'=?x? --> 'profile'=?x?
+'q_profile_14'=?x? --> 'profile'=?x?
+'q_profile_13'=?x? --> 'profile'=?x?
+'q_profile_12'=?x? --> 'profile'=?x?
+'q_profile_11'=?x? --> 'profile'=?x?
+'q_profile_10'=?x? --> 'profile'=?x?
+'q_profile_9'=?x? --> 'profile'=?x?
+'q_profile_8'=?x? --> 'profile'=?x?
+'q_profile_7'=?x? --> 'profile'=?x?
+'q_profile_6'=?x? --> 'profile'=?x?
+'q_profile_5'=?x? --> 'profile'=?x?
+'q_profile_4'=?x? --> 'profile'=?x?
+'q_profile_3'=?x? --> 'profile'=?x?
+'q_profile_2'=?x? --> 'profile'=?x?
+'q_profile_1'=?x? --> 'profile'=?x?
+'q_profile_0'=?x? --> 'profile'=?x?
+
+#closed_auction 9
+
+'q_closed_auction_8'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_7'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_6'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_5'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_4'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#author 9
+
+'q_author_8'=?x? --> 'author'=?x?
+'q_author_7'=?x? --> 'author'=?x?
+'q_author_6'=?x? --> 'author'=?x?
+'q_author_5'=?x? --> 'author'=?x?
+'q_author_4'=?x? --> 'author'=?x?
+'q_author_3'=?x? --> 'author'=?x?
+'q_author_2'=?x? --> 'author'=?x?
+'q_author_1'=?x? --> 'author'=?x?
+'q_author_0'=?x? --> 'author'=?x?
+
+#namerica 4
+
+'q_namerica_3'=?x? --> 'namerica'=?x?
+'q_namerica_2'=?x? --> 'namerica'=?x?
+'q_namerica_1'=?x? --> 'namerica'=?x?
+'q_namerica_0'=?x? --> 'namerica'=?x?
+
+#@id 4
+
+'q_@id_3'=?x? --> '@id'=?x?
+'q_@id_2'=?x? --> '@id'=?x?
+'q_@id_1'=?x? --> '@id'=?x?
+'q_@id_0'=?x? --> '@id'=?x?
+
+#quantity 1
+
+'q_quantity_0'=?x? --> 'quantity'=?x?
+
+#shipping 4
+
+'q_shipping_3'=?x? --> 'shipping'=?x?
+'q_shipping_2'=?x? --> 'shipping'=?x?
+'q_shipping_1'=?x? --> 'shipping'=?x?
+'q_shipping_0'=?x? --> 'shipping'=?x?
+
+#incategory 1
+
+'q_incategory_0'=?x? --> 'incategory'=?x?
+
+#payment 4
+
+'q_payment_3'=?x? --> 'payment'=?x?
+'q_payment_2'=?x? --> 'payment'=?x?
+'q_payment_1'=?x? --> 'payment'=?x?
+'q_payment_0'=?x? --> 'payment'=?x?
+
+#open_auctions 9
+
+'q_open_auctions_8'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_7'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_6'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_5'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_4'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_3'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_2'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_1'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_0'=?x? --> 'open_auctions'=?x?
+
+#bidder 9
+
+'q_bidder_8'=?x? --> 'bidder'=?x?
+'q_bidder_7'=?x? --> 'bidder'=?x?
+'q_bidder_6'=?x? --> 'bidder'=?x?
+'q_bidder_5'=?x? --> 'bidder'=?x?
+'q_bidder_4'=?x? --> 'bidder'=?x?
+'q_bidder_3'=?x? --> 'bidder'=?x?
+'q_bidder_2'=?x? --> 'bidder'=?x?
+'q_bidder_1'=?x? --> 'bidder'=?x?
+'q_bidder_0'=?x? --> 'bidder'=?x?
+
+#description 9
+
+'q_description_8'=?x? --> 'description'=?x?
+'q_description_7'=?x? --> 'description'=?x?
+'q_description_6'=?x? --> 'description'=?x?
+'q_description_5'=?x? --> 'description'=?x?
+'q_description_4'=?x? --> 'description'=?x?
+'q_description_3'=?x? --> 'description'=?x?
+'q_description_2'=?x? --> 'description'=?x?
+'q_description_1'=?x? --> 'description'=?x?
+'q_description_0'=?x? --> 'description'=?x?
+
+#europe 4
+
+'q_europe_3'=?x? --> 'europe'=?x?
+'q_europe_2'=?x? --> 'europe'=?x?
+'q_europe_1'=?x? --> 'europe'=?x?
+'q_europe_0'=?x? --> 'europe'=?x?
+
+#asia 4
+
+'q_asia_3'=?x? --> 'asia'=?x?
+'q_asia_2'=?x? --> 'asia'=?x?
+'q_asia_1'=?x? --> 'asia'=?x?
+'q_asia_0'=?x? --> 'asia'=?x?
+

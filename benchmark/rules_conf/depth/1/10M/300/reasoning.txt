@@ -1,0 +1,48 @@
+#site 0
+
+
+#categories 0
+
+
+#description 0
+
+
+#regions 0
+
+
+#item 0
+
+
+#location 0
+
+
+#open_auctions 0
+
+
+#bidder 0
+
+
+#people 0
+
+
+#watches 0
+
+
+#interval 0
+
+
+#payment 0
+
+
+#happiness 0
+
+
+#shipping 0
+
+
+#closed_auctions 0
+
+
+#closed_auction 0
+
+

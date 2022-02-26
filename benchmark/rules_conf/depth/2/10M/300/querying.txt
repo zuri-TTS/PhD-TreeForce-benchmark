@@ -1,0 +1,204 @@
+#australia 5
+
+'q_australia_4'=?x? --> 'australia'=?x?
+'q_australia_3'=?x? --> 'australia'=?x?
+'q_australia_2'=?x? --> 'australia'=?x?
+'q_australia_1'=?x? --> 'australia'=?x?
+'q_australia_0'=?x? --> 'australia'=?x?
+
+#location 4
+
+'q_location_3'=?x? --> 'location'=?x?
+'q_location_2'=?x? --> 'location'=?x?
+'q_location_1'=?x? --> 'location'=?x?
+'q_location_0'=?x? --> 'location'=?x?
+
+#mailbox 9
+
+'q_mailbox_8'=?x? --> 'mailbox'=?x?
+'q_mailbox_7'=?x? --> 'mailbox'=?x?
+'q_mailbox_6'=?x? --> 'mailbox'=?x?
+'q_mailbox_5'=?x? --> 'mailbox'=?x?
+'q_mailbox_4'=?x? --> 'mailbox'=?x?
+'q_mailbox_3'=?x? --> 'mailbox'=?x?
+'q_mailbox_2'=?x? --> 'mailbox'=?x?
+'q_mailbox_1'=?x? --> 'mailbox'=?x?
+'q_mailbox_0'=?x? --> 'mailbox'=?x?
+
+#person 2
+
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#country 1
+
+'q_country_0'=?x? --> 'country'=?x?
+
+#profile 9
+
+'q_profile_8'=?x? --> 'profile'=?x?
+'q_profile_7'=?x? --> 'profile'=?x?
+'q_profile_6'=?x? --> 'profile'=?x?
+'q_profile_5'=?x? --> 'profile'=?x?
+'q_profile_4'=?x? --> 'profile'=?x?
+'q_profile_3'=?x? --> 'profile'=?x?
+'q_profile_2'=?x? --> 'profile'=?x?
+'q_profile_1'=?x? --> 'profile'=?x?
+'q_profile_0'=?x? --> 'profile'=?x?
+
+#business 4
+
+'q_business_3'=?x? --> 'business'=?x?
+'q_business_2'=?x? --> 'business'=?x?
+'q_business_1'=?x? --> 'business'=?x?
+'q_business_0'=?x? --> 'business'=?x?
+
+#closed_auctions 5
+
+'q_closed_auctions_4'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_3'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_2'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_1'=?x? --> 'closed_auctions'=?x?
+'q_closed_auctions_0'=?x? --> 'closed_auctions'=?x?
+
+#@person 9
+
+'q_@person_8'=?x? --> '@person'=?x?
+'q_@person_7'=?x? --> '@person'=?x?
+'q_@person_6'=?x? --> '@person'=?x?
+'q_@person_5'=?x? --> '@person'=?x?
+'q_@person_4'=?x? --> '@person'=?x?
+'q_@person_3'=?x? --> '@person'=?x?
+'q_@person_2'=?x? --> '@person'=?x?
+'q_@person_1'=?x? --> '@person'=?x?
+'q_@person_0'=?x? --> '@person'=?x?
+
+#author 4
+
+'q_author_3'=?x? --> 'author'=?x?
+'q_author_2'=?x? --> 'author'=?x?
+'q_author_1'=?x? --> 'author'=?x?
+'q_author_0'=?x? --> 'author'=?x?
+
+#namerica 5
+
+'q_namerica_4'=?x? --> 'namerica'=?x?
+'q_namerica_3'=?x? --> 'namerica'=?x?
+'q_namerica_2'=?x? --> 'namerica'=?x?
+'q_namerica_1'=?x? --> 'namerica'=?x?
+'q_namerica_0'=?x? --> 'namerica'=?x?
+
+#@id 9
+
+'q_@id_8'=?x? --> '@id'=?x?
+'q_@id_7'=?x? --> '@id'=?x?
+'q_@id_6'=?x? --> '@id'=?x?
+'q_@id_5'=?x? --> '@id'=?x?
+'q_@id_4'=?x? --> '@id'=?x?
+'q_@id_3'=?x? --> '@id'=?x?
+'q_@id_2'=?x? --> '@id'=?x?
+'q_@id_1'=?x? --> '@id'=?x?
+'q_@id_0'=?x? --> '@id'=?x?
+
+#quantity 4
+
+'q_quantity_3'=?x? --> 'quantity'=?x?
+'q_quantity_2'=?x? --> 'quantity'=?x?
+'q_quantity_1'=?x? --> 'quantity'=?x?
+'q_quantity_0'=?x? --> 'quantity'=?x?
+
+#shipping 4
+
+'q_shipping_3'=?x? --> 'shipping'=?x?
+'q_shipping_2'=?x? --> 'shipping'=?x?
+'q_shipping_1'=?x? --> 'shipping'=?x?
+'q_shipping_0'=?x? --> 'shipping'=?x?
+
+#incategory 9
+
+'q_incategory_8'=?x? --> 'incategory'=?x?
+'q_incategory_7'=?x? --> 'incategory'=?x?
+'q_incategory_6'=?x? --> 'incategory'=?x?
+'q_incategory_5'=?x? --> 'incategory'=?x?
+'q_incategory_4'=?x? --> 'incategory'=?x?
+'q_incategory_3'=?x? --> 'incategory'=?x?
+'q_incategory_2'=?x? --> 'incategory'=?x?
+'q_incategory_1'=?x? --> 'incategory'=?x?
+'q_incategory_0'=?x? --> 'incategory'=?x?
+
+#payment 4
+
+'q_payment_3'=?x? --> 'payment'=?x?
+'q_payment_2'=?x? --> 'payment'=?x?
+'q_payment_1'=?x? --> 'payment'=?x?
+'q_payment_0'=?x? --> 'payment'=?x?
+
+#open_auctions 5
+
+'q_open_auctions_4'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_3'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_2'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_1'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_0'=?x? --> 'open_auctions'=?x?
+
+#date 4
+
+'q_date_3'=?x? --> 'date'=?x?
+'q_date_2'=?x? --> 'date'=?x?
+'q_date_1'=?x? --> 'date'=?x?
+'q_date_0'=?x? --> 'date'=?x?
+
+#@income 4
+
+'q_@income_3'=?x? --> '@income'=?x?
+'q_@income_2'=?x? --> '@income'=?x?
+'q_@income_1'=?x? --> '@income'=?x?
+'q_@income_0'=?x? --> '@income'=?x?
+
+#street 9
+
+'q_street_8'=?x? --> 'street'=?x?
+'q_street_7'=?x? --> 'street'=?x?
+'q_street_6'=?x? --> 'street'=?x?
+'q_street_5'=?x? --> 'street'=?x?
+'q_street_4'=?x? --> 'street'=?x?
+'q_street_3'=?x? --> 'street'=?x?
+'q_street_2'=?x? --> 'street'=?x?
+'q_street_1'=?x? --> 'street'=?x?
+'q_street_0'=?x? --> 'street'=?x?
+
+#description 9
+
+'q_description_8'=?x? --> 'description'=?x?
+'q_description_7'=?x? --> 'description'=?x?
+'q_description_6'=?x? --> 'description'=?x?
+'q_description_5'=?x? --> 'description'=?x?
+'q_description_4'=?x? --> 'description'=?x?
+'q_description_3'=?x? --> 'description'=?x?
+'q_description_2'=?x? --> 'description'=?x?
+'q_description_1'=?x? --> 'description'=?x?
+'q_description_0'=?x? --> 'description'=?x?
+
+#listitem 4
+
+'q_listitem_3'=?x? --> 'listitem'=?x?
+'q_listitem_2'=?x? --> 'listitem'=?x?
+'q_listitem_1'=?x? --> 'listitem'=?x?
+'q_listitem_0'=?x? --> 'listitem'=?x?
+
+#europe 5
+
+'q_europe_4'=?x? --> 'europe'=?x?
+'q_europe_3'=?x? --> 'europe'=?x?
+'q_europe_2'=?x? --> 'europe'=?x?
+'q_europe_1'=?x? --> 'europe'=?x?
+'q_europe_0'=?x? --> 'europe'=?x?
+
+#asia 5
+
+'q_asia_4'=?x? --> 'asia'=?x?
+'q_asia_3'=?x? --> 'asia'=?x?
+'q_asia_2'=?x? --> 'asia'=?x?
+'q_asia_1'=?x? --> 'asia'=?x?
+'q_asia_0'=?x? --> 'asia'=?x?
+

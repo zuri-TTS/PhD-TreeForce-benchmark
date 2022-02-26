@@ -1,0 +1,72 @@
+#bidder 0
+
+
+#seller 0
+
+
+#address 0
+
+
+#city 0
+
+
+#country 0
+
+
+#europe 0
+
+
+#@featured 0
+
+
+#incategory 0
+
+
+#education 0
+
+
+#business 0
+
+
+#namerica 0
+
+
+#@id 0
+
+
+#payment 0
+
+
+#annotation 0
+
+
+#author 0
+
+
+#end 0
+
+
+#start 0
+
+
+#mailbox 0
+
+
+#@item 0
+
+
+#description 0
+
+
+#shipping 0
+
+
+#parlist 0
+
+
+#listitem 0
+
+
+#asia 0
+
+

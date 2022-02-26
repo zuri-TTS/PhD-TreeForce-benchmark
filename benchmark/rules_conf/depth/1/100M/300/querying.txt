@@ -1,0 +1,142 @@
+#site 4
+
+'q_site_3'=?x? --> 'site'=?x?
+'q_site_2'=?x? --> 'site'=?x?
+'q_site_1'=?x? --> 'site'=?x?
+'q_site_0'=?x? --> 'site'=?x?
+
+#open_auctions 4
+
+'q_open_auctions_3'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_2'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_1'=?x? --> 'open_auctions'=?x?
+'q_open_auctions_0'=?x? --> 'open_auctions'=?x?
+
+#bidder 3
+
+'q_bidder_2'=?x? --> 'bidder'=?x?
+'q_bidder_1'=?x? --> 'bidder'=?x?
+'q_bidder_0'=?x? --> 'bidder'=?x?
+
+#date 2
+
+'q_date_1'=?x? --> 'date'=?x?
+'q_date_0'=?x? --> 'date'=?x?
+
+#annotation 3
+
+'q_annotation_2'=?x? --> 'annotation'=?x?
+'q_annotation_1'=?x? --> 'annotation'=?x?
+'q_annotation_0'=?x? --> 'annotation'=?x?
+
+#description 2
+
+'q_description_1'=?x? --> 'description'=?x?
+'q_description_0'=?x? --> 'description'=?x?
+
+#regions 1
+
+'q_regions_0'=?x? --> 'regions'=?x?
+
+#namerica 4
+
+'q_namerica_3'=?x? --> 'namerica'=?x?
+'q_namerica_2'=?x? --> 'namerica'=?x?
+'q_namerica_1'=?x? --> 'namerica'=?x?
+'q_namerica_0'=?x? --> 'namerica'=?x?
+
+#item 1
+
+'q_item_0'=?x? --> 'item'=?x?
+
+#mailbox 2
+
+'q_mailbox_1'=?x? --> 'mailbox'=?x?
+'q_mailbox_0'=?x? --> 'mailbox'=?x?
+
+#people 4
+
+'q_people_3'=?x? --> 'people'=?x?
+'q_people_2'=?x? --> 'people'=?x?
+'q_people_1'=?x? --> 'people'=?x?
+'q_people_0'=?x? --> 'people'=?x?
+
+#person 3
+
+'q_person_2'=?x? --> 'person'=?x?
+'q_person_1'=?x? --> 'person'=?x?
+'q_person_0'=?x? --> 'person'=?x?
+
+#city 2
+
+'q_city_1'=?x? --> 'city'=?x?
+'q_city_0'=?x? --> 'city'=?x?
+
+#street 2
+
+'q_street_1'=?x? --> 'street'=?x?
+'q_street_0'=?x? --> 'street'=?x?
+
+#zipcode 2
+
+'q_zipcode_1'=?x? --> 'zipcode'=?x?
+'q_zipcode_0'=?x? --> 'zipcode'=?x?
+
+#samerica 4
+
+'q_samerica_3'=?x? --> 'samerica'=?x?
+'q_samerica_2'=?x? --> 'samerica'=?x?
+'q_samerica_1'=?x? --> 'samerica'=?x?
+'q_samerica_0'=?x? --> 'samerica'=?x?
+
+#payment 2
+
+'q_payment_1'=?x? --> 'payment'=?x?
+'q_payment_0'=?x? --> 'payment'=?x?
+
+#country 2
+
+'q_country_1'=?x? --> 'country'=?x?
+'q_country_0'=?x? --> 'country'=?x?
+
+#australia 4
+
+'q_australia_3'=?x? --> 'australia'=?x?
+'q_australia_2'=?x? --> 'australia'=?x?
+'q_australia_1'=?x? --> 'australia'=?x?
+'q_australia_0'=?x? --> 'australia'=?x?
+
+#africa 4
+
+'q_africa_3'=?x? --> 'africa'=?x?
+'q_africa_2'=?x? --> 'africa'=?x?
+'q_africa_1'=?x? --> 'africa'=?x?
+'q_africa_0'=?x? --> 'africa'=?x?
+
+#closed_auction 4
+
+'q_closed_auction_3'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_2'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_1'=?x? --> 'closed_auction'=?x?
+'q_closed_auction_0'=?x? --> 'closed_auction'=?x?
+
+#asia 4
+
+'q_asia_3'=?x? --> 'asia'=?x?
+'q_asia_2'=?x? --> 'asia'=?x?
+'q_asia_1'=?x? --> 'asia'=?x?
+'q_asia_0'=?x? --> 'asia'=?x?
+
+#categories 3
+
+'q_categories_2'=?x? --> 'categories'=?x?
+'q_categories_1'=?x? --> 'categories'=?x?
+'q_categories_0'=?x? --> 'categories'=?x?
+
+#category 4
+
+'q_category_3'=?x? --> 'category'=?x?
+'q_category_2'=?x? --> 'category'=?x?
+'q_category_1'=?x? --> 'category'=?x?
+'q_category_0'=?x? --> 'category'=?x?
+
