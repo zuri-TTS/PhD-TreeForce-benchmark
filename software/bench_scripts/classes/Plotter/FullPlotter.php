@@ -164,8 +164,11 @@ final class FullPlotter implements IPlotter
                 $pattern .= "[$s\]*";
                 $group .= "[$s]";
             }
-
             $gdirs = \array_filter($dirs, fn ($d) => \fnmatch($pattern, $d));
+
+            if ($s === '')
+                $gdirs = \array_filter($gdirs, fn ($d) => ! \fnmatch("*\[simplified*\]*", $d));
+
             foreach ($queries as $query) {
                 $dd = \array_map(fn ($p) => "$p/$query.csv", $gdirs);
                 \natcasesort($dd);
