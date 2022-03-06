@@ -493,6 +493,8 @@ final class XMLLoader
 
     private const textKey = '#text';
 
+    private $readNext = true;
+
     private function toPHP(\XMLReader $reader, array &$out, array &$getOut): void
     {
         if ($reader->nodeType !== XMLReader::ELEMENT)
@@ -525,10 +527,17 @@ final class XMLLoader
             $obj[self::textKey . $nbText] = $reader->readInnerXML();
             $reader->next();
             $nbText = 1;
+
+            // Needed because can jump after the next element in the for loop
+            $this->readNext = false;
         } else {
 
             for (;;) {
-                $reader->read();
+
+                if ($this->readNext)
+                    $reader->read();
+                else
+                    $this->readNext = true;
 
                 switch ($reader->nodeType) {
                     case XMLReader::SIGNIFICANT_WHITESPACE:
@@ -555,7 +564,7 @@ final class XMLLoader
                     case XMLReader::END_ELEMENT:
                         {
                             if ($reader->name !== $name)
-                                throw new \Exception("Error, waiting for end element: $name; has $reader->name");
+                                throw new \Exception("Error, waiting for end element: $name; has $reader->name=" . print_r($obj, true));
 
                             break 2;
                         }
