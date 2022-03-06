@@ -47,7 +47,7 @@ final class XMarkLoader implements ILoader
         return self::unwind;
     }
 
-    private const doNotSimplify = [
+    private const is_list = [
         'text',
         'bold',
         'emph',
@@ -61,9 +61,29 @@ final class XMarkLoader implements ILoader
         'bidder'
     ];
 
-    public function getDoNotSimplifyConfig(): array
+    function isList(string $name): bool
     {
-        return self::doNotSimplify;
+        return \in_array($name, self::is_list);
+    }
+
+    function getOut(string $name, string $subVal): bool
+    {
+        return false;
+    }
+
+    function isObject(string $name): bool
+    {
+        return false;
+    }
+
+    function isText(string $name): bool
+    {
+        return false;
+    }
+
+    function isMultipliable(string $name): bool
+    {
+        return false;
     }
 
     public function deleteXMLFile(): bool
