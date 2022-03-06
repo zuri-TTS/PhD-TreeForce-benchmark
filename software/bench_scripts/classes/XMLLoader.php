@@ -17,8 +17,6 @@ final class XMLLoader
 
     private array $dataSets_exists;
 
-    private array $doNotSimplify;
-
     private array $summary;
 
     private int $summaryDepth;
@@ -48,7 +46,6 @@ final class XMLLoader
 
         $this->summarize = false;
         $this->groupLoader = DataSets::getGroupLoader($this->group);
-        $this->doNotSimplify = $this->groupLoader->getDoNotSimplifyConfig();
     }
 
     // ========================================================================
@@ -325,11 +322,13 @@ final class XMLLoader
 
     private function writeJson(XMLReader $reader)
     {
-        $destVal = [];
-        self::toPHP(\simplexml_load_string($reader->readOuterXml()), $destVal);
+        $destVal = $getOut = [];
+
+        $name = $reader->name;
+        $this->toPHP($reader, $destVal, $getOut);
 
         $data = self::array_path($this->path, [
-            $reader->name => $destVal
+            $name => $destVal
         ]);
 
         foreach ($this->files as $d => $file) {
@@ -363,19 +362,29 @@ final class XMLLoader
         if (! \is_array($keys))
             return;
 
-        foreach ($keys as $k => &$e) {
-            $doNotSimplify = \in_array($k, $this->doNotSimplify);
+        foreach ($cp = $keys as $name => $val) {
+            $e = &$keys[$name];
 
-            if ($doNotSimplify)
-                $e = (array) $e;
+            if (! is_array($e))
+                continue;
 
-            if (\is_array($e)) {
+            if (! \array_is_list($e))
+                throw new \Exception("Element must be a list; have: $name" . var_export($e, true));
 
-                foreach ($e as &$se)
-                    $this->doSimplifyObject($se);
+            $c = \count($e);
 
-                if (! $doNotSimplify && \count($e) === 1)
-                    $e = $e[0];
+            if ($c === 0)
+                throw new \Exception("Should never happens");
+
+            foreach ($e as &$se)
+                $this->doSimplifyObject($se);
+
+            if (! $this->groupLoader->isList($name)) {
+
+                if ($c !== 1 || ! isset($val[0]))
+                    throw new \Exception("Element cannot be a list; have: $name:" . var_export($e, true));
+
+                $e = $e[0];
             }
         }
     }
@@ -455,63 +464,143 @@ final class XMLLoader
         \fclose($fileType);
     }
 
-    private static function toPHP(\SimpleXMLElement $element, array &$out): void
+    private static function getAttributesOf(\XMLReader $reader, string $prefix = '@'): array
     {
+        $ret = [];
+
+        while ($reader->moveToNextAttribute()) {
+            $ret["$prefix$reader->name"][] = $reader->value;
+        }
+        return $ret;
+    }
+
+    private function mergeArrayContents(array &$theObject, string $name, $val)
+    {
+        $present = $theObject[$name] ?? null;
+
+        if (null !== $present) {
+
+            if (\is_array_list($present))
+
+                if (\is_array_list($val))
+                    $theObject[$name] = \array_merge($theObject[$name], $val);
+                else
+                    $theObject[$name][] = $val;
+        } else {
+            $theObject[$name] = $val;
+        }
+    }
+
+    private const textKey = '#text';
+
+    private function toPHP(\XMLReader $reader, array &$out, array &$getOut): void
+    {
+        if ($reader->nodeType !== XMLReader::ELEMENT)
+            throw new \Exception("The reader must be on an element; have $reader->nodeType");
+
         $obj = [];
+        $name = $reader->name;
+        $val = $reader->value;
+        $nbText = $nbElements = 0;
 
-        foreach ($element->children() as $name => $val) {
-            if (\count($val) != 0) {
-                $php = [];
-                self::toPHP($val, $php);
-                $obj[$name] = $php;
-            } else {
-                $attr = self::getAttributes($val);
-                $sval = (string) $val;
+        // Handles attributes
+        {
+            $attr = self::getAttributesOf($reader);
+            $getOut = [];
 
-                if (empty($attr))
-                    $obj[$name][] = $sval;
-                elseif (empty($sval)) {
-                    $obj[$name][] = $attr;
-                } else {
-                    $obj[$name][] = $attr;
-                    $obj[$name][] = $sval;
+            foreach ($attr as $aname => $val) {
+
+                if ($this->groupLoader->getOut($name, $aname)) {
+                    $getOut["$name$aname"] = $val;
+                    unset($attr[$aname]);
+                }
+            }
+
+            if (! empty($attr)) {
+                $obj = $attr;
+            }
+        }
+
+        if ($this->groupLoader->isText($name)) {
+            $obj[self::textKey . $nbText] = $reader->readInnerXML();
+            $reader->next();
+            $nbText = 1;
+        } else {
+
+            for (;;) {
+                $reader->read();
+
+                switch ($reader->nodeType) {
+                    case XMLReader::SIGNIFICANT_WHITESPACE:
+                    case XMLReader::COMMENT:
+                        break;
+                    case XMLReader::TEXT:
+                        {
+                            $obj[self::textKey . $nbText] = \trim($reader->value);
+                            $nbText ++;
+                            break;
+                        }
+                    case XMLReader::ELEMENT:
+                        {
+                            $subObj = [];
+
+                            $php = $gout = [];
+                            $cname = $reader->name;
+
+                            $this->toPHP($reader, $php, $gout);
+                            $obj = \array_merge($obj, $gout);
+                            $this->mergeArrayContents($obj, $cname, $php);
+                            break;
+                        }
+                    case XMLReader::END_ELEMENT:
+                        {
+                            if ($reader->name !== $name)
+                                throw new \Exception("Error, waiting for end element: $name; has $reader->name");
+
+                            break 2;
+                        }
+                    default:
+                        throw new \Exception("Cannot handle node $reader->name:$reader->nodeType");
                 }
             }
         }
 
-        // Clean the one value array
-        foreach ($obj as &$subObj) {
-            if (\count($subObj) > 1)
-                continue;
+        if ($nbElements >= 1);
+        elseif ($nbText === 1) {
+            $k = self::textKey . "0";
+            $stringVal = $obj[$k];
+            unset($obj[$k]);
 
-            $val = $subObj[0] ?? null;
-
-            if (\is_string($val))
-                $subObj = $val;
+            if ($this->groupLoader->isObject($name))
+                $obj[self::textKey] = $stringVal;
+            else
+                $obj = $stringVal;
         }
-        unset($subObj);
 
-        $name = $element->getName();
-        $attr = self::getAttributes($element);
+        // Handles isMultipliable
+        if (\is_array($obj)) {
 
-        if (! empty($attr))
-            $obj = $attr + $obj;
+            foreach ($obj as $name => $val) {
 
-        $out[] = $obj;
+                if (! is_array($val))
+                    continue;
 
-        if ($name === "text")
-            $out[] = $element->asXML();
-    }
+                if ($this->groupLoader->isMultipliable($name)) {
+                    $c = \count($val);
 
-    private static function getAttributes(SimpleXMLElement $element): array
-    {
-        $attr = [];
+                    if ($c > 1) {
+                        $obj["multi$name"] = $val;
+                        unset($obj[$name]);
+                    }
+                }
+            }
+        }
 
-        // Add attributes
-        foreach ($element->attributes() as $name => $val)
-            $attr["@$name"] = (string) $val;
-
-        return $attr;
+        // Makes the output
+        if ($nbText === 0 || $nbElements === 0)
+            $out[] = $obj;
+        else
+            $out = $obj;
     }
 
     private function toJsonString(DataSet $dataSet, array $data, bool $simplify, ?callable $postProcess = null): string

@@ -15,6 +15,11 @@ if (! function_exists('str_starts_with')) {
     }
 }
 
+function is_array_list($array): bool
+{
+    return \is_array($array) && \array_is_list($array);
+}
+
 function str_format(string $s, array $vars): string
 {
     return \str_replace(\array_map(fn ($k) => "%$k", \array_keys($vars)), \array_values($vars), $s);
@@ -69,7 +74,6 @@ function wdPush(string $path): void
 
     if (! \chdir($path))
         throw new \Exception("Cannot chdir to $path");
-
 }
 
 function wdPop(): void
