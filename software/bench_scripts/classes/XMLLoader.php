@@ -330,10 +330,27 @@ final class XMLLoader
         $data = self::array_path($this->path, [
             $name => $destVal
         ]);
+        $this->doSimplifyText($data);
+        $dataSimple = null;
 
         foreach ($this->files as $d => $file) {
             $fileData = $this->filesData[$d];
-            $file->fwrite($this->toJsonString($fileData['dataset'], $data, $fileData['simplify'], $fileData['randomize']) . "\n");
+            $postProcess = $fileData['randomize'];
+            $data2 = $data;
+
+            if ($fileData['simplify']) {
+                if (null === $dataSimple) {
+                    $dataSimple = $data;
+                    $this->doSimplifyObject($dataSimple);
+                }
+                $data2 = $dataSimple;
+            } else
+                $data2 = $data;
+
+            if (isset($postProcess))
+                $data2 = $postProcess($data2);
+
+            $file->fwrite($this->toJsonString($fileData['dataset'], $data2) . "\n");
         }
     }
 
@@ -355,6 +372,34 @@ final class XMLLoader
             $ret[$unwind] = self::getFileFromUnwind($unwind, $baseDir);
         }
         return $ret;
+    }
+
+    private function doSimplifyText(&$keys): void
+    {
+        if (! \is_array($keys))
+            return;
+
+        foreach ($cp = $keys as $name => $val) {
+            $e = &$keys[$name];
+
+            if (! is_array($e))
+                continue;
+
+            if (! \array_is_list($e))
+                throw new \Exception("Element must be a list; have: $name" . var_export($e, true));
+
+            $c = \count($e);
+
+            if ($c === 0)
+                throw new \Exception("Should never happens");
+            if ($c === 1 && isset($e[0]) && \is_string($e[0])) {
+                if (! $this->groupLoader->isList($name))
+                    $e = $e[0];
+            } else
+                foreach ($e as &$se) {
+                    $this->doSimplifyText($se);
+                }
+        }
     }
 
     private function doSimplifyObject(&$keys): void
@@ -382,7 +427,7 @@ final class XMLLoader
             if (! $this->groupLoader->isList($name)) {
 
                 if ($c !== 1 || ! isset($val[0]))
-                    throw new \Exception("Element cannot be a list; have: $name:" . var_export($e, true));
+                    throw new \Exception("Element '$name' cannot be a list; have:" . var_export($e, true));
 
                 $e = $e[0];
             }
@@ -469,7 +514,7 @@ final class XMLLoader
         $ret = [];
 
         while ($reader->moveToNextAttribute()) {
-            $ret["$prefix$reader->name"][] = $reader->value;
+            $ret["$prefix$reader->name"] = $reader->value;
         }
         return $ret;
     }
@@ -480,15 +525,32 @@ final class XMLLoader
 
         if (null !== $present) {
 
-            if (\is_array_list($present))
+            if (\is_array_list($present)) {
 
-                if (\is_array_list($val))
-                    $theObject[$name] = \array_merge($theObject[$name], $val);
-                else
+                if (\is_array_list($val)) {
+                    $c = \count($val);
+
+                    if ($c === 1)
+                        $theObject[$name] = \array_merge($theObject[$name], $val);
+                    else
+                        $theObject[$name][] = $val;
+                } else
                     $theObject[$name][] = $val;
-        } else {
+            }
+        } else
             $theObject[$name] = $val;
+    }
+
+    private function mergeNodes(array $obj): array
+    {
+        $ret = [];
+
+        foreach ($obj as $subObj) {
+            $name = \array_key_first($subObj);
+            $val = $subObj[$name];
+            $this->mergeArrayContents($ret, $name, $val);
         }
+        return $ret;
     }
 
     private const textKey = '#text';
@@ -503,6 +565,7 @@ final class XMLLoader
         $obj = [];
         $name = $reader->name;
         $val = $reader->value;
+        $isEmpty = $reader->isEmptyElement;
         $nbText = $nbElements = 0;
 
         // Handles attributes
@@ -517,14 +580,11 @@ final class XMLLoader
                     unset($attr[$aname]);
                 }
             }
-
-            if (! empty($attr)) {
-                $obj = $attr;
-            }
         }
 
-        if ($this->groupLoader->isText($name)) {
-            $obj[self::textKey . $nbText] = $reader->readInnerXML();
+        if ($isEmpty);
+        elseif ($this->groupLoader->isText($name)) {
+            $obj[][self::textKey] = $reader->readInnerXML();
             $reader->next();
             $nbText = 1;
 
@@ -545,46 +605,60 @@ final class XMLLoader
                         break;
                     case XMLReader::TEXT:
                         {
-                            $obj[self::textKey . $nbText] = \trim($reader->value);
+                            $obj[][self::textKey] = \trim($reader->value);
                             $nbText ++;
-                            break;
                         }
+                        break;
                     case XMLReader::ELEMENT:
                         {
+                            $nbElements ++;
                             $subObj = [];
 
                             $php = $gout = [];
                             $cname = $reader->name;
 
                             $this->toPHP($reader, $php, $gout);
-                            $obj = \array_merge($obj, $gout);
-                            $this->mergeArrayContents($obj, $cname, $php);
-                            break;
+
+                            if (! empty($gout))
+                                $obj[] = $gout;
+
+                            $obj[][$cname] = $php;
                         }
+                        break;
                     case XMLReader::END_ELEMENT:
                         {
                             if ($reader->name !== $name)
                                 throw new \Exception("Error, waiting for end element: $name; has $reader->name=" . print_r($obj, true));
-
-                            break 2;
                         }
+                        break 2;
                     default:
                         throw new \Exception("Cannot handle node $reader->name:$reader->nodeType");
                 }
             }
         }
 
-        if ($nbElements >= 1);
-        elseif ($nbText === 1) {
-            $k = self::textKey . "0";
-            $stringVal = $obj[$k];
-            unset($obj[$k]);
+        if ($nbElements >= 1) {
 
-            if ($this->groupLoader->isObject($name))
+            if (! empty($attr))
+                \array_unshift($obj, $attr);
+
+            if ($nbText === 0)
+                $obj = $this->mergeNodes($obj);
+        } elseif ($nbText > 1) {
+            throw new \Exception("Shoud never happens: more than one #text with no element " . print_r($obj, true));
+        } elseif ($nbText === 1) {
+            $k = self::textKey;
+            $stringVal = \array_pop($obj)[$k];
+
+            if ($this->groupLoader->isObject($name)) {
+                $obj = $attr;
                 $obj[self::textKey] = $stringVal;
+            } elseif (! empty($attr))
+                throw new \Exception("Text node cannot have any attribute: $name: " . print_r($attr, true));
             else
                 $obj = $stringVal;
-        }
+        } else
+            $obj = $attr;
 
         // Handles isMultipliable
         if (\is_array($obj)) {
@@ -612,14 +686,8 @@ final class XMLLoader
             $out = $obj;
     }
 
-    private function toJsonString(DataSet $dataSet, array $data, bool $simplify, ?callable $postProcess = null): string
+    private function toJsonString(DataSet $dataSet, array $data): string
     {
-        if ($simplify)
-            $this->doSimplifyObject($data);
-
-        if (isset($postProcess)) {
-            $data = $postProcess($data);
-        }
         $this->addToSummary($dataSet, $data);
         $this->stats['documents.nb'] ++;
 
