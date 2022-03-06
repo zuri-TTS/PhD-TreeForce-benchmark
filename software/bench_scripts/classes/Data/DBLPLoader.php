@@ -43,40 +43,85 @@ final class DBLPLoader implements ILoader
         return self::unwind;
     }
 
-    private const doNotSimplify = [
+    private const is_list = [
         'author',
-        'editor',
-        'title',
-        'booktitle',
-        'pages',
-        'year',
-        'address',
-        'journal',
-        'volume',
-        'number',
-        'month',
-        'url',
-        'ee',
-        'cdrom',
         'cite',
-        'publisher',
-        'note',
         'crossref',
+        'cdrom',
+        'editor',
+        'ee',
         'isbn',
-        'series',
+        'note',
+        'multipublisher',
+        'multiseries',
+        'multititle',
+        'pages',
         'school',
-        'chapter',
-        'publnr',
-        'sub',
-        'sup',
-        'i',
-        'tt',
-        'ref'
+        'url',
+        'multiyear'
     ];
 
-    public function getDoNotSimplifyConfig(): array
+    private const isObject = [
+        'author',
+        'cite',
+        'editor',
+        'ee',
+        'isbn',
+        'note',
+        'publisher',
+        'series',
+        'url'
+    ];
+
+    private const isText = [
+        'title',
+        'address',
+        'cdrom',
+        'chapter',
+        'crossref',
+        'month',
+        'number',
+        'pages',
+        'publnr',
+        'school',
+        'volume',
+        'year'
+    ];
+
+    private const isMultipliable = [
+        'publisher',
+        'series',
+        'title',
+        'year'
+    ];
+
+    private const getOut = [
+        'title' => '@bibtex'
+    ];
+
+    function getOut(string $name, string $subVal): bool
     {
-        return self::doNotSimplify;
+        return (self::getOut[$name] ?? null) === $subVal;
+    }
+
+    function isObject(string $name): bool
+    {
+        return \in_array($name, self::isObject);
+    }
+
+    function isText(string $name): bool
+    {
+        return \in_array($name, self::isText);
+    }
+
+    function isMultipliable(string $name): bool
+    {
+        return \in_array($name, self::isMultipliable);
+    }
+
+    function isList(string $name): bool
+    {
+        return \in_array($name, self::is_list);
     }
 
     public function deleteXMLFile(): bool
