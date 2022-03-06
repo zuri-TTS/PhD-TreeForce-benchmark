@@ -124,17 +124,31 @@ final class FullPlotter implements IPlotter
         } else
             $ret = $dirName;
 
-        $infos = '';
+        $infos = [];
 
         if ($this->xtics_infos) {
 
             if ($nbReformulations != $ret)
-                $infos .= "$nbReformulations";
+                $infos[] = "$nbReformulations";
 
             if ($this->xtics_infos_answers_nb)
-                $infos .= ",$nbAnswers";
+                $infos[] = "$nbAnswers";
 
-            $ret = "$ret($infos)";
+            $infos = \implode(',', $infos);
+
+            \preg_match("#\[summary-(.+)\]#U", $dirName, $summary);
+            \preg_match("#\[toNative-(.+)\]#U", $dirName, $stoNative);
+            $summary = $summary[1] ?? null;
+            $stoNative = $stoNative[1] ?? null;
+
+            $sinfo = [];
+            if ($summary)
+                $sinfo[] = "S-$summary";
+            if ($stoNative)
+                $sinfo[] = "2-$stoNative";
+
+            $sinfo = \implode(',', $sinfo);
+            $ret = "$ret\[$sinfo\]($infos)";
         }
         return \Plot::gnuplotSpecialChars($ret);
     }
@@ -215,8 +229,8 @@ final class FullPlotter implements IPlotter
         foreach ($csvFiles as $csvPath) {
             $dirName = \basename(\dirname($csvPath));
             $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
-            $nbReformulations = $data['queries']['total'];
-            $nbAnswers = $data['answers']['total'];
+            $nbReformulations = $data['queries']['total'] ?? -1;
+            $nbAnswers = $data['answers']['total'] ?? -1;
 
             $xtic = $this->makeXTic($dirName, $nbReformulations, $nbAnswers);
             echo "\"$xtic\" ";
