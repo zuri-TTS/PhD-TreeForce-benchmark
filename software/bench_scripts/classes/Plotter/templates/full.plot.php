@@ -95,7 +95,10 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
             2 => 'rewriting.rules.apply.r'
         ],
         [
-            4 => 'stats.db.time.r'
+            4 => 'rewritings.generation'
+        ],
+        [
+            5 => 'stats.db.time.r'
         ]
     ];
     $xtics = ':xtic(1)';

@@ -32,6 +32,7 @@ final class FullPlotter implements IPlotter
     private array $toPlot = [
         'rewriting.rules.apply' => 'r',
         'rewriting.total' => 'r',
+        'rewritings.generation' => 'r',
         'stats.db.time' => 'r'
     ];
 
@@ -221,6 +222,7 @@ final class FullPlotter implements IPlotter
         echo "test ";
 
         foreach ($this->toPlot as $what => $times) {
+
             foreach ((array) $times as $t)
                 echo "$what.$t ";
         }
