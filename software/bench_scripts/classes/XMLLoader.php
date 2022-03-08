@@ -374,31 +374,46 @@ final class XMLLoader
         return $ret;
     }
 
-    private function doSimplifyText(&$keys): void
+    private function doSimplifyText(&$array, $name = ""): void
     {
-        if (! \is_array($keys))
-            return;
+        if (\array_is_list($array))
+            $this->doSimplifyListText($name, $array);
+        elseif (\is_array($array))
+            $this->doSimplifyObjectText($name, $array);
+    }
 
-        foreach ($cp = $keys as $name => $val) {
-            $e = &$keys[$name];
+    private function doSimplifyObjectText($name, &$object): void
+    {
+        if (! \is_array($object) || \array_is_list($object))
+            throw new \Exception("Element $name must be an object; have: " . \print_r($object, true));
 
-            if (! is_array($e))
-                continue;
+        foreach ($object as $name => &$list) {
 
-            if (! \array_is_list($e))
-                throw new \Exception("Element must be a list; have: $name" . var_export($e, true));
+            if (\is_array($list))
+                $this->doSimplifyListText($name, $list);
+        }
+    }
 
-            $c = \count($e);
+    private function doSimplifyListText($name, &$list): void
+    {
+        if (! \is_array_list($list))
+            throw new \Exception("Element $name must be a list; have: " . \print_r($list, true));
 
-            if ($c === 0)
-                throw new \Exception("Should never happens");
-            if ($c === 1 && isset($e[0]) && \is_string($e[0])) {
-                if (! $this->groupLoader->isList($name))
-                    $e = $e[0];
-            } else
-                foreach ($e as &$se) {
-                    $this->doSimplifyText($se);
-                }
+        $c = \count($list);
+
+        if ($c === 0)
+            throw new \Exception("Should never happens");
+        if ($c === 1 && isset($list[0]) && \is_string($list[0])) {
+
+            if (! $this->groupLoader->isList($name))
+                $list = $list[0];
+        } else {
+
+            foreach ($list as $k => &$item) {
+
+                if (\is_array($item))
+                    $this->doSimplifyText($item, $k);
+            }
         }
     }
 
