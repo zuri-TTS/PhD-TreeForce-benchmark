@@ -639,11 +639,17 @@ final class XMLLoader
 
         if ($nbElements >= 1) {
 
-            if (! empty($attr))
-                \array_unshift($obj, $attr);
-
             if ($nbText === 0)
                 $obj = $this->mergeNodes($obj);
+
+            if (! empty($attr)) {
+
+                if ($nbText === 0) {
+                    $obj = \array_merge($attr, $obj);
+                } else {
+                    \array_unshift($obj, $attr);
+                }
+            }
         } elseif ($nbText > 1) {
             throw new \Exception("Shoud never happens: more than one #text with no element " . print_r($obj, true));
         } elseif ($nbText === 1) {
