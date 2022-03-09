@@ -1,0 +1,68 @@
+mastersthesis=?x? ---> thesis=?x?
+phdthesis=?x?     ---> thesis=?x?
+
+article=?x?       ---> publication=?x?
+book=?x?          ---> publication=?x?
+incollection=?x?  ---> publication=?x?
+inproceedings=?x? ---> publication=?x?
+
+thesis=?x?      ---> document=?x?
+proceedings=?x? ---> document=?x?
+publication=?x? ---> document=?x?
+
+document=?x? ---> content=?x?
+www=?x?      ---> content=?x?
+
+
+title=?x?     ---> dataProperty=?x?
+year=?x?      ---> dataProperty=?x?
+booktitle=?x? ---> dataProperty=?x?
+chapter=?x?   ---> dataProperty=?x?
+crossref=?x?  ---> dataProperty=?x?
+cdrom=?x?     ---> dataProperty=?x?
+month=?x?     ---> dataProperty=?x?
+number=?x?    ---> dataProperty=?x?
+pages=?x?     ---> dataProperty=?x?
+publnr=?x?    ---> dataProperty=?x?
+series=?x?    ---> dataProperty=?x?
+volume=?x?    ---> dataProperty=?x?
+ee=?x?        ---> dataProperty=?x?
+url=?x?       ---> dataProperty=?x?
+isbn=?x?      ---> dataProperty=?x?
+note=?x?      ---> dataProperty=?x?
+
+editor=?x? ---> creator=?x?
+author=?x? ---> creator=?x?
+
+creator=?x?   ---> entityProperty=?x?
+cite=?x?      ---> entityProperty=?x?
+school=?x?    ---> entityProperty=?x?
+journal=?x?   ---> entityProperty=?x?
+publisher=?x? ---> entityProperty=?x?
+
+dataProperty=?x? ---> property=?x?
+entityProperty=?x? ---> property=?x?
+
+
+author."#text"=?x?$ ---> author=?x?$
+editor."#text"=?x?$ ---> editor=?x?$
+cite."#text"=?x?$    ---> cite=?x?$
+ee."#text"=?x?$      ---> ee=?x?$
+isbn."#text"=?x?$    ---> isbn=?x?$
+note."#text"=?x?$    ---> note=?x?$
+publisher."#text"=?x?$ ---> publisher=?x?$
+series."#text"=?x?$  ---> series=?x?$
+url."#text"=?x?$     ---> url=?x?$
+
+
+content.author."@orcid"$          ---> authorWithOrcid
+document.ee."@type"="oa"$         ---> openDocument
+document.ee."@type"="archive oa"$ ---> openDocument
+document.isbn."@type"="online"$   ---> onlineDocument
+
+
+www.(title="Home Page", url)$    ---> personWithHomePage
+(onlineDocument,openDocument)$  ---> openOnlineDocument
+(authorWithOrcid,openDocument)$ ---> identifiableOpenDocument
+(authorWithOrcid,openOnlineDocument)$ --> identifiableOpenOnlineDocument
+
