@@ -22,7 +22,7 @@ final class Check
         $groups[$dataGroup][$query][$rules] = $fileInfo->getRealPath();
     }
 
-    private static function groupBy_data_rules_query(array &$groups, \SplFileInfo $fileInfo): void
+    private static function groupBy_data_summary_rules_query(array &$groups, \SplFileInfo $fileInfo): void
     {
         $query = \basename($fileInfo, '.csv');
         $bname = \basename(\dirname($fileInfo));
@@ -30,8 +30,10 @@ final class Check
         \preg_match("#^\[(.+)\]\[(.+)\]#U", $bname, $matches);
         $dataGroup = $matches[1];
         $rules = $matches[2];
+        \preg_match("#\[summary-(.+)\]#U", $bname, $matches);
+        $summary = $matches[1] ?? '';
 
-        $groups[$dataGroup][$rules][$query][] = $fileInfo->getRealPath();
+        $groups[$dataGroup][$summary][$rules][$query][] = $fileInfo->getRealPath();
     }
 
     private static function stats_data_rules_query(array &$groups, \SplFileInfo $fileInfo): void
@@ -74,7 +76,7 @@ final class Check
     // ========================================================================
     public function checkNbRefs()
     {
-        $csvGroups = $this->getCSVGroups($this->paths, 'Check::groupBy_data_rules_query');
+        $csvGroups = $this->getCSVGroups($this->paths, 'Check::groupBy_data_summary_rules_query');
 
         foreach ($csvGroups as &$queriesFiles) {
             \uksort($queriesFiles, 'strnatcasecmp');
@@ -84,16 +86,19 @@ final class Check
         }
         unset($f, $queriesFiles);
 
-        foreach ($csvGroups as $group => $rules_queries) {
-            foreach ($rules_queries as $rules => $queriesGroup) {
-                echo "[$group/query]\n";
+        foreach ($csvGroups as $group => $summ_rules_queries) {
+            foreach ($summ_rules_queries as $summary => $rules_queries) {
+                foreach ($rules_queries as $rules => $queriesGroup) {
+                    echo "[$group/$rules/$summary/query]\n";
+                    \uksort($queriesGroup, 'strnatcasecmp');
 
-                foreach ($queriesGroup as $query => $queries) {
+                    foreach ($queriesGroup as $query => $queries) {
 
-                    foreach ($queries as $file) {
-                        $csvData = CSVReader::read($file);
+                        foreach ($queries as $file) {
+                            $csvData = CSVReader::read($file);
 
-                        echo "query.$query: {$csvData['reformulations']['nb']}\n";
+                            echo "query.$query: {$csvData['reformulations']['nb']}\n";
+                        }
                     }
                 }
             }
