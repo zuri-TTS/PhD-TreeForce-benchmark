@@ -27,8 +27,12 @@ while (! empty($exec = \parseArgvShift($argv, ";"))) {
             $ite = new RecursiveIteratorIterator($dir);
             $reg = new RegexIterator($ite, "#/[^@][^/]*\.csv$#");
 
-            foreach ($reg as $file)
-                $plotFiles[] = $file->getRealPath();
+            foreach ($reg as $file) {
+                $csv = $file->getRealPath();
+
+                if (! str_starts_with(\basename(\dirname($csv)), "full_"))
+                    $plotFiles[] = $csv;
+            }
         } elseif (is_file($outPath) && preg_match('#\.csv$#', $outPath)) {
             $plotFiles = [
                 $outPath

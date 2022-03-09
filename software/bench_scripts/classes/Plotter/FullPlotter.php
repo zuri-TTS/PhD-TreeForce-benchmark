@@ -81,6 +81,7 @@ final class FullPlotter implements IPlotter
 
         $this->cutData = self::cutData_group_query($csvPaths);
         $this->writeDat($this->cutData);
+        $this->writeCsv($this->cutData);
 
         $contents = \get_include_contents(self::template, [
             'PLOT' => $this->plot,
@@ -231,8 +232,8 @@ final class FullPlotter implements IPlotter
         foreach ($csvFiles as $csvPath) {
             $dirName = \basename(\dirname($csvPath));
             $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
-            $nbReformulations = $data['queries']['total'] ?? -1;
-            $nbAnswers = $data['answers']['total'] ?? -1;
+            $nbReformulations = $data['queries']['total'] ?? - 1;
+            $nbAnswers = $data['answers']['total'] ?? - 1;
 
             $xtic = $this->makeXTic($dirName, $nbReformulations, $nbAnswers);
             echo "\"$xtic\" ";
@@ -261,5 +262,53 @@ final class FullPlotter implements IPlotter
 
             \file_put_contents($file, $content);
         }
+    }
+
+    private function echoCsv(array $csvFiles)
+    {
+        echo "rules(summary,2native)";
+
+        foreach ($this->toPlot as $what => $times) {
+
+            foreach ((array) $times as $t)
+                echo ",$what.$t";
+        }
+        echo "\n";
+
+        foreach ($csvFiles as $csvPath) {
+            $dirName = \basename(\dirname($csvPath));
+            $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
+            $nbReformulations = $data['queries']['total'] ?? - 1;
+            $nbAnswers = $data['answers']['total'] ?? - 1;
+
+            $xtic = $this->makeXTic($dirName, $nbReformulations, $nbAnswers);
+            echo "\"$xtic\"";
+
+            foreach ($this->toPlot as $what => $times) {
+
+                if (isset($data[$what])) {
+
+                    foreach ((array) $times as $t)
+                        $dat = $data[$what][$t] ?? '0';
+                } else
+                    $dat = '0';
+
+                echo ",$dat";
+            }
+            echo "\n";
+        }
+    }
+
+    private function writeCsv(array $cutData)
+    {
+        $file = "table.csv";
+        echo "Writing $file\n";
+        $fp = \fopen($file, "w");
+
+        foreach ($cutData as $file => $csvFiles) {
+            $content = \get_ob(fn () => $this->echoCsv($csvFiles));
+            \fwrite($fp, $content);
+        }
+        \fclose($fp);
     }
 }
