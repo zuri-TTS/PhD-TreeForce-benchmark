@@ -75,16 +75,16 @@ final class LabelReplacer
         return $ret;
     }
 
-    public static function getReplacerForDataSet(\DataSet $dataSet, int $seed): callable
+    public static function getReplacerForDataSet(\DataSet $dataSet, int $seed): ?callable
     {
         $rulesPath = $dataSet->rulesPath();
         $rulesFilePath = "$rulesPath/querying.txt";
 
         if (! \is_dir($rulesPath)) {
-            echo "Warning: rule file $rulesFilePath does not exists (for $dataSet)\n";
-            $rel = [];
+            \fputs(STDERR, "Warning: rule file $rulesFilePath does not exists (for $dataSet)\n");
+            return null;
         } else if (! \is_file($rulesFilePath)) {
-            $rel = [];
+            return null;
         } else
             $rel = self::_getRelabellings($rulesFilePath);
 

@@ -22,5 +22,5 @@ interface ILoader
 
     function deleteXMLFile(): bool;
 
-    function getLabelReplacerForDataSet(\DataSet $dataSet): callable;
+    function getLabelReplacerForDataSet(\DataSet $dataSet): ?callable;
 }

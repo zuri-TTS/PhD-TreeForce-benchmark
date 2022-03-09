@@ -140,6 +140,11 @@ final class DataSet
         return wdOp($path, fn () => \glob("*.txt"));
     }
 
+    public function hasQueryingVocabulary(): bool
+    {
+        return \in_array("querying.txt", $this->rulesFilesPath());
+    }
+
     public function path(): string
     {
         return DataSets::pathOf($this);

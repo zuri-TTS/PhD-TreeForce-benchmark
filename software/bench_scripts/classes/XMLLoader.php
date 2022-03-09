@@ -110,7 +110,7 @@ final class XMLLoader
                 return $dataSet;
 
             return [
-                'randomize' => empty($rulesFiles) ? fn ($data) => $data : $this->groupLoader->getLabelReplacerForDataSet($dataSet),
+                'randomize' => $this->groupLoader->getLabelReplacerForDataSet($dataSet) ?? fn ($data) => $data,
                 'simplify' => $dataSet->isSimplified(),
                 'path' => $path,
                 'dataset' => $dataSet

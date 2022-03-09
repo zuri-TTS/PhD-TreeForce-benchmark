@@ -128,7 +128,7 @@ final class XMarkLoader implements ILoader
         \system($cmd);
     }
 
-    public function getLabelReplacerForDataSet(\DataSet $dataSet): callable
+    public function getLabelReplacerForDataSet(\DataSet $dataSet): ?callable
     {
         return LabelReplacer::getReplacerForDataSet($dataSet, $this->conf_seed);
     }

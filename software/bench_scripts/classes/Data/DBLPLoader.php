@@ -182,7 +182,7 @@ final class DBLPLoader implements ILoader
         }
     }
 
-    public function getLabelReplacerForDataSet(\DataSet $dataSet): callable
+    public function getLabelReplacerForDataSet(\DataSet $dataSet): ?callable
     {
         return LabelReplacer::getReplacerForDataSet($dataSet, $this->conf_seed);
     }

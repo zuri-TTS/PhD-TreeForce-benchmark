@@ -174,6 +174,9 @@ final class MongoImport
 
     public static function getCollectionName(DataSet $dataSet)
     {
+        if (! $dataSet->hasQueryingVocabulary())
+            return $dataSet->group() . DataSets::getQualifiersString($dataSet->qualifiers());
+
         return \str_replace('/', '_', $dataSet->id());
     }
 }
