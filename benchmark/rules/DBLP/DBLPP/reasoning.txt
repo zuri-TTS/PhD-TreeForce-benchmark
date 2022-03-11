@@ -44,25 +44,43 @@ dataProperty=?x? ---> property=?x?
 entityProperty=?x? ---> property=?x?
 
 
-author."#text"=?x?$ ---> author=?x?$
-editor."#text"=?x?$ ---> editor=?x?$
-cite."#text"=?x?$    ---> cite=?x?$
-ee."#text"=?x?$      ---> ee=?x?$
-isbn."#text"=?x?$    ---> isbn=?x?$
-note."#text"=?x?$    ---> note=?x?$
+# '#text' abstraction
+
+author."#text"=?x?$    ---> author=?x?$
+editor."#text"=?x?$    ---> editor=?x?$
+cite."#text"=?x?$      ---> cite=?x?$
+ee."#text"=?x?$        ---> ee=?x?$
+isbn."#text"=?x?$      ---> isbn=?x?$
+note."#text"=?x?$      ---> note=?x?$
 publisher."#text"=?x?$ ---> publisher=?x?$
-series."#text"=?x?$  ---> series=?x?$
-url."#text"=?x?$     ---> url=?x?$
+series."#text"=?x?$    ---> series=?x?$
+url."#text"=?x?$       ---> url=?x?$
 
 
-content.author."@orcid"$          ---> authorWithOrcid
-document.ee."@type"="oa"$         ---> openDocument
-document.ee."@type"="archive oa"$ ---> openDocument
-document.isbn."@type"="online"$   ---> onlineDocument
+# author access
+
+author.("@orcid","#text"=?x?)$ ---> authorWithOrcid=?x?$
+author."@orcid"=?x?$           ---> authorOrcid=?x?$
+
+www.(note.("@type"="award","#text"=?x?), author=?y?)$ ---> authorWithAward.   (name=?y?,award=?x?)$
+www.(title="Home Page",url=?x?,author=?y?)$           ---> personWithHomePage.(name=?y?,url=?x?)$
 
 
-www.(title="Home Page", url)$    ---> personWithHomePage
-(onlineDocument,openDocument)$  ---> openOnlineDocument
-(authorWithOrcid,openDocument)$ ---> identifiableOpenDocument
-(authorWithOrcid,openOnlineDocument)$ --> identifiableOpenOnlineDocument
+#simplification access for document
+
+document.title=?x?$ --> document=?x?$
+document.isbn=?x?$  --> documentIsbn=?x?$
+
+
+# Tag rules (existential)
+
+ee."@type"="oa"$         ---> openAccess
+ee."@type"="archive oa"$ ---> openAccess
+isbn."@type"="online"$   ---> online
+(openAccess,online)      ---> openAccessOnline
+
+
+
+openAccess,      authorWithOrcid=?x?$ ---> authorOpenAccess=?x?$
+openAccessOnline,authorWithOrcid=?x?$ ---> authorOpenAccessOnline=?x?$
 
