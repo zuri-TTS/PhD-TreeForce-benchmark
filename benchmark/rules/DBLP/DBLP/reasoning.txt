@@ -44,12 +44,31 @@ dataProperty=?x? ---> property=?x?
 entityProperty=?x? ---> property=?x?
 
 
-author."#text"=?x?$ ---> author=?x?$
-editor."#text"=?x?$ ---> editor=?x?$
-cite."#text"=?x?$    ---> cite=?x?$
-ee."#text"=?x?$      ---> ee=?x?$
-isbn."#text"=?x?$    ---> isbn=?x?$
-note."#text"=?x?$    ---> note=?x?$
+# '#text' abstraction
+
+author."#text"=?x?$    ---> author=?x?$
+editor."#text"=?x?$    ---> editor=?x?$
+cite."#text"=?x?$      ---> cite=?x?$
+ee."#text"=?x?$        ---> ee=?x?$
+isbn."#text"=?x?$      ---> isbn=?x?$
+note."#text"=?x?$      ---> note=?x?$
 publisher."#text"=?x?$ ---> publisher=?x?$
-series."#text"=?x?$  ---> series=?x?$
-url."#text"=?x?$     ---> url=?x?$
+series."#text"=?x?$    ---> series=?x?$
+url."#text"=?x?$       ---> url=?x?$
+
+
+# author access
+
+creator.("@orcid","#text"=?x?)$ ---> creatorWithOrcid=?x?$
+
+www.(note.("@type"="award","#text"=?x?), author=?y?)$ ---> authorWithAward.(name=?y?,award=?x?)$
+
+www.(title="Home Page",url=?x?,author=?y?)$           ---> personWithHomePage.(name=?y?,url=?x?)$
+
+
+# Tag rules (existential)
+
+ee."@type"="oa"$         ---> openAccess
+ee."@type"="archive oa"$ ---> openAccess
+isbn."@type"="online"$   ---> online
+
