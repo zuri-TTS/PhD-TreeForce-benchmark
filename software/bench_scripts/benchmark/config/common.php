@@ -25,6 +25,7 @@ return [
         'query' => '${queries.dir}/${query.name}',
         'querying.config.print' => 'y',
         'toNative.dots' => 'n',
+        'rewritings.deduplicate' => 'n',
         'data' => 'mongodb://localhost/treeforce.${db.collection}'
     ],
 
