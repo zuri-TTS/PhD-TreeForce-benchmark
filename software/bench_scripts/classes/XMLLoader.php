@@ -79,7 +79,7 @@ final class XMLLoader
     // ========================================================================
     public function summarize(bool $summarize = true): self
     {
-        $this->summarize = $summarize;
+        // $this->summarize = $summarize;
         return $this;
     }
 
@@ -464,6 +464,7 @@ final class XMLLoader
 
     private function addToSummary(DataSet $dataSet, array $data)
     {
+        throw new \Exception(__FUNCTION__ . "To review !");
         $depth = 0;
         $keys = [];
         $toProcess = [
@@ -481,22 +482,54 @@ final class XMLLoader
                     $incDepth = 1;
 
                 foreach ($array as $label => $val) {
+                    $type = [];
                     $cdepth = $depth;
 
-                    if (\is_array($val))
+                    if (\is_array($val)) {
                         $nextToProcess[] = $val;
 
-                    $type = (\is_array($val) && \array_is_list($val)) ? 'ARRAY' : 'OBJECT';
+                        if (\array_is_list($val))
+                            $c = \count($val);
+                        else
+                            $c = 1;
+                    } else {
+                        $c = 0;
+                        $type[] = 'LEAF';
+                    }
+
+                    if ($c == 1)
+                        $type[] = 'OBJECT';
+                    elseif ($c > 1) {
+                        $type[] = 'MULTIPLE';
+                        $obj = $leaf = false;
+
+                        foreach ($val as $sub) {
+
+                            if (\is_array($sub)) {
+                                if ($obj)
+                                    continue;
+                                $obj = true;
+                                $type[] = 'OBJECT';
+                            } elseif (! $leaf) {
+                                $leaf = true;
+                                $type[] = 'LEAF';
+                            }
+                            if ($leaf && $obj)
+                                break;
+                        }
+                    }
 
                     if (\is_string($label)) {
 
                         if (! isset($summary[$label]))
                             $summary[$label] = [];
 
-                        $t = &$summary[$label];
+                        $stypes = &$summary[$label];
 
-                        if (! \in_array($type, $t))
-                            $t[] = $type;
+                        foreach ($type as $t) {
+                            if (! \in_array($t, $stypes))
+                                $stypes[] = $t;
+                        }
                     }
                 }
             }
@@ -709,7 +742,8 @@ final class XMLLoader
 
     private function toJsonString(DataSet $dataSet, array $data): string
     {
-        $this->addToSummary($dataSet, $data);
+        if ($this->summarize)
+            $this->addToSummary($dataSet, $data);
         $this->stats['documents.nb'] ++;
 
         return \json_encode($data);
