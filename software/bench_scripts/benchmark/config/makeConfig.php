@@ -61,15 +61,6 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
     }
     $hasNative = ! empty($native);
 
-    $summaryPath = function (string $summaryType) use ($dataSetPath) {
-
-        if (empty($summaryType))
-            return null;
-
-        $summaryFileName = "summary-$summaryType.txt";
-        return "$dataSetPath/$summaryFileName";
-    };
-
     $common = (include __DIR__ . '/common.php');
     $basePath = getBenchmarkBasePath();
 
@@ -80,9 +71,9 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
         'db.collection' => MongoImport::getCollectionName($dataSet),
         'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
-        'summary' => $summaryPath($cmdArg['summary']),
+        'summary' => "$dataSetPath/summary-\${summary.type}.txt",
         'summary.type' => $cmdArg['summary'],
-        'toNative.summary' => $summaryPath($cmdArg['toNative_summary']),
+        'toNative.summary' => "$dataSetPath/summary-\${toNative.summary.type}.txt",
         'toNative.summary.type' => $cmdArg['toNative_summary']
     ], $javaProperties) + $common['java.properties'];
 
