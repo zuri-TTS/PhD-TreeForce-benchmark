@@ -26,7 +26,9 @@ return [
         'querying.config.print' => 'y',
         'toNative.dots' => 'n',
         'rewritings.deduplicate' => 'n',
-        'data' => 'mongodb://localhost/treeforce.${db.collection}'
+        'data' => 'mongodb://localhost/treeforce.${db.collection}',
+        'summary.prettyPrint' => 'n',
+        'summary.filter.leaf' => 'y'
     ],
 
     'bench.measures' => [
