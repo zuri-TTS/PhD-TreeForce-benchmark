@@ -127,9 +127,10 @@ while (! empty($argv)) {
             $collection = MongoImport::getCollectionName($dataSet);
             $collExists = MongoImport::collectionExists($collection);
 
-            if ($generateDataSet && (! $dataSet->exists() || ! $collExists || //
+            if ($needDatabase && ( //
+            $generateDataSet && (! $dataSet->exists() || ! $collExists || //
             ($hasSummary && ! $cmdSummarize && ! \is_file($summaryPath)) //
-            )) //
+            ))) //
             {
                 $vars = [
                     '',
