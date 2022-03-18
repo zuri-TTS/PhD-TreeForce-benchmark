@@ -67,13 +67,17 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
     if (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
+    $fmakeSummary = function ($type, $var) use ($dataSetPath) {
+        return empty($type) ? '' : "$dataSetPath/summary-\${" . $var . "}.txt";
+    };
+
     $javaProperties = array_merge([
         'db.collection' => MongoImport::getCollectionName($dataSet),
         'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
-        'summary' => "$dataSetPath/summary-\${summary.type}.txt",
+        'summary' => $fmakeSummary($cmdArg['summary'], 'summary.type'),
         'summary.type' => $cmdArg['summary'],
-        'toNative.summary' => "$dataSetPath/summary-\${toNative.summary.type}.txt",
+        'toNative.summary' => $fmakeSummary($cmdArg['toNative_summary'], 'toNative.summary.type'),
         'toNative.summary.type' => $cmdArg['toNative_summary']
     ], $javaProperties) + $common['java.properties'];
 
