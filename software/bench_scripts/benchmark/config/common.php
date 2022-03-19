@@ -76,6 +76,8 @@ return [
 
         if ($hasSummary)
             $outDir .= "[summary-{$cmdArg['summary']}]";
+        if ($javaProperties['summary.filter.leaf'] === 'y')
+            $outDir .= '[filter-leaf]';
         if ($has2Summary)
             $outDir .= "[toNative-{$cmdArg['toNative_summary']}]";
         if ($hasNative)
