@@ -264,17 +264,8 @@ final class FullPlotter implements IPlotter
         }
     }
 
-    private function echoCsv(array $csvFiles)
+    private function echoCsv(string $name, array $csvFiles)
     {
-        echo "rules(summary,2native)";
-
-        foreach ($this->toPlot as $what => $times) {
-
-            foreach ((array) $times as $t)
-                echo ",$what.$t";
-        }
-        echo "\n";
-
         foreach ($csvFiles as $csvPath) {
             $dirName = \basename(\dirname($csvPath));
             $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
@@ -282,7 +273,7 @@ final class FullPlotter implements IPlotter
             $nbAnswers = $data['answers']['total'] ?? - 1;
 
             $xtic = $this->makeXTic($dirName, $nbReformulations, $nbAnswers);
-            echo "\"$xtic\"";
+            echo "\"$name $xtic\"";
 
             foreach ($this->toPlot as $what => $times) {
 
@@ -305,8 +296,18 @@ final class FullPlotter implements IPlotter
         echo "Writing $file\n";
         $fp = \fopen($file, "w");
 
+        $head = "\"rules[summary,2native](nbRefs,nbAns)\"";
+
+        foreach ($this->toPlot as $what => $times) {
+
+            foreach ((array) $times as $t)
+                $head .= ",$what.$t";
+        }
+        $head .= "\n";
+        \fwrite($fp, $head);
+
         foreach ($cutData as $file => $csvFiles) {
-            $content = \get_ob(fn () => $this->echoCsv($csvFiles));
+            $content = \get_ob(fn () => $this->echoCsv($file, $csvFiles));
             \fwrite($fp, $content);
         }
         \fclose($fp);

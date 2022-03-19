@@ -25,18 +25,16 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
     $nbMeasures = \max($nbMeasures, \count($csvPaths));
 }
 
-$nbBars = $nbMeasures * $nbMeasuresToPlot;
+$nbBars = $nbMeasures * $nbMeasuresToPlot + 1;
 $graphics->compute($nbBars, $nbMeasures, $yMax);
 $yMin = \max(1, $yMin - 1);
 
-$nbXPlots = $graphics['plots.max.x'];
+$nbXPlots = $graphics['plots.max.x'] + 1;
 $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
+$plotXSize = 1.0 / ($nbXPlots);
 
 $multiColLayout = "$nbYPlots, $nbXPlots";
 $plotSize = (1.0 / $nbXPlots) . "," . (1.0 / $nbYPlots);
-
-$legendXMore = 300;
-$graphics['w'] += $legendXMore;
 
 $graphics['w'] *= $nbXPlots;
 $graphics['h'] *= $nbYPlots;
@@ -60,16 +58,20 @@ set logscale y
 set xtics rotate by 30 right
 
 set key autotitle columnheader
-set key lmargin top title "Times"
+set key inside left top title "Times"
 
 set style fill pattern border -1
-set boxwidth <?=$boxwidth?>
+set boxwidth <?=$boxwidth?> absolute
 
 set style line 1 lc rgb 'black' lt 1 lw 1.5
 
 set term png size <?=$w?>, <?=$h?>
 
 set multiplot layout <?=$multiColLayout?> title "<?=$theTitle?>"
+
+set rmargin 0
+set lmargin 0
+set bmargin 10
 
 <?php
 $plot_lines = $graphics->plotYLines($yMax);
@@ -80,10 +82,21 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
     $csvData = $PLOTTER->getCsvData($csvPaths[0]);
     $nbAnswers = $csvData['answers']['total'];
     $title = $PLOT->gnuplotSpecialChars($fname);
+    $xmax = $nbMeasures + .25;
+    $xmin = - .5;
+
+    if (($nbPlots % $nbXPlots) === 0) {
+        $ls = 1;
+        echo "set title \"Placeholder\\n\"\n";
+        echo "plot $yMin\n";
+    } else {
+        $ls ++;
+    }
 
     echo "set title \"$title\\n($nbAnswers answers)\"\n";
     echo "set yrange [$yrange]\n";
-    echo "set ylabel \"time (ms)\\n[$yrange]\"\n";
+    echo "set xrange [$xmin:$xmax]\n";
+    echo "set ylabel offset 13,0 \"time (ms)\\n[$yrange]\"\n";
 
     $nb = 0;
     $pattern = 0;
@@ -115,11 +128,6 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
         $nb ++;
     }
     $nbPlots ++;
-
-    if (($nbPlots % $nbXPlots) === 0)
-        $ls = 1;
-    else
-        $ls ++;
 
     echo "plot $plot_lines\\\n,", implode(',', $tmp), "\n";
 }
