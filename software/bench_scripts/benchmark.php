@@ -101,19 +101,17 @@ while (! empty($argv)) {
                 $cmdParsed['toNative_summary'] = 'key-type';
         }
         $config = \makeConfig($dataSet, $cmdParsed, $javaProperties);
-        $summaryPath = $config['java.properties']['summary'];
+        $summaryPath = $config['summary'];
         $hasSummary = ! empty($summaryPath);
         $bench = new \Benchmark($config);
 
         try {
-
             if ($cmdParsed['skip-existing']) {
 
                 if ($cmdSummarize) {
-                    $path = $config['java.properties']['summary'];
 
-                    if (\is_file($path)) {
-                        $fname = \basename($path);
+                    if (\is_file($summaryPath)) {
+                        $fname = \basename($summaryPath);
                         echo "(Skipped) Summary already exists\n";
                         goto end;
                     }

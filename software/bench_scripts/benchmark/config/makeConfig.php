@@ -67,17 +67,17 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
     if (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
-    $fmakeSummary = function ($type, $var) use ($dataSetPath) {
-        return empty($type) ? '' : "$dataSetPath/summary-\${" . $var . "}.txt";
+    $fmakeSummary = function ($type, $suffix) use ($dataSetPath) {
+        return empty($type) ? '' : "$dataSetPath/summary-$suffix.txt";
     };
 
     $javaProperties = array_merge([
         'db.collection' => MongoImport::getCollectionName($dataSet),
         'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
-        'summary' => $fmakeSummary($cmdArg['summary'], 'summary.type'),
+        'summary' => $fmakeSummary($cmdArg['summary'], '${summary.type}'),
         'summary.type' => $cmdArg['summary'],
-        'toNative.summary' => $fmakeSummary($cmdArg['toNative_summary'], 'toNative.summary.type'),
+        'toNative.summary' => $fmakeSummary($cmdArg['toNative_summary'], '${toNative.summary.type}'),
         'toNative.summary.type' => $cmdArg['toNative_summary']
     ], $javaProperties) + $common['java.properties'];
 
@@ -100,6 +100,8 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
         'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
+        'summary' => $fmakeSummary($cmdArg['summary'], $cmdArg['summary']),
+        'toNative.summary' => $fmakeSummary($cmdArg['toNative_summary'], $cmdArg['toNative_summary']),
         'bench.output.dir' => $outDir,
         'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
