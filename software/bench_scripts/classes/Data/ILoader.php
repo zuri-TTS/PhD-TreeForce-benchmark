@@ -8,6 +8,8 @@ interface ILoader
 
     function getUnwindConfig(): array;
 
+    function getDataLocationConfig(): array;
+
     function isList(string $name): bool;
 
     function getOut(string $name, string $subVal): bool;

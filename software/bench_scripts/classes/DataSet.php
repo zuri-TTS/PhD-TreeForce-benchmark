@@ -11,6 +11,10 @@ final class DataSet
 
     private string $queriesId = '';
 
+    private \Data\IDataLocation $dataLocation;
+
+    private string $locationId = '';
+
     private array $stats;
 
     private array $qualifiers = [];
@@ -25,7 +29,20 @@ final class DataSet
         $ret->group = $group;
         $ret->rules = $rules;
         $ret->qualifiers = $qualifiers;
+        $ret->setDataLocation();
         return $ret;
+    }
+
+    public function setDataLocation(string $locationId = '')
+    {
+        if (! empty($this->locationId))
+            \array_pop($this->qualifiers);
+
+        $this->locationId = $locationId;
+        $this->dataLocation = \Data\DataLocations::getLocationFor($this, $locationId);
+
+        if (! empty($locationId))
+            \array_push($this->qualifiers, $locationId);
     }
 
     // ========================================================================
@@ -58,6 +75,11 @@ final class DataSet
     public function qualifiers(): array
     {
         return $this->qualifiers;
+    }
+
+    public function dataLocation(): \Data\IDataLocation
+    {
+        return $this->dataLocation;
     }
 
     public function qualifiersString(): string

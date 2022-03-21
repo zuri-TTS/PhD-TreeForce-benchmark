@@ -34,6 +34,27 @@ final class DBLPLoader implements ILoader
         $this->closeXMLReader();
     }
 
+    private const dataLocation = [
+        'prefix-colls' => [
+            'class' => '\Data\PrefixLocation',
+            'params' => [
+                'dblp.article' => 'article',
+                'dblp.book' => 'book',
+                'dblp.incollection' => 'incollection',
+                'dblp.inproceedings' => 'inproceedings',
+                'dblp.mastersthesis' => 'mastersthesis',
+                'dblp.phdthesis' => 'phdthesis',
+                'dblp.proceedings' => 'proceedings',
+                'dblp.www' => 'www'
+            ]
+        ]
+    ];
+
+    function getDataLocationConfig(): array
+    {
+        return self::dataLocation;
+    }
+
     private const unwind = [
         'dblp.*'
     ];
@@ -41,6 +62,11 @@ final class DBLPLoader implements ILoader
     public function getUnwindConfig(): array
     {
         return self::unwind;
+    }
+
+    public function getUnwinding(): \Generator\IUnwinding
+    {
+        return new \Generator\SimpleUnwinding();
     }
 
     private const is_list = [

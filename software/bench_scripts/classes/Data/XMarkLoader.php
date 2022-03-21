@@ -33,6 +33,11 @@ final class XMarkLoader implements ILoader
         $oa->checkEmpty($config);
     }
 
+    function getDataLocationConfig(): array
+    {
+        return [];
+    }
+
     private const unwind = [
         'site.regions.$.*',
         'site.categories.*',

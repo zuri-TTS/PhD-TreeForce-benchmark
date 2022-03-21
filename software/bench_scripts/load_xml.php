@@ -18,7 +18,8 @@ $cmdArgsDef = [
     'post-clean' => false,
     'post-clean-xml' => false,
     'post-clean-all' => false,
-    'simplify_object_useConfig' => true
+    'simplify_object_useConfig' => true,
+    'dataLocation' => ''
 ];
 
 if (empty($argv))
@@ -44,6 +45,7 @@ while (! empty($argv)) {
     // Group by 'group'
     $toProcess = [];
     foreach ($dataSets as $dataSet) {
+        $dataSet->setDataLocation($cmdParsed['dataLocation']);
         $group = $dataSet->group();
         $qualifiers = $dataSet->qualifiersString();
         $toProcess["$group"][] = $dataSet;

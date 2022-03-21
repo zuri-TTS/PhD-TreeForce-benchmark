@@ -245,18 +245,10 @@ final class XMLLoader
                         break;
 
                     echo "Unwinding $u\n";
-                    $this->files = \array_combine( //
-                    $rules, //
-                    \array_map(fn ($theRules) => new \SplFileObject(self::getFileFromUnwind($u, $this->filesData[$theRules]['path']), 'w'), $rules));
 
                     $reader->read();
                     $u_a = explode('.', $u);
                     $this->unwind($reader, $u_a);
-
-                    // Close files
-                    \array_walk($this->files, function (&$f) {
-                        $f = null;
-                    });
                     break;
                 case XMLReader::END_ELEMENT:
                     \array_pop($path);
@@ -331,10 +323,10 @@ final class XMLLoader
             $name => $destVal
         ]);
         $this->doSimplifyText($data);
+        $this->stats['documents.nb'] ++;
         $dataSimple = null;
 
-        foreach ($this->files as $d => $file) {
-            $fileData = $this->filesData[$d];
+        foreach ($this->filesData as $d => $fileData) {
             $postProcess = $fileData['randomize'];
             $data2 = $data;
 
@@ -350,8 +342,13 @@ final class XMLLoader
             if (isset($postProcess))
                 $data2 = $postProcess($data2);
 
-            $file->fwrite($this->toJsonString($fileData['dataset'], $data2) . "\n");
+            $this->writeFinalJson($data2, $fileData);
         }
+    }
+
+    private function writeFinalJson(array $data, array $fileData)
+    {
+        $fileData['dataset']->dataLocation()->writeData($this->path, $data);
     }
 
     // ========================================================================
@@ -464,7 +461,7 @@ final class XMLLoader
 
     private function addToSummary(DataSet $dataSet, array $data)
     {
-        throw new \Exception(__FUNCTION__ . "To review !");
+        throw new \Exception(__FUNCTION__ . "To review (with all summary stuff)!");
         $depth = 0;
         $keys = [];
         $toProcess = [
@@ -738,14 +735,5 @@ final class XMLLoader
             $out[] = $obj;
         else
             $out = $obj;
-    }
-
-    private function toJsonString(DataSet $dataSet, array $data): string
-    {
-        if ($this->summarize)
-            $this->addToSummary($dataSet, $data);
-        $this->stats['documents.nb'] ++;
-
-        return \json_encode($data);
     }
 }
