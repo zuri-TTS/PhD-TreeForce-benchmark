@@ -19,30 +19,51 @@ final class DataSet
 
     private array $qualifiers = [];
 
+    private const qsimple = [
+        'simplified',
+        'simplified.all'
+    ];
+
     // ========================================================================
     private function __construct()
     {}
 
     public static function create(string $group, string $rules, array $qualifiers): DataSet
     {
+        \sort($qualifiers);
         $ret = new DataSet();
         $ret->group = $group;
         $ret->rules = $rules;
         $ret->qualifiers = $qualifiers;
         $ret->setDataLocation();
+
+        $ret->processQualifiers($qualifiers);
         return $ret;
     }
 
-    public function setDataLocation(string $locationId = '')
+    private function setDataLocation(string $locationId = '')
     {
-        if (! empty($this->locationId))
-            \array_pop($this->qualifiers);
-
         $this->locationId = $locationId;
         $this->dataLocation = \Data\DataLocations::getLocationFor($this, $locationId);
+    }
 
-        if (! empty($locationId))
-            \array_push($this->qualifiers, $locationId);
+    private function processQualifiers(array $qualifiers): void
+    {
+        $remaining = [];
+
+        foreach ($qualifiers as $q) {
+            if (\in_array($q, self::qsimple))
+                continue;
+            $remaining[] = $q;
+        }
+        $c = \count($remaining);
+
+        if ($c > 1)
+            throw new \Exception("More than one dataLocation qualifier: " . implode(',', $remaining));
+        if ($c == 0)
+            return;
+
+        $this->setDataLocation(\array_pop($remaining));
     }
 
     // ========================================================================
@@ -89,10 +110,7 @@ final class DataSet
 
     public function isSimplified(): bool
     {
-        return \array_intersect([
-            'simplified',
-            'simplified.all'
-        ], $this->qualifiers()) !== [];
+        return \array_intersect(self::qsimple, $this->qualifiers()) !== [];
     }
 
     public function exists(): bool

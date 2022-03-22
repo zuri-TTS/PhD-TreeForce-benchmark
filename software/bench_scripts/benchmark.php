@@ -5,198 +5,32 @@ require_once __DIR__ . '/common/functions.php';
 
 \array_shift($argv);
 
-$cmdArgsDef = [
-    'generate-dataset' => true,
-    'cmd-display-output' => false,
-    'clean-db' => false,
-    'pre-clean-db' => false,
-    'post-clean-db' => false,
-    'summary' => 'key',
-    'toNative_summary' => null,
-    'native' => '',
-    'cmd' => 'querying',
-    'doonce' => false,
-    'cold' => false,
-    'output' => null,
-    'skip-existing' => true,
-    'plot' => '',
-    'forget-results' => false
-];
-
-if (empty($argv))
-    $argv[] = ";";
+$cmdParser = \Test\CmdArgs::default();
 
 while (! empty($argv)) {
-    $cmdParsed = $cmdArgsDef;
-    $cmdRemains = \updateArray_getRemains(\parseArgvShift($argv, ';'), $cmdParsed, mapArgKey_default(fn ($k) => ($k[0] ?? '') !== 'P'));
+    $current_argv = \parseArgvShift($argv, ';');
 
-    $dataSets = \array_filter_shift($cmdRemains, 'is_int', ARRAY_FILTER_USE_KEY);
+    $parsed = $cmdParser->parse($current_argv);
+    $dataSets = $parsed['dataSets'];
+    $cmd = $parsed['args']['cmd'];
 
-    $cmdSummarize = false;
-    $forceNbMeasures = null;
-
-    $javaProperties = shiftJavaProperties($cmdRemains);
-
-    if (! empty($cmdRemains)) {
-        $usage = "\nValid cli arguments are:\n" . \var_export($cmdParsed, true) . //
-        "\nor a Java property of the form P#prop=#val:\n" . \var_export(\getDefaultJavaProperties(), true) . "\n";
-        fwrite(STDERR, $usage);
-        throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true));
-    }
-
-    if (\in_array($cmdParsed['cmd'], [
-        'generate',
-        'config'
-    ]))
-        $needDatabase = false;
+    if ($cmd === 'summarize')
+        $testClass = '\Test\DoSummarize';
     else
-        $needDatabase = true;
-
-    if (\in_array($cmdParsed['cmd'], [
-        'summarize'
-    ])) {
-        $cmdParsed['doonce'] = true;
-        $cmdSummarize = $cmdParsed['cmd'] === 'summarize';
-    } elseif (\in_array($cmdParsed['cmd'], [
-        'generate',
-        'config'
-    ]) || \in_array($javaProperties['querying.mode'], [
-        'stats'
-    ])) {
-        $cmdParsed['cmd-display-output'] = true;
-        $cmdParsed['plot'] = false;
-        $forceNbMeasures = 1;
-    }
-
-    if ($cmdParsed['forget-results'])
-        $cmdParsed['plot'] = false;
-
-    if (\count($dataSets) == 0) {
-        $dataSets = [
-            null
-        ];
-    }
-    $dataSets = \array_unique(DataSets::all($dataSets));
-
-    if ($needDatabase && ($cmdParsed['pre-clean-db'] || $cmdParsed['clean-db']))
-        MongoImport::dropCollections($dataSets);
+        $testClass = '\Test\OneTest';
 
     $errors = [];
-    $cmdParsed_cpy = $cmdParsed;
 
     foreach ($dataSets as $dataSet) {
 
-        if ($cmdSummarize) {
-            echo "\nSummarizing $dataSet\n";
-        } else {
-            $header = \str_repeat('=', \strlen((string) $dataSet));
-            echo "\n$header\nTEST\n$dataSet\n";
+        foreach ($dataSet->dataLocation()->getDBCollections() as $coll) {
+            $test = new $testClass($dataSet, $coll, $cmdParser);
+            $test->execute();
+            $test->reportErrors();
+            $errors = \array_merge($errors, $test->getErrors());
         }
-        $generateDataSet = $cmdParsed['generate-dataset'];
 
-        if ($dataSet->isSimplified()) {
-            $cmdParsed = $cmdParsed_cpy;
-
-            if (null === $cmdParsed['toNative_summary'] || 'key' === $cmdParsed['toNative_summary'])
-                $cmdParsed['toNative_summary'] = 'key-type';
-        }
-        $config = \makeConfig($dataSet, $cmdParsed, $javaProperties);
-        $summaryPath = $config['summary'];
-        $hasSummary = ! empty($summaryPath);
-        $bench = new \Benchmark($config);
-
-        try {
-            if ($cmdParsed['skip-existing']) {
-
-                if ($cmdSummarize) {
-
-                    if (\is_file($summaryPath)) {
-                        $fname = \basename($summaryPath);
-                        echo "(Skipped) Summary already exists\n";
-                        goto end;
-                    }
-                } else if (! empty($existings = $bench->getExistings())) {
-                    $existings = \implode(",\n", $existings);
-                    echo "(Skipped) Similar test already exists: $existings\n";
-                    goto end;
-                }
-            }
-            // ================================================================
-            $collection = MongoImport::getCollectionName($dataSet);
-            $collExists = MongoImport::collectionExists($collection);
-
-            if ($needDatabase && ( //
-            $generateDataSet && (! $dataSet->exists() || ! $collExists || //
-            ($hasSummary && ! $cmdSummarize && ! \is_file($summaryPath)) //
-            ))) //
-            {
-                $vars = [
-                    '',
-                    $dataSet->id(),
-                    '+load'
-                ];
-                include_script(__DIR__ . '/load_xml.php', $vars);
-                $vars = [
-                    '',
-                    $dataSet->id(),
-                    'cmd=summarize',
-                    '+skip-existing',
-                    '-generate-dataset',
-                    '-clean-db',
-                    "summary={$cmdParsed['summary']}",
-                    "output:",
-                    \sys_get_temp_dir(),
-                    '+plot'
-                ];
-                include_script(__DIR__ . '/benchmark.php', $vars);
-                \clearstatcache();
-            }
-            // ================================================================
-
-            if ($needDatabase && ! $generateDataSet) {
-
-                if (! $collExists)
-                    throw new \Exception("The collection treeforce.$collection must exists in the database");
-
-                if (! $cmdSummarize && $hasSummary && ! \is_file($summaryPath))
-                    throw new \Exception("Summary '$summaryPath' does not exists");
-            }
-            if ($cmdParsed['doonce'])
-                $bench->executeOnce();
-            else
-                $bench->doTheBenchmark($forceNbMeasures);
-
-            end:
-
-            if ($cmdParsed['post-clean-db'] || $cmdParsed['clean-db']) {
-                MongoImport::dropCollection($dataSet);
-                $vars = [
-                    '',
-                    $dataSet->id(),
-                    '+drop',
-                    '+cmd-display-output'
-                ];
-                include_script(__DIR__ . '/load_xml.php', $vars);
-            }
-
-            if ($cmdParsed['forget-results'] && \is_dir($config['java.properties']['output.path']))
-                \rrmdir($config['java.properties']['output.path']);
-        } catch (\Exception $e) {
-            $errors[] = [
-                'dataset' => $dataSet,
-                'exception' => $e
-            ];
-            \fwrite(STDERR, "<$dataSet>Exception:\n {$e->getMessage()}\n");
-        }
-    }
-
-    if (! empty($errors)) {
-        \ob_start();
-        echo "\n== Error reporting ==\n\n";
-
-        foreach ($errors as $err) {
-            echo "===\n{$err['dataset']}\n{$err['exception']->getMessage()}\n{$err['exception']->getTraceAsString()}\n\n";
-        }
-        \fwrite(STDERR, \ob_get_clean());
+        if (! empty($errors))
+            $test->reportErrors($errors);
     }
 }

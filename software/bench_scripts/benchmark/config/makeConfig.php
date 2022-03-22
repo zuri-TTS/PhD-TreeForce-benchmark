@@ -1,50 +1,8 @@
 <?php
 
-function selectJavaProperties(array $cmdArg)
+function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array $javaProperties) //
 {
-    $ret = [];
-
-    foreach ($cmdArg as $k => $v) {
-        if (! is_string($k))
-            continue;
-        if ($k[0] !== 'P')
-            continue;
-        if (is_bool($v))
-            $v = $v ? 'y' : 'n';
-        $ret[substr($k, 1)] = $v;
-    }
-    return $ret;
-}
-
-function getDefaultJavaProperties(): array
-{
-    return (include __DIR__ . '/common.php')['java.properties'];
-}
-
-function shiftJavaProperties(array &$args): array
-{
-    $ret = getDefaultJavaProperties();
-
-    foreach ($cp = $args as $k => $v) {
-        if (! is_string($k))
-            continue;
-        if ($k[0] !== 'P')
-            continue;
-
-        $prop = substr($k, 1);
-        if (! \array_key_exists($prop, $ret))
-            continue;
-        if (is_bool($v))
-            $v = $v ? 'y' : 'n';
-
-        $ret[$prop] = $v;
-        unset($args[$k]);
-    }
-    return $ret;
-}
-
-function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
-{
+    $collectionSuffix = \explode('.', $collection, 2)[1] ?? '';
     $group = $dataSet->group();
     $rules = $dataSet->rules();
     $dataSetPath = $dataSet->path();
@@ -64,15 +22,21 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
     $common = (include __DIR__ . '/common.php');
     $basePath = getBenchmarkBasePath();
 
-    if (null === $cmdArg['toNative_summary'])
+    if ($dataSet->isSimplified()) {
+
+        if (null === $cmdArg['toNative_summary'] || 'key' === $cmdArg['toNative_summary'])
+            $cmdArg['toNative_summary'] = 'key-type';
+    } elseif (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
-    $fmakeSummary = function ($type, $suffix) use ($dataSetPath) {
-        return empty($type) ? '' : "$dataSetPath/summary-$suffix.txt";
+    $cprefix = empty($collectionSuffix) ? '' : "$collectionSuffix-";
+
+    $fmakeSummary = function ($type, $suffix) use ($dataSetPath, $cprefix) {
+        return empty($type) ? '' : "$dataSetPath/${cprefix}summary-$suffix.txt";
     };
 
     $javaProperties = array_merge([
-        'db.collection' => MongoImport::getCollectionName($dataSet),
+        'db.collection' => $collection,
         'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
         'summary' => $fmakeSummary($cmdArg['summary'], '${summary.type}'),
@@ -82,7 +46,7 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
     ], $javaProperties) + $common['java.properties'];
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
-    $outDirPattern = $outputDirGenerator($dataSet, $cmdArg, $javaProperties);
+    $outDirPattern = $outputDirGenerator($dataSet, $collection, $cmdArg, $javaProperties);
 
     $outDir = sprintf($outDirPattern, $common['bench.datetime']->format('Y-m-d H:i:s v'));
 
@@ -115,10 +79,4 @@ function makeConfig(DataSet $dataSet, array $cmdArg, array $javaProperties) //
             'rules' => $dataSet->rulesPath()
         ]);
     return $ret;
-}
-
-function useQuery(array $config, string $query): array
-{
-    $config["query.native"] = sprintf($config["query.native"], $query);
-    return $config;
 }

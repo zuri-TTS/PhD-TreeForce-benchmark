@@ -48,6 +48,11 @@ final class XMLLoader
         $this->groupLoader = DataSets::getGroupLoader($this->group);
     }
 
+    public static function of(\DataSet ...$dataSets)
+    {
+        return new self($dataSets);
+    }
+
     // ========================================================================
     private function summaryExists(DataSet $dataSet)
     {

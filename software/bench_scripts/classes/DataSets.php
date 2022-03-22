@@ -101,10 +101,10 @@ final class DataSets
         $groups = self::allGroups($groups);
         $qualifierss = empty($qualifierss) ? [
             ''
-        ] : \explode(';', $qualifierss);
+        ] : \explode('|', $qualifierss);
 
         foreach ($qualifierss as &$q) {
-            $q = \array_values(\array_filter(\explode(',', $q)));
+            $q = \array_values(\array_filter(\preg_split('/[,;]/', $q)));
             \natcasesort($q);
         }
         unset($q);
@@ -276,7 +276,7 @@ final class DataSets
         if (empty($qualifiers))
             return '';
 
-        $s = implode(',', $qualifiers);
+        $s = implode(';', $qualifiers);
         return "[$s]";
     }
 

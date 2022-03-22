@@ -52,6 +52,11 @@ final class MongoImport
         }
     }
 
+    public static function dropCollection(string $collection): void
+    {
+        self::_dropCollection($collection);
+    }
+
     public static function dropCollectionsOf(DataSet $dataSet): void
     {
         self::dropCollections([
@@ -153,48 +158,69 @@ final class MongoImport
         DataSets::checkNotExists([
             $dataSet
         ]);
+        self::importCollections($dataSet, ...$dataSet->dataLocation()->getDBCollections());
+    }
+
+    public static function importCollections(DataSet $dataSet, string ...$collections): void
+    {
+        DataSets::checkNotExists([
+            $dataSet
+        ]);
+        $dsColls = $dataSet->dataLocation()->getDBCollections();
+        $invalidColls = \array_diff($collections, $dsColls);
+
+        if (! empty($invalidColls)) {
+            $invalidColls = implode(',', $invalidColls);
+            $dsColls = implode(',', $dsColls);
+            throw new \Exception("$dataSet does not have collections [$invalidColls]; has [$dsColls]");
+        }
         $dataLocation = $dataSet->dataLocation();
         echo "\nImporting $dataSet\n";
 
-        \wdOp($dataSet->path(), function () use ($dataLocation) {
-            $jsonFiles = \glob("*.json");
+        \wdPush($dataSet->path());
+        $jsonFiles = \glob("*.json");
 
-            if (empty($jsonFiles)) {
-                throw new \Exception("$collectionName: no json files to load\n");
+        if (empty($jsonFiles)) {
+            throw new \Exception("$collectionName: no json files to load\n");
+        }
+
+        $nbFails = 0;
+
+        foreach ($dataLocation->collectionJsonFiles() as $collectionName => $jsonFiles) {
+
+            if (! in_array($collectionName, $collections))
+                continue;
+
+            if (self::collectionExists($collectionName)) {
+                echo "$collectionName: already exists\n";
+                continue;
             }
 
-            $nbFails = 0;
+            foreach ($jsonFiles as $json) {
 
-            foreach ($dataLocation->collectionJsonFiles() as $collectionName => $jsonFiles) {
-
-                if (self::collectionExists($collectionName)) {
-                    echo "Already exists\n";
+                if ($json === 'end.json')
                     continue;
-                }
 
-                foreach ($jsonFiles as $json) {
+                echo "$json in collection: $collectionName\n";
 
-                    if ($json === 'end.json')
-                        continue;
+                $cname = \escapeshellarg($collectionName);
+                $json = \escapeshellarg($json);
+                \simpleExec("mongoimport -d treeforce -c $cname --file $json", $output, $err);
 
-                    echo "$json in collection: $collectionName\n";
-
-                    $cname = \escapeshellarg($collectionName);
-                    $json = \escapeshellarg($json);
-                    \simpleExec("mongoimport -d treeforce -c $cname --file $json", $output, $err);
-
-                    \preg_match('/(\d+) document\(s\) failed/', $err, $matches);
-                    $nbFails += (int) $matches[1];
-                }
+                \preg_match('/(\d+) document\(s\) failed/', $err, $matches);
+                $nbFails += (int) $matches[1];
             }
-            if (0 === $nbFails)
-                echo "Success";
-            else
-                echo "Failed ($nbFails documents)";
 
             if (null !== self::$collections_cache)
                 self::$collections_cache[] = $collectionName;
-        });
+        }
+
+        if (0 === $nbFails)
+            echo "Success";
+        else
+            echo "Failed ($nbFails documents)";
+
+        \wdPop();
         echo "\n";
     }
 

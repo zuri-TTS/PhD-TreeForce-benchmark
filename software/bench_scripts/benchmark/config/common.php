@@ -1,8 +1,8 @@
 <?php
 $basePath = getBenchmarkBasePath();
 
-$measuresNb = 5;
-$measuresForget = 1;
+$measuresNb = 1;
+$measuresForget = 0;
 
 $time = \date(DATE_ATOM);
 $outDir = $time;
@@ -30,7 +30,6 @@ return [
         'summary.prettyPrint' => 'n',
         'summary.filter.leaf' => 'y'
     ],
-
     'bench.measures' => [
         'default' => [
             'nb' => $measuresNb,
@@ -44,7 +43,7 @@ return [
         sleep(1);
     },
     'bench.output.base.path' => "$basePath/outputs",
-    'bench.output.dir.generator' => function (DataSet $dataSet, array $cmdArg, array $javaProperties): string {
+    'bench.output.dir.generator' => function (DataSet $dataSet, string $collection, array $cmdArg, array $javaProperties): string {
         $group = $dataSet->group();
         $theRules = $dataSet->rules();
         $qualifiers = $dataSet->qualifiersString();
@@ -62,7 +61,10 @@ return [
         } else {
             $native = $cmdArg['native'] ?? '';
         }
-        $outDir = "[$group][$theRules]$qualifiers";
+        $collectionSuffix = \explode('.', $collection, 2)[1] ?? '';
+        $coll = empty($collectionSuffix) ? '' : ".$collectionSuffix";
+
+        $outDir = "[$group$coll][$theRules]$qualifiers";
         $mode = $javaProperties['querying.mode'];
 
         if ($mode === 'query')
