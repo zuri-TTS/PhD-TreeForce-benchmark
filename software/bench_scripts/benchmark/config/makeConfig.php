@@ -61,6 +61,14 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
     $outputPath = $bpath . "/$outDir";
     $javaProperties['output.path'] = $outputPath;
 
+    // Inhibit summary.filter.types for summary without type infos
+    if (\in_array($cmdArg['summary'], [
+        '',
+        'key'
+    ]))
+        $javaProperties['summary.filter.types'] === 'n';
+
+    // Default value for 'leaf.checkTerminal
     if (null === $javaProperties['leaf.checkTerminal'])
         $javaProperties['leaf.checkTerminal'] = ($javaProperties['summary.filter.types'] === 'n') ? 'y' : 'n';
 
