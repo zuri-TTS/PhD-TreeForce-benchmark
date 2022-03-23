@@ -27,7 +27,7 @@ final class MongoImport
             if (isset($v))
                 return $v;
         }
-        $collections = $dataSet->dataLocation()->getDBCollections();
+        $collections = $dataSet->getCollections();
         $colls = \array_map(fn ($c) => "\"$c\"", $collections);
         $colls = implode(',', $colls);
         $script = <<<EOD
@@ -69,7 +69,7 @@ final class MongoImport
         $collections = [];
 
         foreach ($dataSets as $ds) {
-            $dscolls = $ds->dataLocation()->getDBCollections();
+            $dscolls = $ds->getCollections();
             $collections = \array_merge($collections, $dscolls);
         }
         self::_dropCollection(...$collections);
@@ -158,7 +158,7 @@ final class MongoImport
         DataSets::checkNotExists([
             $dataSet
         ]);
-        self::importCollections($dataSet, ...$dataSet->dataLocation()->getDBCollections());
+        self::importCollections($dataSet, ...$dataSet->getCollections());
     }
 
     public static function importCollections(DataSet $dataSet, string ...$collections): void
@@ -166,7 +166,7 @@ final class MongoImport
         DataSets::checkNotExists([
             $dataSet
         ]);
-        $dsColls = $dataSet->dataLocation()->getDBCollections();
+        $dsColls = $dataSet->getCollections();
         $invalidColls = \array_diff($collections, $dsColls);
 
         if (! empty($invalidColls)) {

@@ -53,6 +53,14 @@ final class DataSets
         return self::allThings('DataSets::_getAllQueries', $group, $ids);
     }
 
+    public static function allCollections(DataSet $ds, $ids = null): array
+    {
+        return self::allThings([
+            $ds->dataLocation(),
+            'getDBCollections'
+        ], $ids);
+    }
+
     // ========================================================================
     public static function groupExists(string $group): bool
     {
@@ -96,7 +104,7 @@ final class DataSets
         preg_match("#^(.*)(?:\[(.*)\])?$#U", $id, $matches);
         list (, $id, $qualifierss) = $matches + \array_fill(0, 3, '');
 
-        list ($groups, $rules, $queries) = explode('/', $id) + \array_fill(0, 3, '');
+        list ($groups, $rules, $queries, $collsIDs) = explode('/', $id) + \array_fill(0, 4, '');
 
         $groups = self::allGroups($groups);
         $qualifierss = empty($qualifierss) ? [
@@ -118,8 +126,11 @@ final class DataSets
                 $eRulesSets = (array) '#no_rules';
 
             foreach ($eRulesSets as $rulesSet) {
-                foreach ($qualifierss as $q)
-                    $ret[] = DataSet::create($group, $rulesSet, $q)->setQueriesId($queries);
+                foreach ($qualifierss as $q) {
+                    $ret[] = DataSet::create($group, $rulesSet, $q)-> //
+                    setQueriesId($queries)-> //
+                    setCollectionsId($collsIDs);
+                }
             }
         }
         return $ret;

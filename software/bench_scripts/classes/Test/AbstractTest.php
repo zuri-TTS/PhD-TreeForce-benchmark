@@ -21,7 +21,7 @@ abstract class AbstractTest
         $this->ds = $ds;
         $this->collection = $collectionName;
 
-        if (! \in_array($collectionName, $ds->dataLocation()->getDBCollections()))
+        if (! \in_array($collectionName, $ds->getCollections()))
             throw new \Exception("$ds does not have the collection $collectionName");
 
         $this->cmdParser = $cmdParser;

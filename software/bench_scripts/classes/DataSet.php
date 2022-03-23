@@ -11,6 +11,8 @@ final class DataSet
 
     private string $queriesId = '';
 
+    private string $collectionsId = '';
+
     private \Data\IDataLocation $dataLocation;
 
     private string $locationId = '';
@@ -76,6 +78,17 @@ final class DataSet
     public function getQueries(): array
     {
         return DataSets::allQueries($this->group, $this->queriesId);
+    }
+
+    public function setCollectionsId(string $id): self
+    {
+        $this->collectionsId = $id;
+        return $this;
+    }
+
+    public function getCollections(): array
+    {
+        return DataSets::allCollections($this, $this->collectionsId);
     }
 
     public function id(): string

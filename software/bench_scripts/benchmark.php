@@ -23,7 +23,7 @@ while (! empty($argv)) {
 
     foreach ($dataSets as $dataSet) {
 
-        foreach ($dataSet->dataLocation()->getDBCollections() as $coll) {
+        foreach ($dataSet->getCollections() as $coll) {
             $test = new $testClass($dataSet, $coll, $cmdParser);
             $test->execute();
             $test->reportErrors();
