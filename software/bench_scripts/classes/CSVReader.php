@@ -30,4 +30,23 @@ final class CSVReader
         }
         return $ret;
     }
+
+    public static function write(string $filePath, array $csvData): void
+    {
+        $file = new SplFileObject($filePath, "w");
+
+        foreach ($csvData as $group => $items) {
+            $file->fputcsv([
+                $group
+            ]);
+
+            foreach ($items as $k => $item)
+                $file->fputcsv([
+                    $k,
+                    $item
+                ]);
+
+            $file->fputcsv([]);
+        }
+    }
 }
