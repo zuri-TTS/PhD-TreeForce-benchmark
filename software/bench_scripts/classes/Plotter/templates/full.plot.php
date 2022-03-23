@@ -3,6 +3,8 @@ $graphics = new Plotter\Graphics();
 $nbPlots = \count($PLOTTER->getCutData());
 $nbMeasuresToPlot = \count($PLOTTER->getMeasuresToPlot());
 
+$plot_wMin = 600;
+
 $yMax = 0;
 $yMin = PHP_INT_MAX;
 $nbMeasures = 0;
@@ -36,34 +38,56 @@ $plotXSize = 1.0 / ($nbXPlots);
 $multiColLayout = "$nbYPlots, $nbXPlots";
 $plotSize = (1.0 / $nbXPlots) . "," . (1.0 / $nbYPlots);
 
+$graphics['w'] = \max($graphics['w'], $plot_wMin);
 $graphics['w'] *= $nbXPlots;
 $graphics['h'] *= $nbYPlots;
 $h = $graphics['h'];
 $w = $graphics['w'];
 
 $yLog = 10 ** floor(\log10($yMax));
-$yRange = $yLog;
+$yRangeMax = $yLog;
 
-while ($yRange < $yMax)
-    $yRange += $yLog;
+while ($yRangeMax < $yMax)
+    $yRangeMax += $yLog;
 
-$yrange = "$yMin:$yRange";
+$yrange = "$yMin:$yRangeMax";
 
 $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
 
 $boxwidth = 0.25;
+
+$placeholderPlot = <<<EOD
+unset title
+unset key
+unset xtics
+unset ytics
+set border 0
+unset grid
+set key off
+unset ylabel
+set key inside left center title "Times"
+set key autotitle columnheader
+set format y "%gms"
+
+EOD;
+
+$normalPlot = <<<EOD
+set xtics rotate by 30 right
+set xtics scale 0
+set ytics scale .2 nomirror
+set border 1
+set grid ytics
+set key off
+set ylabel offset 15,0 "[$yrange]"
+
+EOD;
 ?>
 set logscale y
 
-set xtics rotate by 30 right
-
-set key autotitle columnheader
-set key inside left top title "Times"
-
 set style fill pattern border -1
-set boxwidth <?=$boxwidth?> absolute
+set boxwidth <?=$boxwidth?>
 
-set style line 1 lc rgb 'black' lt 1 lw 1.5
+set style line 1 lc rgb 'black' lt 1 lw .5
 
 set term png size <?=$w?>, <?=$h?>
 
@@ -74,7 +98,24 @@ set lmargin 0
 set bmargin 10
 
 <?php
-$plot_lines = $graphics->plotYLines($yMax);
+$stacked = [
+    [
+        3 => 'rewriting.total.r'
+        // 2 => 'rewriting.rules.apply.r'
+    ],
+    [
+        4 => 'rewritings.generation'
+    ],
+    [
+        5 => 'stats.db.time.r'
+    ]
+];
+
+$xmax = $nbMeasures + $boxwidth;
+$xmin = - $boxwidth * 2;
+echo "set yrange [$yrange]\n";
+echo "set xrange [$xmin:$xmax]\n";
+
 $ls = 1;
 $nbPlots = 0;
 
@@ -82,37 +123,32 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
     $csvData = $PLOTTER->getCsvData($csvPaths[0]);
     $nbAnswers = $csvData['answers']['total'];
     $title = $PLOT->gnuplotSpecialChars($fname);
-    $xmax = $nbMeasures + .25;
-    $xmin = - .5;
 
     if (($nbPlots % $nbXPlots) === 0) {
+        $tmp = [];
         $ls = 1;
-        echo "set title \"Placeholder\\n\"\n";
-        echo "plot $yMin\n";
+        $pattern = 0;
+
+        foreach ($stacked as $stack) {
+
+            foreach ($stack as $pos => $measure) {
+                $tmp[] = "1/0 with boxes title '$measure' ls $ls fs pattern $pattern";
+                $pattern ++;
+            }
+        }
+        echo $placeholderPlot;
+        echo 'plot ', \implode(',', $tmp), "\n";
+        echo $normalPlot;
+        $nbPlots ++;
     } else {
         $ls ++;
     }
 
     echo "set title \"$title\\n($nbAnswers answers)\"\n";
-    echo "set yrange [$yrange]\n";
-    echo "set xrange [$xmin:$xmax]\n";
-    echo "set ylabel offset 13,0 \"time (ms)\\n[$yrange]\"\n";
 
     $nb = 0;
     $pattern = 0;
     $tmp = [];
-
-    $stacked = [
-        [
-            3 => 'rewriting.total.r',
-        ],
-        [
-            4 => 'rewritings.generation'
-        ],
-        [
-            5 => 'stats.db.time.r'
-        ]
-    ];
     $xtics = ':xtic(1)';
 
     foreach ($stacked as $stack) {
@@ -128,7 +164,7 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
     }
     $nbPlots ++;
 
-    echo "plot $plot_lines\\\n,", implode(',', $tmp), "\n";
+    echo "plot", implode(',', $tmp), "\n";
 }
 
     

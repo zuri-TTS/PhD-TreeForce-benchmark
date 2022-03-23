@@ -1,18 +1,12 @@
 <?php
 namespace Plotter;
 
-final class FullPlotter implements IPlotter
+final class FullPlotter extends AbstractFullPlotter
 {
 
     private const template = __DIR__ . '/templates/full.plot.php';
 
     private \Plot $plot;
-
-    private bool $xtics_pretty = true;
-
-    private bool $xtics_infos = true;
-
-    private bool $xtics_infos_answers_nb = true;
 
     public function __construct(\Plot $plot)
     {
@@ -97,12 +91,6 @@ final class FullPlotter implements IPlotter
         system($cmd);
     }
 
-    private function cleanCurrentDir()
-    {
-        foreach ($g = \glob('*.dat') as $file)
-            \unlink($file);
-    }
-
     public function getCsvData(?string $csvPath = null): array
     {
         if (null === $csvPath)
@@ -112,53 +100,6 @@ final class FullPlotter implements IPlotter
     }
 
     // ========================================================================
-    private function makeXTic(string $dirName, int $nbReformulations, int $nbAnswers)
-    {
-        if (\preg_match("#^\[.+\]\[(.+)\]#U", $dirName, $matches)) {
-
-            if ($this->xtics_pretty) {
-                if (\preg_match("#^\((\d+)\)#U", $matches[1], $smatches))
-                    $ret = $smatches[1];
-                else
-                    $ret = $matches[1];
-            } else
-                $ret = $matches[0];
-        } else
-            $ret = $dirName;
-
-        $infos = [];
-
-        if ($this->xtics_infos) {
-
-            if ($nbReformulations != $ret)
-                $infos[] = "$nbReformulations";
-
-            if ($this->xtics_infos_answers_nb)
-                $infos[] = "$nbAnswers";
-
-            $infos = \implode(',', $infos);
-
-            \preg_match("#\[summary-(.+)\]#U", $dirName, $summary);
-            \preg_match("#\[toNative-(.+)\]#U", $dirName, $stoNative);
-            $filterLeaf = false !== \strpos($dirName, '[filter-leaf]');
-
-            $summary = $summary[1] ?? null;
-            $stoNative = $stoNative[1] ?? null;
-
-            $sinfo = [];
-            if ($summary) {
-                $filter = $filterLeaf ?  '-filtleaf' : '';
-                $sinfo[] = "S-$summary$filter";
-            }
-            if ($stoNative)
-                $sinfo[] = "2-$stoNative";
-
-            $sinfo = \implode(',', $sinfo);
-            $ret = "$ret\[$sinfo\]($infos)";
-        }
-        return \Plot::gnuplotSpecialChars($ret);
-    }
-
     private static function cutData_group_query(array $csvFiles): array
     {
         $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
@@ -207,19 +148,6 @@ final class FullPlotter implements IPlotter
             return \strnatcasecmp($a, $b);
         });
         return $ret;
-    }
-
-    private const factors = [
-        'K' => 10 ** 3,
-        'M' => 10 ** 6,
-        'G' => 10 ** 9
-    ];
-
-    private static function nbFromGroupName(string $groupName)
-    {
-        if (\preg_match('#^(\d+)([KMG])#', $groupName, $matches))
-            return (int) $matches[1] * (self::factors[$matches[2]] ?? 0);
-        return 0;
     }
 
     private function echoDat(array $csvFiles)
