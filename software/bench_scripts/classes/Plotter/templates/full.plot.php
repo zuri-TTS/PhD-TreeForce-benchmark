@@ -105,7 +105,6 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
     $stacked = [
         [
             3 => 'rewriting.total.r',
-            2 => 'rewriting.rules.apply.r'
         ],
         [
             4 => 'rewritings.generation'
