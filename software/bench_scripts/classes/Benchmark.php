@@ -54,7 +54,11 @@ final class Benchmark
     {
         if (! \is_dir($this->qOutputPath)) {
             \mkdir($this->qOutputPath, 0777, true);
-            $this->writeBenchConfigToCSV(new SplFileObject("{$this->qOutputPath}/@config.csv", "w"));
+
+            // Protect against too long name
+            \wdPush($this->qOutputPath);
+            $this->writeBenchConfigToCSV(new SplFileObject("@config.csv", "w"));
+            \wdPop();
         }
     }
 
@@ -197,7 +201,9 @@ final class Benchmark
         }
 
         // Make the query file
-        $qfile = new \SplFileObject("$this->qOutputPath/$queryFile.csv", 'w');
+        \wdPush($this->qOutputPath);
+        $qfile = new \SplFileObject("$queryFile.csv", 'w');
+        \wdPop();
 
         $measureConfig = $this->getMeasuresConfig($queryFile);
         $forgetNb = (int) $measureConfig['forget'];
