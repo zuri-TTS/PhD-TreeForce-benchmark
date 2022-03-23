@@ -46,7 +46,7 @@ return [
     'bench.output.dir.generator' => function (DataSet $dataSet, string $collection, array $cmdArg, array $javaProperties): string {
         $group = $dataSet->group();
         $theRules = $dataSet->rules();
-        $qualifiers = $dataSet->qualifiersString();
+        $qualifiers = $dataSet->qualifiersString('[]');
 
         $cmd = $cmdArg['cmd'];
         $cold = $cmdArg['cold'];

@@ -116,9 +116,14 @@ final class DataSet
         return $this->dataLocation;
     }
 
-    public function qualifiersString(): string
+    public function qualifiersString(string $default = ''): string
     {
-        return DataSets::getQualifiersString($this->qualifiers());
+        $ret = DataSets::getQualifiersString($this->qualifiers());
+
+        if (empty($ret))
+            return $default;
+
+        return $ret;
     }
 
     public function isSimplified(): bool
