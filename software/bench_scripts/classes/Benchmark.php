@@ -166,54 +166,12 @@ final class Benchmark
             'datetime',
             $this->config['bench.datetime']->format(self::dateFormat)
         ]);
-        $csvFile->fputcsv([
-            'db.collection',
-            $jprop['db.collection']
-        ]);
-        $csvFile->fputcsv([
-            'output.dir',
-            $this->config['bench.output.dir']
-        ]);
-        $csvFile->fputcsv([
-            'rules',
-            \substr($jprop['rules'] ?? '', $basePathEndOffset)
-        ]);
-        $csvFile->fputcsv([
-            'summary',
-            \substr($jprop['summary'] ?? '', $basePathEndOffset)
-        ]);
-        $csvFile->fputcsv([
-            'query.native',
-            \substr($jprop['query.native'] ?? '', $basePathEndOffset)
-        ]);
-        $csvFile->fputcsv([
-            'querying.mode',
-            $jprop['querying.mode'] ?? ''
-        ]);
-        $csvFile->fputcsv([
-            'querying.display.answers',
-            $jprop['querying.display.answers'] ?? ''
-        ]);
-        $csvFile->fputcsv([
-            'inhibitBatchStreamTime',
-            $jprop['inhibitBatchStreamTime'] ?? ''
-        ]);
-        $csvFile->fputcsv([
-            'toNative.dots',
-            $jprop['toNative.dots'] ?? ''
-        ]);
-        $csvFile->fputcsv([
-            'leaf.checkTerminal',
-            $jprop['leaf.checkTerminal'] ?? ''
-        ]);
-        $csvFile->fputcsv([
-            'query.batchSize',
-            $jprop['query.batchSize'] ?? ''
-        ]);
-        $csvFile->fputcsv([
-            'data.batchSize',
-            $jprop['data.batchSize'] ?? ''
-        ]);
+
+        foreach ($jprop as $k => $v)
+            $csvFile->fputcsv([
+                $k,
+                $v
+            ]);
     }
 
     private function writeCSV(string $queryFile, array $measures)
@@ -247,7 +205,9 @@ final class Benchmark
         $forgetLine = \array_merge($forgetLine, \array_fill(0, count($usedMeasures), null));
         $forgetLine = \array_merge($forgetLine, \array_fill(0, $forgetNb, 'forget'));
         {
-            $this->writeBenchConfigToCSV($qfile);
+            $qfile->fputcsv([
+                'bench'
+            ]);
             $qfile->fputcsv([
                 'measures.nb',
                 $measureConfig['nb'] ?? ''

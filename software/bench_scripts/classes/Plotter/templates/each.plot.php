@@ -1,9 +1,15 @@
 <?php
 $graphics = new Plotter\Graphics();
 
-$exclude = [
+$bench_exclude = [
     'datetime',
-    'output.dir'
+    'output.dir',
+    'summary',
+    'toNative.summary',
+    'base.path',
+    'output.path',
+    'queries.dir',
+    'rules'
 ];
 $blocGroups = [
     'bench',
@@ -13,7 +19,7 @@ $blocGroups = [
     ]
 ];
 $data = $PLOTTER->getData();
-$blocs = $graphics->prepareBlocs($blocGroups, $exclude, $data);
+$blocs = $graphics->prepareBlocs($blocGroups, $bench_exclude, $data);
 
 
 list ($yMin, $yMax) = $graphics->getYMinMax($PLOT->getData());

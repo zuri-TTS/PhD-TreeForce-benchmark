@@ -129,8 +129,17 @@ final class Plot
     {
         $this->data = [];
 
-        foreach ($csvFiles as $csvPath)
-            $this->data[$csvPath] = \CSVReader::read($csvPath);
+        foreach ($csvFiles as $csvPath) {
+            $basePath = \dirname($csvPath);
+            $configPath = "$basePath/@config.csv";
+
+            $data = \CSVReader::read($csvPath);
+
+            if (\is_file($configPath))
+                $data = \array_merge_recursive($data, \CSVReader::read($configPath));
+
+            $this->data[$csvPath] = $data;
+        }
     }
 
     // ========================================================================
