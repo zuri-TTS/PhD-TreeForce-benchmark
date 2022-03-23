@@ -65,14 +65,12 @@ return [
         $coll = empty($collectionSuffix) ? '' : ".$collectionSuffix";
 
         $outDir = "[$group$coll][$theRules]$qualifiers";
-        $mode = $javaProperties['querying.mode'];
 
-        if ($mode === 'query')
-            $mode = '';
-        else
-            $mode = ":$mode";
-
-        $outDir .= "{{$cmd}$mode}";
+        if ($cmd === 'querying') {
+            $mode = $javaProperties['querying.mode'];
+            $outDir .= "{{$mode}}";
+        } else
+            $outDir .= "{{$cmd}}";
 
         $outDir .= '[%s]';
 
