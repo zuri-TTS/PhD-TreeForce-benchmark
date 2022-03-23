@@ -28,7 +28,7 @@ return [
         'rewritings.deduplicate' => 'n',
         'data' => 'mongodb://localhost/treeforce.${db.collection}',
         'summary.prettyPrint' => 'n',
-        'summary.filter.leaf' => 'y'
+        'summary.filter.types' => 'y'
     ],
     'bench.measures' => [
         'default' => [
@@ -78,8 +78,8 @@ return [
 
         if ($hasSummary)
             $outDir .= "[summary-{$cmdArg['summary']}]";
-        if ($javaProperties['summary.filter.leaf'] === 'y')
-            $outDir .= '[filter-leaf]';
+        if ($javaProperties['summary.filter.types'] === 'y')
+            $outDir .= '[filter-types]';
         if ($has2Summary)
             $outDir .= "[toNative-{$cmdArg['toNative_summary']}]";
         if ($hasNative)

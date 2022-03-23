@@ -56,11 +56,15 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
     if (false === $bpath)
         throw new \Exception("Error output path '$pp' does not exists");
 
+    // <<< Java properties updates >>>
+
     $outputPath = $bpath . "/$outDir";
     $javaProperties['output.path'] = $outputPath;
 
     if (null === $javaProperties['leaf.checkTerminal'])
-        $javaProperties['leaf.checkTerminal'] = ($javaProperties['summary.filter.leaf'] === 'n') ? 'y' : 'n';
+        $javaProperties['leaf.checkTerminal'] = ($javaProperties['summary.filter.types'] === 'n') ? 'y' : 'n';
+
+    // <<< >>>
 
     $ret = array_merge($common, [
         'app.cmd' => $cmd,
