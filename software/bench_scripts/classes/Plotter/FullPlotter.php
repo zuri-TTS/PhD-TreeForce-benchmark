@@ -140,12 +140,16 @@ final class FullPlotter implements IPlotter
 
             \preg_match("#\[summary-(.+)\]#U", $dirName, $summary);
             \preg_match("#\[toNative-(.+)\]#U", $dirName, $stoNative);
+            $filterLeaf = false !== \strpos($dirName, '[filter-leaf]');
+
             $summary = $summary[1] ?? null;
             $stoNative = $stoNative[1] ?? null;
 
             $sinfo = [];
-            if ($summary)
-                $sinfo[] = "S-$summary";
+            if ($summary) {
+                $filter = $filterLeaf ?  '-filtleaf' : '';
+                $sinfo[] = "S-$summary$filter";
+            }
             if ($stoNative)
                 $sinfo[] = "2-$stoNative";
 
