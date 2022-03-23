@@ -17,7 +17,7 @@ return [
         'query.native' => "",
         'query.batchSize' => 1000,
         'data.batchSize' => 100,
-        'leaf.checkTerminal' => 'y',
+        'leaf.checkTerminal' => null,
         'querying.mode' => 'explain',
         'inhibitBatchStreamTime' => 'y',
         'querying.display.answers' => 'n',

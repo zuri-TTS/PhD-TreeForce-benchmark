@@ -59,6 +59,9 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
     $outputPath = $bpath . "/$outDir";
     $javaProperties['output.path'] = $outputPath;
 
+    if (null === $javaProperties['leaf.checkTerminal'])
+        $javaProperties['leaf.checkTerminal'] = ($javaProperties['summary.filter.leaf'] === 'n') ? 'y' : 'n';
+
     $ret = array_merge($common, [
         'app.cmd' => $cmd,
         'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
