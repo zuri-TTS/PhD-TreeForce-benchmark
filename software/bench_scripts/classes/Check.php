@@ -78,6 +78,8 @@ final class Check
     {
         $csvGroups = $this->getCSVGroups($this->paths, 'Check::groupBy_data_summary_rules_query');
 
+        \uksort($csvGroups, 'strnatcasecmp');
+
         foreach ($csvGroups as &$queriesFiles) {
             \uksort($queriesFiles, 'strnatcasecmp');
 
@@ -96,8 +98,11 @@ final class Check
 
                         foreach ($queries as $file) {
                             $csvData = CSVReader::read($file);
+                            $uniq = (int) ($csvData['reformulations']['unique'] ?? 0);
 
-                            echo "query.$query: {$csvData['reformulations']['nb']}\n";
+                            $uniq = ($uniq === 0) ? '' : "\tu$uniq";
+
+                            echo "query.$query: {$csvData['reformulations']['nb']}$uniq\n";
                         }
                     }
                 }
