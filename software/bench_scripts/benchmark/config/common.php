@@ -1,7 +1,7 @@
 <?php
 $basePath = getBenchmarkBasePath();
 
-$measuresNb = 1;
+$measuresNb = 3;
 $measuresForget = 0;
 
 $time = \date(DATE_ATOM);
