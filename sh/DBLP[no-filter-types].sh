@@ -2,7 +2,7 @@
 
 scriptName=$(basename -s '.sh' "$0")
 
-export PARAMS="Psummary.filter.types=y"
+export PARAMS="Psummary.filter.types=n"
 
 com=$(sh/benchmark.sh 'DBLP[simplified]' "outputs/$scriptName" $*)
 eval "php $com"

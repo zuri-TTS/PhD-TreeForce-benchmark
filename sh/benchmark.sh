@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# ENV VARIABLES
+# PARAMS: more parameters to send to the command
+# SUMMARIES: summaries to use
+
+
 nl=$'\n'
 
 script=software/bench_scripts/benchmark.php
@@ -20,14 +25,15 @@ shift
 summaries="$@"
 
 if [ -z "$summaries" ] ; then
-	summaries="'' 'key-type' 'path'"
+	default="'' 'key-type' 'path'"
+	summaries="${SUMMARIES:-$default}"
 fi
 
 
 command=$script
 for summary in $summaries
 do
-	command="$command \\$nl '$dataset' cmd: '$cmd' summary: $summary output: $output \;"
+	command="$command \\$nl '$dataset' cmd: '$cmd' summary: $summary output: '$output' $PARAMS \;"
 done
 
 echo $"$command"
