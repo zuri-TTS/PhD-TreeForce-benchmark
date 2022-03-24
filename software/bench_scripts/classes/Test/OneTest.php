@@ -65,6 +65,15 @@ final class OneTest extends AbstractTest
         $header = \str_repeat('=', \strlen((string) $this->ds));
         echo "\n$header\nTEST\n$this->collection\n";
 
+        if (! empty($this->testConfig['test.existing'])) {
+            echo "Similar test already exists:\n";
+
+            foreach ($this->testConfig['test.existing'] as $test)
+                echo $test, "\n";
+
+            return;
+        }
+
         try {
             $this->preProcess();
             $bench = new \Benchmark($this->testConfig);
@@ -147,5 +156,7 @@ final class OneTest extends AbstractTest
 
         if ($args['forget-results'] && \is_dir($config['bench.output.path']))
             \rrmdir($config['bench.output.path']);
+        else
+            \touch($config['bench.output.path'].'/@end');
     }
 }

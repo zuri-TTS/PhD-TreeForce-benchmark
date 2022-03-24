@@ -74,6 +74,29 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
 
     // <<< >>>
 
+    $gfrom = [
+        '[',
+        ']',
+        '\[',
+        '\]'
+    ];
+    $gto = [
+        '\[',
+        '\]',
+        '[[]',
+        '[]]'
+    ];
+    $testPattern = \sprintf($outDirPattern, "*");
+    $testPattern = \str_replace($gfrom, $gto, $testPattern);
+
+    if ($cmdArg['skip-existing']) {
+        \wdPush($bpath);
+        $test_existing = \glob($testPattern);
+        $test_existing = \array_filter($test_existing, fn($p) => \is_file("$p/@end"));
+        \wdPop();
+    } else
+        $test_existing = null;
+
     $ret = array_merge($common, [
         'app.cmd' => $cmd,
         'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
@@ -81,6 +104,7 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
         'dataSet' => $dataSet,
         'summary' => $fmakeSummary($cmdArg['summary'], $cmdArg['summary']),
         'toNative.summary' => $fmakeSummary($cmdArg['toNative_summary'], $cmdArg['toNative_summary']),
+        'test.existing' => $test_existing,
         'bench.output.dir' => $outDir,
         'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
