@@ -87,6 +87,11 @@ final class FullCollsPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
+    private const avg = [
+        'rewriting.total',
+        'rewriting.rules.apply'
+    ];
+
     private function prepareMeasures(array $colls): array
     {
         $nbColls = \count($colls);
@@ -97,14 +102,10 @@ final class FullCollsPlotter extends AbstractFullPlotter
             'bench'
         ];
         $ret = null;
+        $ret['collections']['nb'] = $nbColls;
 
         foreach ($colls as $csvPath) {
             $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
-
-            if ($ret === null) {
-                $ret = $data;
-                continue;
-            }
 
             foreach ($data as $k => $items) {
 
@@ -125,6 +126,12 @@ final class FullCollsPlotter extends AbstractFullPlotter
                     }
                 }
             }
+        }
+
+        foreach (self::avg as $meas) {
+
+            foreach ($ret[$meas] as &$val)
+                $val /= $nbColls;
         }
         return $ret;
     }
