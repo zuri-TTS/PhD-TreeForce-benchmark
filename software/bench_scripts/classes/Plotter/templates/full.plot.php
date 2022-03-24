@@ -65,7 +65,7 @@ set border 0
 unset grid
 set key off
 unset ylabel
-set key inside left center title "Times"
+set key inside center center title "Times"
 set key autotitle columnheader
 set format y "%gms"
 
