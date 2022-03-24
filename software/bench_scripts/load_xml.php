@@ -9,6 +9,7 @@ $cmdArgsDef = [
     'cmd-display-output' => false,
     'drop-empty' => false,
     'drop' => false,
+    'clean' => false,
     'generate' => true,
     'summarize' => true,
     'load' => false,
@@ -60,7 +61,13 @@ while (! empty($argv)) {
         if ($cmdParsed['pre-clean'] || $cmdParsed['pre-clean-all'])
             $converter->clean();
 
-        if ($cmdParsed['drop'])
+        if (false !== $cmdParsed['clean']) {
+
+            if ($cmdParsed['clean'] === true)
+                $converter->clean();
+            else
+                $converter->clean($cmdParsed['clean']);
+        } elseif ($cmdParsed['drop'])
             $converter->drop();
         elseif ($cmdParsed['drop-empty'])
             $converter->dropEmpty();

@@ -183,11 +183,11 @@ final class XMLLoader
         }
     }
 
-    public function clean()
+    public function clean(string $globPattern = "*.json")
     {
         foreach ($this->dataSets as $dataSet) {
             echo "Cleaning <$dataSet>\n";
-            self::cleanDataSet($dataSet, "*.json");
+            self::cleanDataSet($dataSet, $globPattern);
         }
     }
 
@@ -214,7 +214,11 @@ final class XMLLoader
     private static function cleanGlob(string $pattern): void
     {
         foreach (\glob($pattern) as $f) {
-            \is_file($f) && \unlink($f);
+
+            if (\is_file($f)) {
+                echo "Delete $f\n";
+                \unlink($f);
+            }
         }
     }
 
