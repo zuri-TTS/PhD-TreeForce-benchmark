@@ -15,12 +15,21 @@ $nbQueries = \count($PLOTTER->getQueries());
 if ($nbQueries > 0)
     $graphics['plots.max.x'] = $nbQueries;
 
+$getMeasure = function ($csvData, $what, $time) {
+    return (int) (($csvData[$what] ?? [])[$time] ?? 0);
+};
+
+$measuresPresent = [];
+
 foreach ($PLOTTER->getCsvData() as $csvData) {
 
     foreach ($PLOTTER->toPlot() as $what => $measure) {
-        $v = (int) $csvData[$what][$measure];
+        $v = (int) $getMeasure($csvData, $what, $measure);
         $yMax = \max($yMax, $v);
         $yMin = \min($yMin, $v);
+
+        if ($v > 0)
+            $measuresPresent[$what] = true;
     }
 }
 foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
@@ -98,18 +107,25 @@ set lmargin 0
 set bmargin 10
 
 <?php
-$stacked = [
-    [
-        3 => 'rewriting.total.r'
+$stacked = [];
+
+if ($measuresPresent['rewriting.total'] ?? 0)
+    $stacked[] = [
+        3 => 'rewriting.total'
         // 2 => 'rewriting.rules.apply.r'
-    ],
-    [
+    ];
+if ($measuresPresent['rewriting.generation'] ?? 0)
+    $stacked[] = [
         4 => 'rewritings.generation'
-    ],
-    [
-        5 => 'stats.db.time.r'
-    ]
-];
+    ];
+if ($measuresPresent['stats.db.time'] ?? 0)
+    $stacked[] = [
+        5 => 'stats.db.time'
+    ];
+if ($measuresPresent['threads.time'] ?? 0)
+    $stacked[] = [
+        6 => 'threads.time'
+    ];
 
 $xmax = $nbMeasures + $boxwidth;
 $xmin = - $boxwidth * 2;

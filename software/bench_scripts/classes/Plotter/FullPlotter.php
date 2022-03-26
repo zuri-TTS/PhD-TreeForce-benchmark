@@ -27,7 +27,8 @@ final class FullPlotter extends AbstractFullPlotter
         'rewriting.rules.apply' => 'r',
         'rewriting.total' => 'r',
         'rewritings.generation' => 'r',
-        'stats.db.time' => 'r'
+        'stats.db.time' => 'r',
+        'threads.time' => 'r'
     ];
 
     private array $cutData;
