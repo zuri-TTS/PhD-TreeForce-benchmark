@@ -12,6 +12,7 @@ return [
     'java.opt' => "-Xmx10G",
 
     'java.properties' => [
+        'db' => 'treeforce',
         'base.path' => $basePath,
         'output.measures' => "std://out" . ($measuresNb > 1 ? '' : ",\${output.path}/\${query.name}_measures.txt"),
         'query.native' => "",
@@ -26,7 +27,7 @@ return [
         'querying.config.print' => 'y',
         'toNative.dots' => 'n',
         'rewritings.deduplicate' => 'n',
-        'data' => 'mongodb://localhost/treeforce.${db.collection}',
+        'data' => 'mongodb://localhost',
         'summary.prettyPrint' => 'n',
         'summary.filter.types' => 'y'
     ],
@@ -73,6 +74,9 @@ return [
             $outDir .= "{{$cmd}}";
 
         $outDir .= '[%s]';
+
+        if ($cmdArg['parallel'])
+            $outDir .= '[parall]';
 
         if ($hasSummary)
             $outDir .= "[summary-{$cmdArg['summary']}]";

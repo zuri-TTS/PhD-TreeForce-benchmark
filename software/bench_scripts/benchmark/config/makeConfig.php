@@ -1,8 +1,7 @@
 <?php
 
-function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array $javaProperties) //
+function makeConfig(DataSet $dataSet, $collections, array &$cmdArg, array $javaProperties) //
 {
-    $collectionSuffix = \explode('.', $collection, 2)[1] ?? '';
     $group = $dataSet->group();
     $rules = $dataSet->rules();
     $dataSetPath = $dataSet->path();
@@ -29,24 +28,61 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
     } elseif (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
-    $cprefix = empty($collectionSuffix) ? '' : "$collectionSuffix-";
+    $outputDirGenerator = $common['bench.output.dir.generator'];
 
-    $fmakeSummary = function ($type, $suffix) use ($dataSetPath, $cprefix) {
-        return empty($type) ? '' : "$dataSetPath/${cprefix}summary-$suffix.txt";
+    $fsummary = function ($baseDir, $summPrefix, $summType) {
+        return "$baseDir/{$summPrefix}summary-$summType.txt";
     };
 
+    if ($cmdArg['parallel']) {
+
+        if (! \is_array($collections))
+            throw new \Exception("In parallel mode \$collections must be an array; have $collections");
+
+        $cprefix = "";
+        $javaCollection = [];
+        $javaSummary = [];
+        $javaToNativeSummary = [];
+
+        foreach ($collections as $coll) {
+            $collectionSuffix = \explode('.', $coll, 2)[1] ?? '';
+            $cprefix = empty($collectionSuffix) ? '' : "$collectionSuffix-";
+
+            $javaCollection[] = $coll;
+            $javaSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
+            $javaToNativeSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
+
+            $benchSummary = $benchToNativeSummary = '';
+        }
+        $outDirPattern = $outputDirGenerator($dataSet, '', $cmdArg, $javaProperties);
+    } else {
+
+        if (! \is_scalar($collections))
+            throw new \Exception("In parallel mode \$collections must be scalar; have $collections");
+
+        $collectionSuffix = \explode('.', $collections, 2)[1] ?? '';
+        $cprefix = empty($collectionSuffix) ? '' : "$collectionSuffix-";
+
+        $javaCollection = (string) $collections;
+        $javaSummary = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
+        $javaToNativeSummary = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
+
+        $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
+        $benchToNativeSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['toNative_summary']);
+
+        $outDirPattern = $outputDirGenerator($dataSet, $javaCollection, $cmdArg, $javaProperties);
+    }
+
     $javaProperties = array_merge([
-        'db.collection' => $collection,
+        'dataset.baseDir' => $dataSetPath,
+        'db.collection' => $javaCollection,
         'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
-        'summary' => $fmakeSummary($cmdArg['summary'], '${summary.type}'),
+        'summary' => $javaSummary,
         'summary.type' => $cmdArg['summary'],
-        'toNative.summary' => $fmakeSummary($cmdArg['toNative_summary'], '${toNative.summary.type}'),
+        'toNative.summary' => $javaToNativeSummary,
         'toNative.summary.type' => $cmdArg['toNative_summary']
     ], $javaProperties) + $common['java.properties'];
-
-    $outputDirGenerator = $common['bench.output.dir.generator'];
-    $outDirPattern = $outputDirGenerator($dataSet, $collection, $cmdArg, $javaProperties);
 
     $outDir = sprintf($outDirPattern, $common['bench.datetime']->format('Y-m-d H:i:s v'));
 
@@ -72,6 +108,9 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
     if (null === $javaProperties['leaf.checkTerminal'])
         $javaProperties['leaf.checkTerminal'] = ($javaProperties['summary.filter.types'] === 'n') ? 'y' : 'n';
 
+    if ($cmdArg['parallel'] && $javaProperties['querying.mode'] === 'explain')
+        $javaProperties['querying.mode'] = 'explaincolls';
+
     // <<< >>>
 
     $gfrom = [
@@ -92,7 +131,7 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
     if ($cmdArg['skip-existing']) {
         \wdPush($bpath);
         $test_existing = \glob($testPattern);
-        $test_existing = \array_filter($test_existing, fn($p) => \is_file("$p/@end"));
+        $test_existing = \array_filter($test_existing, fn ($p) => \is_file("$p/@end"));
         \wdPop();
     } else
         $test_existing = null;
@@ -102,8 +141,8 @@ function makeConfig(DataSet $dataSet, string $collection, array &$cmdArg, array 
         'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
-        'summary' => $fmakeSummary($cmdArg['summary'], $cmdArg['summary']),
-        'toNative.summary' => $fmakeSummary($cmdArg['toNative_summary'], $cmdArg['toNative_summary']),
+        'summary' => $benchSummary,
+        'toNative.summary' => $benchToNativeSummary,
         'test.existing' => $test_existing,
         'bench.output.dir' => $outDir,
         'bench.output.path' => $outputPath,

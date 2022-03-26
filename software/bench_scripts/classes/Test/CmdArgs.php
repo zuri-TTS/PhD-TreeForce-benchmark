@@ -20,6 +20,7 @@ final class CmdArgs
         'toNative_summary' => null, // Must be null for makeConfig()
         'native' => '',
         'cmd' => 'querying',
+        'parallel' => false,
         'doonce' => false,
         'cold' => false,
         'output' => null,

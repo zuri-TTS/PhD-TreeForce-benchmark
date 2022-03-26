@@ -21,7 +21,7 @@ abstract class AbstractTest
         $this->ds = $ds;
         $this->collection = $collectionName;
 
-        if (! \in_array($collectionName, $ds->getCollections()))
+        if (!empty($collection) && ! \in_array($collectionName, $ds->getCollections()))
             throw new \Exception("$ds does not have the collection $collectionName");
 
         $this->cmdParser = $cmdParser;
@@ -30,16 +30,23 @@ abstract class AbstractTest
 
     public final function collectionExists(): bool
     {
+        if (empty($this->collection))
+            return true;
+
         return \MongoImport::collectionExists($this->collection);
     }
 
     public final function dropCollection(): void
     {
+        if (empty($this->collection))
+            return;
         \MongoImport::dropCollection($this->collection);
     }
 
     public final function loadCollection(): void
     {
+        if (empty($this->collection))
+            return;
         $this->xmlLoader->convert();
         \MongoImport::importCollections($this->ds, $this->collection);
     }

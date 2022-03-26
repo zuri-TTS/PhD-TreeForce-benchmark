@@ -97,9 +97,8 @@ final class Benchmark
         $s = "";
         $jprop = $this->config['java.properties'] + $incVar;
 
-        $jprop['db.collection'] = \rawurlencode($jprop['db.collection']);
-
-        foreach ($jprop as $k => $v) {
+        foreach ($this->javaPropertiesPairs($jprop) as $pair) {
+            list ($k, $v) = $pair;
             $s .= "$k: $v\n";
         }
         return $s;
@@ -154,9 +153,25 @@ final class Benchmark
         return round(array_sum($vals) / $c);
     }
 
+    private function javaPropertiesPairs(array $jprops): array
+    {
+        $ret = [];
+
+        foreach ($jprops as $k => $v) {
+            if (! \is_array($v))
+                $v = (array) $v;
+
+            foreach ($v as $v)
+                $ret[] = [
+                    $k,
+                    $v
+                ];
+        }
+        return $ret;
+    }
+
     private function writeBenchConfigToCSV(SplFileObject $csvFile)
     {
-        $jprop = $this->config['java.properties'];
         $basePathEndOffset = \strlen($this->config['java.properties']['base.path']) + 1;
         $csvFile->fputcsv([
             'bench'
@@ -171,11 +186,8 @@ final class Benchmark
             $this->config['bench.datetime']->format(self::dateFormat)
         ]);
 
-        foreach ($jprop as $k => $v)
-            $csvFile->fputcsv([
-                $k,
-                $v
-            ]);
+        foreach ($this->javaPropertiesPairs($this->config['java.properties']) as $pair)
+            $csvFile->fputcsv($pair);
     }
 
     private function writeCSV(string $queryFile, array $measures)

@@ -12,18 +12,27 @@ while (! empty($argv)) {
 
     $parsed = $cmdParser->parse($current_argv);
     $dataSets = $parsed['dataSets'];
+    $parallelTest = $parsed['args']['parallel'];
     $cmd = $parsed['args']['cmd'];
 
     if ($cmd === 'summarize')
         $testClass = '\Test\DoSummarize';
+    elseif ($parallelTest)
+        $testClass = '\Test\ParallelTest';
     else
         $testClass = '\Test\OneTest';
 
     $errors = [];
 
     foreach ($dataSets as $dataSet) {
+        $colls = $dataSet->getCollections();
 
-        foreach ($dataSet->getCollections() as $coll) {
+        if ($parallelTest)
+            $colls = [
+                $colls
+            ];
+
+        foreach ($colls as $coll) {
             $test = new $testClass($dataSet, $coll, $cmdParser);
             $test->execute();
             $test->reportErrors();
