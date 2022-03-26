@@ -64,12 +64,22 @@ function makeConfig(DataSet $dataSet, $collections, array &$cmdArg, array $javaP
         $cprefix = empty($collectionSuffix) ? '' : "$collectionSuffix-";
 
         $javaCollection = (string) $collections;
-        $javaSummary = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
-        $javaToNativeSummary = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
 
-        $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
-        $benchToNativeSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['toNative_summary']);
+        if (empty($cmdArg['summary'])) {
+            $javaSummary = '';
+            $benchSummary = '';
+        } else {
+            $javaSummary = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
+            $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
+        }
 
+        if (empty($cmdArg['toNative_summary'])) {
+            $javaToNativeSummary = '';
+            $benchToNativeSummary = '';
+        } else {
+            $javaToNativeSummary = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
+            $benchToNativeSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['toNative_summary']);
+        }
         $outDirPattern = $outputDirGenerator($dataSet, $javaCollection, $cmdArg, $javaProperties);
     }
 
