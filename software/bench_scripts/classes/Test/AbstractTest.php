@@ -36,11 +36,14 @@ abstract class AbstractTest
         return \MongoImport::collectionExists($this->collection);
     }
 
-    public final function dropCollection(): void
+    public final function dropCollection(string $clean = "*.json"): void
     {
         if (empty($this->collection))
             return;
         \MongoImport::dropCollection($this->collection);
+
+        if (! empty($clean))
+            $this->xmlLoader->clean($clean);
     }
 
     public final function loadCollection(): void
