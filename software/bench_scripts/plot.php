@@ -9,7 +9,8 @@ array_shift($argv);
 while (! empty($exec = \parseArgvShift($argv, ";"))) {
     $outPath = \argShift($exec, 'output');
     $types = \argShift($exec, 'types', '');
-    $paths = \array_filter($argv, 'is_int');
+    $paths = \array_filter($exec, 'is_int', ARRAY_FILTER_USE_KEY);
+
     $config = __DIR__ . '/gnuplot/config.php';
 
     if (! empty($types))
