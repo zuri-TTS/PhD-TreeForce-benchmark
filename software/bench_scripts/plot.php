@@ -24,7 +24,11 @@ while (! empty($exec = \parseArgvShift($argv, ";"))) {
     foreach ($paths as $outPath) {
 
         if (is_dir($outPath)) {
-            $dir = new RecursiveDirectoryIterator($outPath);
+            $dir = new RecursiveDirectoryIterator($outPath, //
+            FilesystemIterator::KEY_AS_PATHNAME | //
+            FilesystemIterator::CURRENT_AS_FILEINFO | //
+            FilesystemIterator::FOLLOW_SYMLINKS) //
+            ;
             $ite = new RecursiveIteratorIterator($dir);
             $ite->setMaxDepth(1);
             $reg = new RegexIterator($ite, "#/[^@][^/]*\.csv$#");
