@@ -19,6 +19,8 @@ final class XMLLoader
 
     private array $summary;
 
+    private int $_id = 1;
+
     private int $summaryDepth;
 
     private bool $summarize;
@@ -331,6 +333,7 @@ final class XMLLoader
         $data = self::array_path($this->path, [
             $name => $destVal
         ]);
+        $data['_id'] = $this->_id ++;
         $this->doSimplifyText($data);
         $this->stats['documents.nb'] ++;
         $dataSimple = null;
