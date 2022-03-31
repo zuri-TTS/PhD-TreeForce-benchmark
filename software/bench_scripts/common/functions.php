@@ -224,17 +224,22 @@ function &array_follow(array &$array, array $path, $default = null)
 {
     $p = &$array;
 
-    while (\array_key_exists($k = \array_shift($path), $p)) {
+    for (;;) {
+        $k = \array_shift($path);
+
+        if (! \array_key_exists($k, $p))
+            return $default;
+
         $p = &$p[$k];
 
-        if (! is_array($p))
-            break;
+        if (! is_array($p)) {
+
+            if (! empty($path))
+                return $default;
+        }
+        elseif (empty($path))
+            return $p;
     }
-
-    if (! empty($path))
-        return $default;
-
-    return $p;
 }
 
 function array_kdelete_get(array &$array, $key, $default = null)
