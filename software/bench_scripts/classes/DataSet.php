@@ -13,7 +13,9 @@ final class DataSet
 
     private string $collectionsId = '';
 
-    private \Data\IDataLocation $dataLocation;
+    private \Data\IPartitioning $partitioning;
+
+    private array $partitions;
 
     private string $locationId = '';
 
@@ -30,23 +32,19 @@ final class DataSet
     private function __construct()
     {}
 
-    public static function create(string $group, string $rules, array $qualifiers): DataSet
+    public static function create(string $group, string $partitioning, string $rules, array $qualifiers): DataSet
     {
+        $qualifiers = \array_unique($qualifiers);
         \sort($qualifiers);
         $ret = new DataSet();
         $ret->group = $group;
         $ret->rules = $rules;
         $ret->qualifiers = $qualifiers;
-        $ret->setDataLocation();
-
+        $ret->partitioning = $ret->getGroupLoader()->getPartitioning($partitioning);
         $ret->processQualifiers($qualifiers);
-        return $ret;
-    }
 
-    private function setDataLocation(string $locationId = '')
-    {
-        $this->locationId = $locationId;
-        $this->dataLocation = \Data\DataLocations::getLocationFor($this, $locationId);
+        $ret->partitions = $ret->partitioning->getPartitionsOf($ret);
+        return $ret;
     }
 
     private function processQualifiers(array $qualifiers): void
@@ -60,12 +58,8 @@ final class DataSet
         }
         $c = \count($remaining);
 
-        if ($c > 1)
-            throw new \Exception("More than one dataLocation qualifier: " . implode(',', $remaining));
-        if ($c == 0)
-            return;
-
-        $this->setDataLocation(\array_pop($remaining));
+        if ($c > 0)
+            throw new \Exception("Can't handle qualifiers: " . implode(',', $remaining));
     }
 
     // ========================================================================
@@ -109,11 +103,6 @@ final class DataSet
     public function qualifiers(): array
     {
         return $this->qualifiers;
-    }
-
-    public function dataLocation(): \Data\IDataLocation
-    {
-        return $this->dataLocation;
     }
 
     public function qualifiersString(string $default = ''): string
@@ -170,6 +159,16 @@ final class DataSet
             return $this->loader;
 
         return $this->loader = DataSets::getGroupLoader($this->group);
+    }
+
+    public function getPartitioning(): \Data\IPartitioning
+    {
+        return $this->partitioning;
+    }
+
+    public function getPartitions(): array
+    {
+        return $this->partitions;
     }
 
     // ========================================================================

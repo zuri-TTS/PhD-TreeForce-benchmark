@@ -34,25 +34,25 @@ final class DBLPLoader implements ILoader
         $this->closeXMLReader();
     }
 
-    private const dataLocation = [
-        'prefix-colls' => [
-            'class' => '\Data\PrefixLocation',
-            'params' => [
-                'dblp.article' => 'article',
-                'dblp.book' => 'book',
-                'dblp.incollection' => 'incollection',
-                'dblp.inproceedings' => 'inproceedings',
-                'dblp.mastersthesis' => 'mastersthesis',
-                'dblp.phdthesis' => 'phdthesis',
-                'dblp.proceedings' => 'proceedings',
-                'dblp.www' => 'www'
-            ]
+    private const partitions = [
+        'colls' => [
+            'article' => 'dblp.article',
+            'book' => 'dblp.book',
+            'incollection' => 'dblp.incollection',
+            'inproceedings' => 'dblp.inproceedings',
+            'mastersthesis' => 'dblp.mastersthesis',
+            'phdthesis' => 'dblp.phdthesis',
+            'proceedings' => 'dblp.proceedings',
+            'www' => 'dblp.www'
         ]
     ];
 
-    function getDataLocationConfig(): array
+    function getPartitioning(string $name = ''): IPartitioning
     {
-        return self::dataLocation;
+        if (empty($name))
+            return NoPartitioning::create();
+
+        return PrefixPartitioning::create($name, self::partitions[$name]);
     }
 
     private const unwind = [

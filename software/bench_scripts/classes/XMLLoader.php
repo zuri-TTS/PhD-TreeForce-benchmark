@@ -116,11 +116,22 @@ final class XMLLoader
             if ($exists && (! $this->summarize || $this->summaryExists($dataSet)))
                 return $dataSet;
 
+            $fp = [];
+            \wdPush($dataSet->path());
+
+            foreach ($dataSet->getPartitions() as $partition) {
+                $name = $partition->getID();
+                $fp[$name] = \fopen("$name.json", 'w');
+            }
+            \wdPop();
+
             return [
+
                 'randomize' => $this->groupLoader->getLabelReplacerForDataSet($dataSet) ?? fn ($data) => $data,
                 'simplify' => $dataSet->isSimplified(),
                 'path' => $path,
-                'dataset' => $dataSet
+                'dataset' => $dataSet,
+                'fp' => $fp
             ];
         }, $this->dataSets);
 
@@ -151,6 +162,9 @@ final class XMLLoader
 
         foreach ($this->filesData as $fd) {
             \touch("{$fd['path']}/end.json");
+
+            foreach ($fd['fp'] as $f)
+                \fclose($f);
 
             if ($this->summarize) {
                 \ksort($this->summary[$fd['dataset']->id()]);
@@ -360,7 +374,10 @@ final class XMLLoader
 
     private function writeFinalJson(array $data, array $fileData)
     {
-        $fileData['dataset']->dataLocation()->writeData($this->path, $data);
+        $partition = \Data\Partitions::getPartitionForData($fileData['dataset']->getPartitions(), $data);
+        $fp = $fileData['fp'][$partition->getID()];
+
+        \fwrite($fp, \json_encode($data) . "\n");
     }
 
     // ========================================================================

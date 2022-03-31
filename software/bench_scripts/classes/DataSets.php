@@ -55,10 +55,7 @@ final class DataSets
 
     public static function allCollections(DataSet $ds, $ids = null): array
     {
-        return self::allThings([
-            $ds->dataLocation(),
-            'getDBCollections'
-        ], $ids);
+        return self::allThings(fn () => \Data\Partitions::getCollectionsOf($ds->getPartitions()), $ids);
     }
 
     // ========================================================================
@@ -120,6 +117,8 @@ final class DataSets
         $ret = [];
 
         foreach ($groups as $group) {
+            list ($group, $partition) = \explode('.', $group, 2) + \array_fill(0, 2, '');
+
             $eRulesSets = self::allRules($group, $rules);
 
             if (empty($eRulesSets))
@@ -127,7 +126,7 @@ final class DataSets
 
             foreach ($eRulesSets as $rulesSet) {
                 foreach ($qualifierss as $q) {
-                    $ret[] = DataSet::create($group, $rulesSet, $q)-> //
+                    $ret[] = DataSet::create($group, $partition, $rulesSet, $q)-> //
                     setQueriesId($queries)-> //
                     setCollectionsId($collsIDs);
                 }
@@ -274,7 +273,14 @@ final class DataSets
 
     public static function pathOf(DataSet $dataset): string
     {
-        return self::_dataSetPath($dataset->group(), $dataset->rules(), $dataset->qualifiers());
+        $path = self::_dataSetPath($dataset->group(), $dataset->rules(), $dataset->qualifiers());
+
+        $partitioning = $dataset->getPartitioning()->getID();
+
+        if (! empty($partitioning))
+            $path .= "/$partitioning";
+
+        return $path;
     }
 
     public static function idOf(DataSet $dataset): string

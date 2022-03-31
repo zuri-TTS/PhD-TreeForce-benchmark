@@ -33,9 +33,26 @@ final class XMarkLoader implements ILoader
         $oa->checkEmpty($config);
     }
 
-    function getDataLocationConfig(): array
+    private const partitioning = [
+        'colls' => [
+            'regions' => 'site.regions',
+            'categories' => 'site.categories',
+            'catgraph' => 'site.catgraph',
+            'people' => 'site.people',
+            'open_auctions' => 'site.open_auctions',
+            'closed_auctions' => 'site.closed_auctions'
+        ]
+    ];
+
+    function getPartitioning(string $name = ''): IPartitioning
     {
-        return [];
+        if (empty($name))
+            return \Data\NoPartitioning::create();
+
+        if (! \array_key_exists($name, self::partitioning))
+            throw new \Exception(__CLASS__ . ": invalid partition '$name'; must be one of [" . \implode(',', \array_keys(self::partitioning)) . "]");
+
+        return PrefixPartitioning::create($name, self::partitioning[$name]);
     }
 
     private const unwind = [

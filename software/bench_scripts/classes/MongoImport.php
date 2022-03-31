@@ -174,42 +174,33 @@ final class MongoImport
             $dsColls = implode(',', $dsColls);
             throw new \Exception("$dataSet does not have collections [$invalidColls]; has [$dsColls]");
         }
-        $dataLocation = $dataSet->dataLocation();
         echo "\nImporting $dataSet\n";
 
-        \wdPush($dataSet->path());
-        $jsonFiles = \glob("*.json");
+        $partitions = $dataSet->getPartitions();
 
-        if (empty($jsonFiles)) {
-            throw new \Exception("$collectionName: no json files to load\n");
-        }
+        \wdPush($dataSet->path());
 
         $nbFails = 0;
 
-        foreach ($dataLocation->collectionJsonFiles() as $collectionName => $jsonFiles) {
-
-            if (! in_array($collectionName, $collections))
-                continue;
+        foreach ($partitions as $partition) {
+            $collectionName = $partition->getCollectionName();
+            $jsonFile = "$collectionName.json";
 
             if (self::collectionExists($collectionName)) {
                 echo "$collectionName: already exists\n";
                 continue;
             }
+            echo "$jsonFile in collection: $collectionName\n";
 
-            foreach ($jsonFiles as $json) {
+            if (! \is_file($jsonFile))
+                throw new \Exception("The file $jsonFile does not exists");
 
-                if ($json === 'end.json')
-                    continue;
+            $cname = \escapeshellarg($collectionName);
+            $jsonFile = \escapeshellarg($jsonFile);
+            \simpleExec("mongoimport -d treeforce -c $cname --file $jsonFile", $output, $err);
 
-                echo "$json in collection: $collectionName\n";
-
-                $cname = \escapeshellarg($collectionName);
-                $json = \escapeshellarg($json);
-                \simpleExec("mongoimport -d treeforce -c $cname --file $json", $output, $err);
-
-                \preg_match('/(\d+) document\(s\) failed/', $err, $matches);
-                $nbFails += (int) $matches[1];
-            }
+            \preg_match('/(\d+) document\(s\) failed/', $err, $matches);
+            $nbFails += (int) $matches[1];
 
             if (null !== self::$collections_cache)
                 self::$collections_cache[] = $collectionName;
