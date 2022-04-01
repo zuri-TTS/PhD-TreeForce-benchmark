@@ -46,13 +46,7 @@ final class XMarkLoader implements ILoader
 
     function getPartitioning(string $name = ''): IPartitioning
     {
-        if (empty($name))
-            return \Data\NoPartitioning::create();
-
-        if (! \array_key_exists($name, self::partitioning))
-            throw new \Exception(__CLASS__ . ": invalid partition '$name'; must be one of [" . \implode(',', \array_keys(self::partitioning)) . "]");
-
-        return PrefixPartitioning::create($name, self::partitioning[$name]);
+        return Loaders::getPartitioningWithLogical($name, self::partitioning);
     }
 
     private const unwind = [

@@ -10,18 +10,21 @@ abstract class AbstractTest
 
     protected string $collection;
 
+    protected \Data\IPartition $partition;
+
     protected CmdArgs $cmdParser;
 
     private \XMLLoader $xmlLoader;
 
     public abstract function execute();
 
-    public function __construct(\DataSet $ds, string $collectionName, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
     {
         $this->ds = $ds;
-        $this->collection = $collectionName;
+        $this->partition = $partition;
+        $this->collection = $partition->getCollectionName();
 
-        if (!empty($collection) && ! \in_array($collectionName, $ds->getCollections()))
+        if (! empty($collection) && ! \in_array($collectionName, $ds->getCollections()))
             throw new \Exception("$ds does not have the collection $collectionName");
 
         $this->cmdParser = $cmdParser;

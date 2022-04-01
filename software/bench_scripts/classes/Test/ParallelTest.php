@@ -6,17 +6,17 @@ final class ParallelTest extends AbstractTest
 
     private array $testConfig;
 
-    private array $collections;
+    private array $partitions;
 
-    public function __construct(\DataSet $ds, array $collections, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, array $partitions, CmdArgs $cmdParser)
     {
-        parent::__construct($ds, "", $cmdParser);
+        parent::__construct($ds, \Data\NoPartitioning::noPartition(), $cmdParser);
 
         $parsed = $this->cmdParser->parsed();
         $args = &$parsed['args'];
         $javaProperties = $parsed['javaProperties'];
 
-        $this->collections = $collections;
+        $this->partitions = $partitions;
         $this->doonce = $args['doonce'];
 
         if (\in_array($args['cmd'], [
@@ -29,8 +29,7 @@ final class ParallelTest extends AbstractTest
             $args['plot'] = false;
             $this->forceNbMeasures = 1;
         }
-
-        $this->testConfig = \makeConfig($this->ds, $this->collections, $args, $javaProperties);
+        $this->testConfig = \makeConfig($ds, $partitions, $args, $javaProperties);
     }
 
     public function getTestConfig(): array

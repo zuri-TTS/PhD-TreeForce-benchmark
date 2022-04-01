@@ -275,7 +275,7 @@ final class DataSets
     {
         $path = self::_dataSetPath($dataset->group(), $dataset->rules(), $dataset->qualifiers());
 
-        $partitioning = $dataset->getPartitioning()->getID();
+        $partitioning = $dataset->getPartitioning()->getBaseDir();
 
         if (! empty($partitioning))
             $path .= "/$partitioning";
@@ -285,7 +285,7 @@ final class DataSets
 
     public static function idOf(DataSet $dataset): string
     {
-        return self::_getId($dataset->group(), $dataset->rules(), $dataset->qualifiers());
+        return self::_getId($dataset->group(), $dataset->getPartitioning(), $dataset->rules(), $dataset->qualifiers());
     }
 
     public static function getQualifiersString(array $qualifiers): string
@@ -315,12 +315,17 @@ final class DataSets
         return self::getDataSetsBasePath($group) . "/$theRules$q";
     }
 
-    private static function _getId(string $group, string $theRules, array $qualifiers): string
+    private static function _getId(string $group, \Data\IPartitioning $partitioning, string $theRules, array $qualifiers): string
     {
+        $pid = $partitioning->getID();
+
+        if (! empty($pid))
+            $pid = ".$pid";
+
         $q = self::getQualifiersString($qualifiers);
 
         if (! empty($theRules))
-            return "$group/$theRules$q";
+            return "$group$pid/$theRules$q";
 
         return "$group$q";
     }

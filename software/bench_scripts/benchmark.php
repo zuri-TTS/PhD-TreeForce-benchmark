@@ -15,7 +15,9 @@ while (! empty($argv)) {
     $parallelTest = $parsed['args']['parallel'];
     $cmd = $parsed['args']['cmd'];
 
-    if ($cmd === 'summarize')
+    if (! empty($parsed['args']['partitioning']))
+        $testClass = '\Test\DoPartitioning';
+    elseif ($cmd === 'summarize')
         $testClass = '\Test\DoSummarize';
     elseif ($parallelTest)
         $testClass = '\Test\ParallelTest';
@@ -25,15 +27,25 @@ while (! empty($argv)) {
     $errors = [];
 
     foreach ($dataSets as $dataSet) {
-        $colls = $dataSet->getCollections();
+        $dsPartitions = $dataSet->getPartitions();
+        $partitions = [];
+
+        foreach ($dsPartitions as $partition) {
+            $logicalPartitioning = $partition->getLogicalPartitioning();
+
+            if ($logicalPartitioning === null)
+                $partitions[] = $partition;
+            else
+                $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
+        }
 
         if ($parallelTest)
-            $colls = [
-                $colls
+            $partitions = [
+                $partitions
             ];
 
-        foreach ($colls as $coll) {
-            $test = new $testClass($dataSet, $coll, $cmdParser);
+        foreach ($partitions as $partition) {
+            $test = new $testClass($dataSet, $partition, $cmdParser);
             $test->execute();
             $test->reportErrors();
             $errors = \array_merge($errors, $test->getErrors());

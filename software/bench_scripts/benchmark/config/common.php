@@ -44,7 +44,7 @@ return [
         sleep(1);
     },
     'bench.output.base.path' => "$basePath/outputs",
-    'bench.output.dir.generator' => function (DataSet $dataSet, string $collection, array $cmdArg, array $javaProperties): string {
+    'bench.output.dir.generator' => function (DataSet $dataSet, \Data\IPartition $partition, array $cmdArg, array $javaProperties): string {
         $group = $dataSet->group();
         $theRules = $dataSet->rules();
         $qualifiers = $dataSet->qualifiersString('[]');
@@ -62,8 +62,10 @@ return [
         } else {
             $native = $cmdArg['native'] ?? '';
         }
-        $collectionSuffix = \explode('.', $collection, 2)[1] ?? '';
-        $coll = empty($collectionSuffix) ? '' : ".$collectionSuffix";
+        $pid = $dataSet->getPartitioning()->getID();
+        $coll = empty($pid) ? '' : ".$pid";
+        $pid = $partition->getID();
+        $coll .= empty($pid) ? '' : ".$pid";
 
         $outDir = "[$group$coll][$theRules]$qualifiers";
 

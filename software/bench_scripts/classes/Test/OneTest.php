@@ -14,11 +14,13 @@ final class OneTest extends AbstractTest
 
     private bool $needSummary = false;
 
+    private bool $displayHeader = true;
+
     private array $args;
 
-    public function __construct(\DataSet $ds, string $collectionName, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
     {
-        parent::__construct($ds, $collectionName, $cmdParser);
+        parent::__construct($ds, $partition, $cmdParser);
 
         $parsed = $this->cmdParser->parsed();
         $args = &$parsed['args'];
@@ -51,8 +53,13 @@ final class OneTest extends AbstractTest
         if ($args['forget-results'])
             $args['plot'] = false;
 
-        $this->testConfig = \makeConfig($this->ds, $this->collection, $args, $parsed['javaProperties']);
+        $this->testConfig = \makeConfig($this->ds, $partition, $args, $parsed['javaProperties']);
         $this->args = $args;
+    }
+
+    public function setDisplayHeader(bool $val)
+    {
+        $this->displayHeader = $val;
     }
 
     public function getTestConfig(): array
@@ -62,8 +69,11 @@ final class OneTest extends AbstractTest
 
     public function execute()
     {
-        $header = \str_repeat('=', \strlen((string) $this->ds));
-        echo "\n$header\nTEST\n$this->collection\n";
+        if ($this->displayHeader) {
+            $title = "$this->collection/{$this->partition->getID()}";
+            $header = \str_repeat('=', \strlen($title));
+            echo "\n$header\nTEST\n$title\n";
+        }
 
         if (! empty($this->testConfig['test.existing'])) {
             echo "Similar test already exists:\n";
@@ -123,8 +133,10 @@ final class OneTest extends AbstractTest
             if (! $cmdSummarize) {
                 $this->ensureSummary($args['summary']);
                 $this->ensureSummary((string) $args['toNative_summary']);
-                $this->checkSummary($this->testConfig['summary']);
                 $this->checkSummary($this->testConfig['toNative.summary']);
+
+                foreach ((array) $this->testConfig['summary'] as $summary)
+                    $this->checkSummary($summary);
             }
         }
     }
@@ -134,7 +146,7 @@ final class OneTest extends AbstractTest
         if (empty($type))
             return;
 
-        DoSummarize::summarize($this->ds, $this->collection, $type);
+        DoSummarize::summarize($this->ds, $this->partition, $type);
     }
 
     private function checkSummary(string $path): void
@@ -157,6 +169,6 @@ final class OneTest extends AbstractTest
         if ($args['forget-results'] && \is_dir($config['bench.output.path']))
             \rrmdir($config['bench.output.path']);
         else
-            \touch($config['bench.output.path'].'/@end');
+            \touch($config['bench.output.path'] . '/@end');
     }
 }

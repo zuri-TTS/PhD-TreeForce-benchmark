@@ -4,13 +4,11 @@ namespace Test;
 final class DoSummarize extends AbstractTest
 {
 
-    private OneTest $doIt;
-
     private string $summaryType;
 
-    public function __construct(\DataSet $ds, string $collection, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
     {
-        parent::__construct($ds, $collection, $cmdParser);
+        parent::__construct($ds, $partition, $cmdParser);
 
         $args = $cmdParser->parsed()['args'];
 
@@ -20,7 +18,7 @@ final class DoSummarize extends AbstractTest
         $this->summaryType = $args['summary'];
     }
 
-    public static function summarize(\DataSet $ds, string $collection, string $summaryType): void
+    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType): void
     {
         $summArgs = [
             $ds->id(),
@@ -36,25 +34,41 @@ final class DoSummarize extends AbstractTest
         ];
         $doItParser = CmdArgs::default();
         $doItParser->parse($summArgs);
-        $doIt = new OneTest($ds, $collection, $doItParser);
+        $doIt = new OneTest($ds, $partition, $doItParser);
+        $doIt->setDisplayHeader(false);
 
-        $summaryPath = $doIt->getTestConfig()['summary'];
-        $summaryName = \basename($summaryPath);
+        $testConfig = $doIt->getTestConfig();
 
-        echo "\nSummarizing $summaryName\n";
+        echo "\nSummarizing <$ds/{$partition->getID()}>\n";
+        $allExists = true;
+        $summaries = (array) $testConfig['summary'];
 
-        if (\is_file($summaryPath)) {
-            echo "Already exists\n";
+        foreach ($summaries as $summaryPath) {
+            $fname = \basename($summaryPath);
+            echo "$fname: ";
+
+            if (\is_file($summaryPath)) {
+                echo "Already exists\n";
+            } else {
+                $allExists = false;
+                echo "Must be generated\n";
+            }
+        }
+
+        if ($allExists && \count($summaries) > 1) {
+            echo "Nothing to do!\n";
             return;
         }
+        $summaryName = \basename($summaryPath);
+
         \XMLLoader::of($ds)->convert();
-        \MongoImport::importCollections($ds, $collection);
+        \MongoImport::importDataset($ds);
         $doIt->execute();
         \clearstatcache();
     }
 
     public function execute()
     {
-        self::summarize($this->ds, $this->collection, $this->summaryType);
+        self::summarize($this->ds, $this->partition, $this->summaryType);
     }
 }

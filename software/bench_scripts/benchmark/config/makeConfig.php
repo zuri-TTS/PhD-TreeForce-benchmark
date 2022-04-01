@@ -1,6 +1,6 @@
 <?php
 
-function makeConfig(DataSet $dataSet, $collections, array &$cmdArg, array $javaProperties) //
+function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaProperties) //
 {
     $group = $dataSet->group();
     $rules = $dataSet->rules();
@@ -33,37 +33,53 @@ function makeConfig(DataSet $dataSet, $collections, array &$cmdArg, array $javaP
     $fsummary = function ($baseDir, $summPrefix, $summType) {
         return "$baseDir/{$summPrefix}summary-$summType.txt";
     };
+    $fpartition = function ($partition): string {
+        $range = $partition->getLogicalRange();
+        $range = implode('..', $range);
+        return $partition->getID() . ';' . $partition->getPrefix() . ";[$range]";
+    };
 
     if ($cmdArg['parallel']) {
 
-        if (! \is_array($collections))
-            throw new \Exception("In parallel mode \$collections must be an array; have $collections");
+        if (! \is_array($partitions))
+            throw new \Exception("In parallel mode \$collections must be an array; have $partitions");
 
         $cprefix = "";
         $javaCollection = [];
         $javaSummary = [];
+        $benchSummary = [];
         $javaToNativeSummary = [];
+        $javaPartition = [];
 
-        foreach ($collections as $coll) {
-            $collectionSuffix = \explode('.', $coll, 2)[1] ?? '';
-            $cprefix = empty($collectionSuffix) ? '' : "$collectionSuffix-";
+        foreach ($partitions as $partition) {
+            $partID = $partition->getID();
+            $cprefix = empty($partID) ? '' : "$partID-";
 
-            $javaCollection[] = $coll;
+            $javaCollection[] = $partition->getCollectionName();
             $javaSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
             $javaToNativeSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
+            $benchSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
 
-            $benchSummary = $benchToNativeSummary = '';
+            if ($partition->isLogical())
+                $javaPartition[] = $fpartition($partition);
+            else
+                $javaPartition[] = '';
         }
-        $outDirPattern = $outputDirGenerator($dataSet, '', $cmdArg, $javaProperties);
+        $benchToNativeSummary = '';
+        $outDirPattern = $outputDirGenerator($dataSet, \Data\NoPartitioning::noPartition(), $cmdArg, $javaProperties);
     } else {
 
-        if (! \is_scalar($collections))
-            throw new \Exception("In parallel mode \$collections must be scalar; have $collections");
+        if (! $partitions instanceof \Data\IPartition)
+            throw new \Exception("In sequential mode \$collections must be a \Data\IPartition; have " . print_r($partitions, true));
 
-        $collectionSuffix = \explode('.', $collections, 2)[1] ?? '';
-        $cprefix = empty($collectionSuffix) ? '' : "$collectionSuffix-";
+        $partition = $partitions;
 
-        $javaCollection = (string) $collections;
+        if ($partition->isLogical())
+            $javaPartition = $fpartition($partition);
+
+        $partID = $partition->getID();
+        $cprefix = empty($partID) ? '' : "$partID-";
+        $javaCollection = $partition->getCollectionName();
 
         if (empty($cmdArg['summary'])) {
             $javaSummary = '';
@@ -80,7 +96,7 @@ function makeConfig(DataSet $dataSet, $collections, array &$cmdArg, array $javaP
             $javaToNativeSummary = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
             $benchToNativeSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['toNative_summary']);
         }
-        $outDirPattern = $outputDirGenerator($dataSet, $javaCollection, $cmdArg, $javaProperties);
+        $outDirPattern = $outputDirGenerator($dataSet, $partition, $cmdArg, $javaProperties);
     }
 
     $javaProperties = array_merge([
@@ -121,6 +137,14 @@ function makeConfig(DataSet $dataSet, $collections, array &$cmdArg, array $javaP
     if ($cmdArg['parallel'] && $javaProperties['querying.mode'] === 'explain')
         $javaProperties['querying.mode'] = 'explaincolls';
 
+    // Note: for now only prefix partitions are presents
+    if (isset($javaPartition)) {
+        $javaProperties = \array_merge($javaProperties, [
+            'partition' => $javaPartition,
+            'partition.mode' => 'prefix',
+            'partition.output.pattern' => '${dataset.baseDir}/partition.%s.txt'
+        ]);
+    }
     // <<< >>>
 
     $gfrom = [
@@ -166,5 +190,6 @@ function makeConfig(DataSet $dataSet, $collections, array &$cmdArg, array $javaP
         $ret['java.properties'] = array_merge($ret['java.properties'], [
             'rules' => $dataSet->rulesPath()
         ]);
+
     return $ret;
 }

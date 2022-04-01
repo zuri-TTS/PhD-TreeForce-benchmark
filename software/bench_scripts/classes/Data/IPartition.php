@@ -9,4 +9,8 @@ interface IPartition
     function getCollectionName(): string;
 
     function contains(array $data): bool;
+
+    function isLogical(): bool;
+
+    function getLogicalRange(): ?array;
 }
