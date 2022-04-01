@@ -26,7 +26,7 @@ final class PrefixPartitioning implements IPartitioning
         $cname = \MongoImport::getCollectionName($ds);
 
         foreach ($this->partitionsPrefix as $name => $prefix) {
-            $ccname = $this->logical ? $cname : "$cname.$prefix";
+            $ccname = $this->logical ? $cname : "$cname.$name";
             $ret[] = self::createPartition($ds, $ccname, $name, $prefix, $this->logical);
         }
         return $ret;
