@@ -54,8 +54,9 @@ final class DoSummarize extends AbstractTest
             }
         }
 
-        if ($allExists && \count($summaries) > 1) {
-            echo "Nothing to do!\n";
+        if ($allExists) {
+            if (\count($summaries) > 1)
+                echo "Nothing to do!\n";
             return;
         }
         $summaryName = \basename($summaryPath);
