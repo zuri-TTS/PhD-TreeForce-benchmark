@@ -41,9 +41,13 @@ final class LogicalPrefixPartition extends LogicalPartition
 
     public function getLogicalRange(): array
     {
-        $fpath = $this->getRangeFilePath();
+        $dspath = $this->ds->path();
 
-        \wdPush($this->ds->path());
+        if (! \is_dir($dspath))
+            return [];
+
+        \wdPush($dspath);
+        $fpath = $this->getRangeFilePath();
 
         if (! \is_file($fpath))
             $ret = [];
