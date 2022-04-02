@@ -4,18 +4,22 @@ namespace Data;
 final class NoPartitioning implements IPartitioning
 {
 
-    private function __construct()
-    {}
+    private string $id;
+
+    function __construct(string $id)
+    {
+        $this->id = $id;
+    }
 
     public function getPartitionsOf(\DataSet $ds): array
     {
-        $partition = new class($ds) extends PhysicalPartition {
+        $partition = new class($ds, $this->id) extends PhysicalPartition {
 
             private string $cname;
 
-            function __construct(\DataSet $ds)
+            function __construct(\DataSet $ds, string $id)
             {
-                parent::__construct('');
+                parent::__construct($id);
                 $this->cname = \MongoImport::getCollectionName($ds);
             }
 
@@ -41,7 +45,7 @@ final class NoPartitioning implements IPartitioning
 
     public function getID(): string
     {
-        return '';
+        return $this->id;
     }
 
     public function getBaseDir(): string
@@ -49,9 +53,9 @@ final class NoPartitioning implements IPartitioning
         return '';
     }
 
-    public static function create(): IPartitioning
+    public static function create(string $id = ''): IPartitioning
     {
-        return new NoPartitioning();
+        return new NoPartitioning($id);
     }
 
     public static function noPartition(): IPartition

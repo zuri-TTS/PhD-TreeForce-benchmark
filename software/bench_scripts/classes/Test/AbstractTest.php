@@ -54,7 +54,7 @@ abstract class AbstractTest
         if (empty($this->collection))
             return;
         $this->xmlLoader->convert();
-        \MongoImport::importCollections($this->ds, $this->collection);
+        \MongoImport::importCollections($this->ds, $this->partition);
     }
 
     public final function reportErrors(?array $errors = null): void

@@ -49,7 +49,7 @@ final class DBLPLoader implements ILoader
 
     function getPartitioning(string $name = ''): IPartitioning
     {
-        return Loaders::getPartitioningWithLogical($name, self::partitions);
+        return Loaders::getPartitioningWithLogical($name, self::partitions, 'dblp');
     }
 
     private const unwind = [

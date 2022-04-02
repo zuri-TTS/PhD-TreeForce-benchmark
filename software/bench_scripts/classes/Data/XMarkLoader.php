@@ -46,7 +46,7 @@ final class XMarkLoader implements ILoader
 
     function getPartitioning(string $name = ''): IPartitioning
     {
-        return Loaders::getPartitioningWithLogical($name, self::partitioning);
+        return Loaders::getPartitioningWithLogical($name, self::partitioning, 'xmark');
     }
 
     private const unwind = [

@@ -9,10 +9,10 @@ final class Loaders
         throw new \Error();
     }
 
-    function getPartitioningWithLogical(string $name, array $partitioning): IPartitioning
+    function getPartitioningWithLogical(string $name, array $partitioning, string $defaultId = 'nopartition'): IPartitioning
     {
         if (empty($name))
-            return \Data\NoPartitioning::create();
+            return \Data\NoPartitioning::create($defaultId);
 
         if (\str_starts_with($name, 'L')) {
             $class = '\Data\LogicalPrefixPartitioning';
