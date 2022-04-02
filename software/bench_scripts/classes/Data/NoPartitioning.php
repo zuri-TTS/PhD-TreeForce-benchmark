@@ -4,12 +4,15 @@ namespace Data;
 final class NoPartitioning implements IPartitioning
 {
 
+    private string $id;
+
     private string $json;
 
     private ?ILogicalPartitioningFactory $logicalPFactory;
 
-    private function __construct(string $json, ?ILogicalPartitioningFactory $logicalPFactory = null)
+    private function __construct(string $id, string $json, ?ILogicalPartitioningFactory $logicalPFactory = null)
     {
+        $this->id = $id;
         $this->json = $json;
         $this->logicalPFactory = $logicalPFactory;
     }
@@ -54,7 +57,7 @@ final class NoPartitioning implements IPartitioning
 
     public function getID(): string
     {
-        return '';
+        return $this->id;
     }
 
     public function getBaseDir(): string
@@ -62,8 +65,8 @@ final class NoPartitioning implements IPartitioning
         return '';
     }
 
-    public static function create(string $json = '', ?ILogicalPartitioningFactory $logicalFactory = null): IPartitioning
+    public static function create(string $id, string $json = '', ?ILogicalPartitioningFactory $logicalFactory = null): IPartitioning
     {
-        return new NoPartitioning($json, $logicalFactory);
+        return new NoPartitioning($id, $json, $logicalFactory);
     }
 }

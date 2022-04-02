@@ -12,7 +12,7 @@ final class Loaders
     function getPartitioningWithLogical(string $name, array $partitioning, string $defaultJson = 'nopartition'): IPartitioning
     {
         if (empty($name))
-            return NoPartitioning::create($defaultJson);
+            return NoPartitioning::create('', $defaultJson);
 
         $isLogical = \str_starts_with($name, 'L');
 
@@ -30,7 +30,7 @@ final class Loaders
 
         if ($isLogical) {
             $logicalPartitioning = LogicalPrefixPartitioning::createFactory($name, $baseDir, $partitionPrefix);
-            return NoPartitioning::create($defaultJson, $logicalPartitioning);
+            return NoPartitioning::create($name, $defaultJson, $logicalPartitioning);
         } else
             return PrefixPartitioning::create($id, $baseDir, $partitionPrefix);
     }
