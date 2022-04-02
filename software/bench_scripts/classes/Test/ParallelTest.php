@@ -10,7 +10,7 @@ final class ParallelTest extends AbstractTest
 
     public function __construct(\DataSet $ds, array $partitions, CmdArgs $cmdParser)
     {
-        parent::__construct($ds, \Data\NoPartitioning::noPartition(), $cmdParser);
+        parent::__construct($ds, \Data\Partitions::noPartition(), $cmdParser);
 
         $parsed = $this->cmdParser->parsed();
         $args = &$parsed['args'];

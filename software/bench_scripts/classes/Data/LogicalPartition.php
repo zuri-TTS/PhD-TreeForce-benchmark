@@ -22,4 +22,6 @@ abstract class LogicalPartition implements IPartition
     }
 
     abstract function getLogicalRange(): array;
+
+    abstract function getPhysicalParent(): PhysicalPartition;
 }

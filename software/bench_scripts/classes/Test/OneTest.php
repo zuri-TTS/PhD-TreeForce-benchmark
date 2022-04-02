@@ -12,6 +12,8 @@ final class OneTest extends AbstractTest
 
     private bool $needDatabase = false;
 
+    private bool $needNativeSummary = false;
+
     private bool $needSummary = false;
 
     private bool $displayHeader = true;
@@ -28,8 +30,19 @@ final class OneTest extends AbstractTest
 
         $this->doonce = $args['doonce'];
 
-        if ($args['cmd'] === 'generate')
+        if (\in_array($args['cmd'], [
+            'partition'
+        ])) {
+            $this->needNativeSummary = true;
+        }
+
+        if (\in_array($args['cmd'], [
+            'generate',
+            'querying'
+        ])) {
             $this->needSummary = true;
+            $this->needNativeSummary = true;
+        }
 
         if (\in_array($args['cmd'], [
             'generate',
@@ -108,6 +121,7 @@ final class OneTest extends AbstractTest
     private function preProcess()
     {
         $args = $this->args;
+        $testConfig = $this->testConfig;
 
         if ($this->needDatabase) {
             $collExists = $this->collectionExists();
@@ -127,26 +141,38 @@ final class OneTest extends AbstractTest
             if (! $collExists)
                 throw new \Exception("The collection treeforce.$this->collection must exists in the database");
         }
-        if ($this->needDatabase || $this->needSummary) {
-            $cmdSummarize = $args['cmd'] === 'summarize';
 
-            if (! $cmdSummarize) {
-                $this->ensureSummary($args['summary']);
-                $this->ensureSummary((string) $args['toNative_summary']);
-                $this->checkSummary($this->testConfig['toNative.summary']);
+        if ($this->needNativeSummary) {
+            $partition = $this->partition;
 
-                foreach ((array) $this->testConfig['summary'] as $summary)
-                    $this->checkSummary($summary);
-            }
+            if ($this->args['cmd'] === 'partition')
+                $partition = $partition->getPhysicalParent();
+
+            $this->ensureSummary((string) $args['toNative_summary'], $partition);
+            $this->checkSummary($this->testConfig['toNative.summary']);
+        }
+        if ($this->needSummary) {
+            $this->ensureSummary($args['summary'], $this->partition);
+
+            foreach ((array) $this->testConfig['summary'] as $summary)
+                $this->checkSummary($summary);
         }
     }
 
-    private function ensureSummary(string $type): void
+    private function ensurePartition(string $partition): void
     {
         if (empty($type))
             return;
 
         DoSummarize::summarize($this->ds, $this->partition, $type);
+    }
+
+    private function ensureSummary(string $summary, \Data\IPartition $partition): void
+    {
+        if (empty($summary))
+            return;
+
+        DoSummarize::summarize($this->ds, $partition, $summary);
     }
 
     private function checkSummary(string $path): void

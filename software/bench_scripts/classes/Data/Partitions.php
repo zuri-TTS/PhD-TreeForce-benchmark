@@ -38,4 +38,35 @@ final class Partitions
         // Error
         return null;
     }
+
+    public static function noPartition(): IPartition
+    {
+        return new class() implements IPartition {
+
+            function getID(): string
+            {
+                return '';
+            }
+
+            function getCollectionName(): string
+            {
+                return '';
+            }
+
+            function contains(array $data): bool
+            {
+                return false;
+            }
+
+            function isLogical(): bool
+            {
+                return true;
+            }
+
+            function getLogicalRange(): ?array
+            {
+                return null;
+            }
+        };
+    }
 }

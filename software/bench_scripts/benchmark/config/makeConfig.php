@@ -35,8 +35,14 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
     };
     $fpartition = function ($partition): string {
         $range = $partition->getLogicalRange();
-        $range = implode('..', $range);
-        return $partition->getID() . ';' . $partition->getPrefix() . ";[$range]";
+
+        if (empty($range))
+            $range = '';
+        else {
+            $range = implode('..', $range);
+            $range = ";[$range]";
+        }
+        return $partition->getID() . ';' . $partition->getPrefix() . $range;
     };
 
     if ($cmdArg['parallel']) {
@@ -66,7 +72,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
                 $javaPartition[] = '';
         }
         $benchToNativeSummary = '';
-        $outDirPattern = $outputDirGenerator($dataSet, \Data\NoPartitioning::noPartition(), $cmdArg, $javaProperties);
+        $outDirPattern = $outputDirGenerator($dataSet, \Data\Partitions::noPartition(), $cmdArg, $javaProperties);
     } else {
 
         if (! $partitions instanceof \Data\IPartition)
@@ -89,7 +95,10 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
         }
 
-        if (empty($cmdArg['toNative_summary'])) {
+        if ($cmd === 'partition') {
+            $javaToNativeSummary = $fsummary('${dataset.baseDir}', '', '${toNative.summary.type}');
+            $benchToNativeSummary = $fsummary($dataSetPath, '', $cmdArg['toNative_summary']);
+        } elseif (empty($cmdArg['toNative_summary'])) {
             $javaToNativeSummary = '';
             $benchToNativeSummary = '';
         } else {

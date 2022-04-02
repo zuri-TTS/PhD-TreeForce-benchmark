@@ -184,7 +184,7 @@ final class MongoImport
 
         foreach ($partitions as $partition) {
             $collectionName = $partition->getCollectionName();
-            $jsonFile = "{$partition->getID()}.json";
+            $jsonFile = $partition->getJsonFile();
 
             if (self::collectionExists($collectionName)) {
                 echo "$collectionName: already exists\n";

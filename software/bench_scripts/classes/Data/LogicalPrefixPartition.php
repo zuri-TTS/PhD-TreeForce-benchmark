@@ -4,6 +4,8 @@ namespace Data;
 final class LogicalPrefixPartition extends LogicalPartition
 {
 
+    private PhysicalPartition $parent;
+
     private \DataSet $ds;
 
     private string $prefix_s;
@@ -12,13 +14,19 @@ final class LogicalPrefixPartition extends LogicalPartition
 
     private string $cname;
 
-    public function __construct(\DataSet $ds, string $collectionName, string $id, string $prefix)
+    public function __construct(PhysicalPartition $parent, \DataSet $ds, string $collectionName, string $id, string $prefix)
     {
         parent::__construct($id);
         $this->ds = $ds;
         $this->cname = $collectionName;
         $this->prefix = \explode('.', $prefix);
         $this->prefix_s = $prefix;
+        $this->parent = $parent;
+    }
+
+    public function getPhysicalParent(): PhysicalPartition
+    {
+        return $this->parent;
     }
 
     public function getPrefix(): string

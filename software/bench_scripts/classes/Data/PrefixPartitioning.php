@@ -1,23 +1,15 @@
 <?php
 namespace Data;
 
-final class PrefixPartitioning implements IPartitioning
+final class PrefixPartitioning extends AbstractPartitioning
 {
 
     private array $partitionsPrefix;
 
-    private string $id;
-
-    private string $baseDir;
-
-    private bool $logical;
-
-    private function __construct(string $id, string $baseDir, array $partitionsPrefix, bool $logical)
+    private function __construct(string $id, string $baseDir, array $partitionsPrefix)
     {
-        $this->id = $id;
-        $this->baseDir = $baseDir;
+        parent::__construct($id, $baseDir);
         $this->partitionsPrefix = $partitionsPrefix;
-        $this->logical = $logical;
     }
 
     public function getPartitionsOf(\DataSet $ds): array
@@ -26,30 +18,15 @@ final class PrefixPartitioning implements IPartitioning
         $cname = \MongoImport::getCollectionName($ds);
 
         foreach ($this->partitionsPrefix as $name => $prefix) {
-            $ccname = $this->logical ? $cname : "$cname.$name";
-            $ret[] = self::createPartition($ds, $ccname, $name, $prefix, $this->logical);
+            $ccname = "$cname.$name";
+            $ret[] = new PrefixPartition($ds, $ccname, $name, $prefix);
         }
         return $ret;
     }
 
-    public function getID(): string
+    // ========================================================================
+    public static function create(string $id, string $baseDir, array $partitionsPrefix): IPartitioning
     {
-        return $this->id;
-    }
-
-    public function getBaseDir(): string
-    {
-        return $this->baseDir;
-    }
-
-    public static function create(string $id, string $baseDir, array $partitionsPrefix, bool $logical = false): IPartitioning
-    {
-        return new PrefixPartitioning($id, $baseDir, $partitionsPrefix, $logical);
-    }
-
-    private static function createPartition(\DataSet $ds, string $collectionName, string $id, string $prefix, bool $logical = false)
-    {
-        $classPartition = '\\Data\\' . ($logical ? 'LogicalPrefixPartition' : 'PrefixPartition');
-        return new $classPartition($ds, $collectionName, $id, $prefix, $logical);
+        return new PrefixPartitioning($id, $baseDir, $partitionsPrefix);
     }
 }

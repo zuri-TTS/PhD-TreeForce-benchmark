@@ -4,23 +4,29 @@ namespace Data;
 final class NoPartitioning implements IPartitioning
 {
 
-    private string $id;
+    private string $json;
 
-    function __construct(string $id)
+    private ?ILogicalPartitioningFactory $logicalPFactory;
+
+    private function __construct(string $json, ?ILogicalPartitioningFactory $logicalPFactory = null)
     {
-        $this->id = $id;
+        $this->json = $json;
+        $this->logicalPFactory = $logicalPFactory;
     }
 
     public function getPartitionsOf(\DataSet $ds): array
     {
-        $partition = new class($ds, $this->id) extends PhysicalPartition {
+        $partition = new class($ds, $this->json, $this->logicalPFactory) extends PhysicalPartition {
 
             private string $cname;
 
-            function __construct(\DataSet $ds, string $id)
+            private ?IPartitioning $logical;
+
+            function __construct(\DataSet $ds, string $json, ?ILogicalPartitioningFactory $logical)
             {
-                parent::__construct($id);
+                parent::__construct('', $json);
                 $this->cname = \MongoImport::getCollectionName($ds);
+                $this->logicalPFactory = $logical;
             }
 
             function getCollectionName(): string
@@ -28,9 +34,12 @@ final class NoPartitioning implements IPartitioning
                 return $this->cname;
             }
 
-            function getLogicalPartitioning(): IPartitioning
+            function getLogicalPartitioning(): ?IPartitioning
             {
-                return $this;
+                if (null === $this->logicalPFactory)
+                    return null;
+
+                return $this->logicalPFactory->create($this);
             }
 
             function contains(array $data): bool
@@ -45,7 +54,7 @@ final class NoPartitioning implements IPartitioning
 
     public function getID(): string
     {
-        return $this->id;
+        return '';
     }
 
     public function getBaseDir(): string
@@ -53,39 +62,8 @@ final class NoPartitioning implements IPartitioning
         return '';
     }
 
-    public static function create(string $id = ''): IPartitioning
+    public static function create(string $json = '', ?ILogicalPartitioningFactory $logicalFactory = null): IPartitioning
     {
-        return new NoPartitioning($id);
-    }
-
-    public static function noPartition(): IPartition
-    {
-        return new class() implements IPartition {
-
-            function getID(): string
-            {
-                return '';
-            }
-
-            function getCollectionName(): string
-            {
-                return '';
-            }
-
-            function contains(array $data): bool
-            {
-                return false;
-            }
-
-            function isLogical(): bool
-            {
-                return true;
-            }
-
-            function getLogicalRange(): ?array
-            {
-                return null;
-            }
-        };
+        return new NoPartitioning($json, $logicalFactory);
     }
 }

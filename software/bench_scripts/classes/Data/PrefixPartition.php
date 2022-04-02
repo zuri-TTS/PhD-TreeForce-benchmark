@@ -24,11 +24,6 @@ final class PrefixPartition extends PhysicalPartition
         return $this->prefix_s;
     }
 
-    public function getLogicalPartitioning(): ?IPartitioning
-    {
-        return null;
-    }
-
     public function getCollectionName(): string
     {
         return $this->cname;

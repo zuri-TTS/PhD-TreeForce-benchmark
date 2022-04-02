@@ -9,23 +9,29 @@ final class Loaders
         throw new \Error();
     }
 
-    function getPartitioningWithLogical(string $name, array $partitioning, string $defaultId = 'nopartition'): IPartitioning
+    function getPartitioningWithLogical(string $name, array $partitioning, string $defaultJson = 'nopartition'): IPartitioning
     {
         if (empty($name))
-            return \Data\NoPartitioning::create($defaultId);
+            return NoPartitioning::create($defaultJson);
 
-        if (\str_starts_with($name, 'L')) {
-            $class = '\Data\LogicalPrefixPartitioning';
+        $isLogical = \str_starts_with($name, 'L');
+
+        if ($isLogical) {
             $id = $name;
             $baseDir = \substr($name, 1);
         } else {
-            $class = '\Data\PrefixPartitioning';
             $id = $baseDir = $name;
         }
 
         if (! \array_key_exists($baseDir, $partitioning))
             throw new \Exception(__CLASS__ . ": invalid partition '$baseDir'; must be one of [" . \implode(',', \array_keys($partitioning)) . "]");
 
-        return $class::create($id, $baseDir, $partitioning[$baseDir]);
+        $partitionPrefix = $partitioning[$baseDir];
+
+        if ($isLogical) {
+            $logicalPartitioning = LogicalPrefixPartitioning::createFactory($name, $baseDir, $partitionPrefix);
+            return NoPartitioning::create($defaultJson, $logicalPartitioning);
+        } else
+            return PrefixPartitioning::create($id, $baseDir, $partitionPrefix);
     }
 }

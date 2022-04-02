@@ -120,8 +120,9 @@ final class XMLLoader
             \wdPush($dataSet->path());
 
             foreach ($dataSet->getPartitions() as $partition) {
-                $name = $partition->getID();
-                $fp[$name] = \fopen("$name.json", 'w');
+                $pid = $partition->getID();
+                $jsonFile = $partition->getJsonFile();
+                $fp[$pid] = \fopen($jsonFile, 'w');
             }
             \wdPop();
 

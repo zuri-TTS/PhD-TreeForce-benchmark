@@ -1,22 +1,17 @@
 <?php
 namespace Data;
 
-final class LogicalPrefixPartitioning implements IPartitioning
+final class LogicalPrefixPartitioning extends AbstractPartitioning
 {
 
-    private object $noPrefix;
+    private PhysicalPartition $parent;
 
     private array $partitionsPrefix;
 
-    private string $id;
-
-    private string $baseDir;
-
-    private function __construct(string $id, string $baseDir, array $partitionsPrefix)
+    public function __construct(PhysicalPartition $parent, string $id, string $baseDir, array $partitionsPrefix)
     {
-        $this->id = $id;
-        $this->baseDir = $baseDir;
-        $this->noPrefix = (object) null;
+        parent::__construct($id, $baseDir);
+        $this->parent = $parent;
         $this->partitionsPrefix = $partitionsPrefix;
     }
 
@@ -25,52 +20,28 @@ final class LogicalPrefixPartitioning implements IPartitioning
         $ret = [];
         $cname = \MongoImport::getCollectionName($ds);
 
-        $ret[] = new class($ds, $this->id, $cname, $this->partitionsPrefix) extends PhysicalPartition {
+        foreach ($this->partitionsPrefix as $name => $prefix) {
+            $ret[] = new LogicalPrefixPartition($this->parent, $ds, $cname, $name, $prefix);
+        }
+        return $ret;
+    }
 
-            private array $partitionsPrefix;
+    // ========================================================================
+    public static function createFactory(string $id, string $baseDir, array $partitionsPrefix): ILogicalPartitioningFactory
+    {
+        return new class($id, $baseDir, $partitionsPrefix) implements ILogicalPartitioningFactory {
 
-            private string $cname;
-
-            private \DataSet $ds;
-
-            function __construct(\DataSet $ds, string $id, string $cname, array $partitionsPrefix)
+            function __construct($id, $baseDir, $partitionsPrefix)
             {
-                parent::__construct($id);
-                $this->ds = $ds;
-                $this->cname = $cname;
+                $this->id = $id;
+                $this->baseDir = $baseDir;
                 $this->partitionsPrefix = $partitionsPrefix;
             }
 
-            function getLogicalPartitioning(): IPartitioning
+            function create(PhysicalPartition $parent): IPartitioning
             {
-                return PrefixPartitioning::create($this->ds, '', $this->partitionsPrefix, true);
-            }
-
-            function getCollectionName(): string
-            {
-                return $this->cname;
-            }
-
-            function contains(array $data): bool
-            {
-                return true;
+                return new LogicalPrefixPartitioning($parent, $this->id, $this->baseDir, $this->partitionsPrefix);
             }
         };
-        return $ret;
-    }
-    
-    public function getID(): string
-    {
-        return $this->id;
-    }
-
-    public function getBaseDir(): string
-    {
-        return $this->baseDir;
-    }
-
-    public static function create(string $id, string $baseDir, array $partitionsPrefix): IPartitioning
-    {
-        return new LogicalPrefixPartitioning($id, $baseDir, $partitionsPrefix);
     }
 }
