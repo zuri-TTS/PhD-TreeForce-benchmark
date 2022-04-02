@@ -95,10 +95,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
         }
 
-        if ($cmd === 'partition') {
-            $javaToNativeSummary = $fsummary('${dataset.baseDir}', '', '${toNative.summary.type}');
-            $benchToNativeSummary = $fsummary($dataSetPath, '', $cmdArg['toNative_summary']);
-        } elseif (empty($cmdArg['toNative_summary'])) {
+            if (empty($cmdArg['toNative_summary'])) {
             $javaToNativeSummary = '';
             $benchToNativeSummary = '';
         } else {

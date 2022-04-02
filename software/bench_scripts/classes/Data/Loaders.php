@@ -29,8 +29,7 @@ final class Loaders
         $partitionPrefix = $partitioning[$baseDir];
 
         if ($isLogical) {
-            $logicalPartitioning = LogicalPrefixPartitioning::createFactory($name, $baseDir, $partitionPrefix);
-            return NoPartitioning::create($name, $defaultJson, $logicalPartitioning);
+            return PrefixPartitioning::oneCollection($id, $baseDir, $partitionPrefix);
         } else
             return PrefixPartitioning::create($id, $baseDir, $partitionPrefix);
     }

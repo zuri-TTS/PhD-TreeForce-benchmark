@@ -75,7 +75,7 @@ while (! empty($argv)) {
             $converter->convert();
 
         if ($cmdParsed['load'])
-            \array_walk($dataSets, 'MongoImport::importDataSet');
+            $converter->load($dataSets);
 
         if ($cmdParsed['post-clean'] || $cmdParsed['post-clean-all'])
             $converter->clean();

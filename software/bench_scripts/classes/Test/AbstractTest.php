@@ -54,6 +54,7 @@ abstract class AbstractTest
         if (empty($this->collection))
             return;
         $this->xmlLoader->convert();
+        // Load only one collection
         \MongoImport::importCollections($this->ds, $this->collection);
     }
 

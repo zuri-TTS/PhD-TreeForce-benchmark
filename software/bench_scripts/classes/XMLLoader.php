@@ -19,8 +19,6 @@ final class XMLLoader
 
     private array $summary;
 
-    private int $_id = 1;
-
     private int $summaryDepth;
 
     private bool $summarize;
@@ -116,27 +114,36 @@ final class XMLLoader
             if ($exists && (! $this->summarize || $this->summaryExists($dataSet)))
                 return $dataSet;
 
+            $i = 0;
+            $partition_i = new SplObjectStorage();
             $fp = [];
+            $nb_a = [];
+            $i_a = [];
             \wdPush($dataSet->path());
 
             foreach ($dataSet->getPartitions() as $partition) {
-                $pid = $partition->getID();
                 $jsonFile = $partition->getJsonFile();
-                $fp[$pid] = \fopen($jsonFile, 'w');
+                $partition_i[$partition] = $i ++;
+                $fp[] = \fopen($jsonFile, 'w');
+                $nb_a[] = 0;
+                $i_a[] = 0;
             }
             \wdPop();
 
             return [
-
                 'randomize' => $this->groupLoader->getLabelReplacerForDataSet($dataSet) ?? fn ($data) => $data,
                 'simplify' => $dataSet->isSimplified(),
                 'path' => $path,
                 'dataset' => $dataSet,
-                'fp' => $fp
+                'pindex' => $partition_i,
+                'fp' => $fp,
+                'nbDocuments' => $nb_a,
+                'offsets' => $i_a
             ];
         }, $this->dataSets);
 
         list ($this->filesData, $this->dataSets_exists) = \array_partition($filesData, '\is_array');
+        $readStats = false;
 
         foreach ($this->filesData as $f) {
 
@@ -144,6 +151,23 @@ final class XMLLoader
 
             if (! \is_dir($f['path']))
                 \mkdir($f['path']);
+
+            if (\count($f['fp']) > 1)
+                $readStats = true;
+        }
+
+        if ($readStats) {
+            $this->readStats($this->groupLoader->getXMLReader());
+
+            foreach ($this->filesData as &$f) {
+                $total = $f['nbDocuments'][0];
+
+                for ($i = 1, $c = \count($f['fp']); $i < $c; $i ++) {
+
+                    $f['offsets'][$i] = $total;
+                    $total += $f['nbDocuments'][$i];
+                }
+            }
         }
     }
 
@@ -173,6 +197,22 @@ final class XMLLoader
             }
         }
         \printPHPFile("$this->groupPath/stats.php", $this->stats);
+    }
+
+    // ========================================================================
+    public function load()
+    {
+        $dataSets = $this->dataSets;
+        $ignoreCollections = [];
+
+        foreach ($dataSets as $ds) {
+            $colls = $ds->getCollections();
+
+            foreach ($colls as $c)
+                $ignoreCollections[$c] = MongoImport::collectionExists($c);
+        }
+        foreach ($dataSets as $ds)
+            MongoImport::importDataSet($ds, $ignoreCollections);
     }
 
     // ========================================================================
@@ -251,6 +291,15 @@ final class XMLLoader
         return \count($ret) === 1 ? $ret[0] : null;
     }
 
+    private bool $readStats = false;
+
+    private function readStats(XMLReader $reader): void
+    {
+        $this->readStats = true;
+        $this->read($reader);
+        $this->readStats = false;
+    }
+
     private function read(XMLReader $reader): void
     {
         $path = &$this->path;
@@ -270,7 +319,10 @@ final class XMLLoader
                     if (null === $u)
                         break;
 
-                    echo "Unwinding $u\n";
+                    if ($this->readStats)
+                        echo "Stats for $u\n";
+                    else
+                        echo "Unwinding $u\n";
 
                     $reader->read();
                     $u_a = explode('.', $u);
@@ -348,12 +400,12 @@ final class XMLLoader
         $data = self::array_path($this->path, [
             $name => $destVal
         ]);
-        $data['_id'] = $this->_id ++;
+
         $this->doSimplifyText($data);
         $this->stats['documents.nb'] ++;
         $dataSimple = null;
 
-        foreach ($this->filesData as $d => $fileData) {
+        foreach ($this->filesData as &$fileData) {
             $postProcess = $fileData['randomize'];
             $data2 = $data;
 
@@ -369,16 +421,31 @@ final class XMLLoader
             if (isset($postProcess))
                 $data2 = $postProcess($data2);
 
-            $this->writeFinalJson($data2, $fileData);
+            if ($this->readStats)
+                $this->updateStats($data2, $fileData);
+            else
+                $this->writeFinal($data2, $fileData);
         }
     }
 
-    private function writeFinalJson(array $data, array $fileData)
+    private function updateStats(array $data, array &$fileData): void
     {
         $partition = \Data\Partitions::getPartitionForData($fileData['dataset']->getPartitions(), $data);
-        $fp = $fileData['fp'][$partition->getID()];
+        $i = $fileData['pindex'][$partition];
+        $fileData['nbDocuments'][$i] ++;
+    }
 
-        \fwrite($fp, \json_encode($data) . "\n");
+    private function writeFinal(array $data, array &$fileData): void
+    {
+        $partition = \Data\Partitions::getPartitionForData($fileData['dataset']->getPartitions(), $data);
+        $i = $fileData['pindex'][$partition];
+
+        $fp = $fileData['fp'][$i];
+        $id = ++ $fileData['offsets'][$i];
+        $id = [
+            '_id' => $id
+        ];
+        \fwrite($fp, \json_encode($id + $data) . "\n");
     }
 
     // ========================================================================

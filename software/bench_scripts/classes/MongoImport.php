@@ -153,16 +153,21 @@ final class MongoImport
         return self::$collections_cache = \json_decode($output);
     }
 
-    public static function importDataSet(DataSet $dataSet): void
+    public static function importDataSet(DataSet $dataSet, array $ignoreCollections = []): void
     {
         DataSets::checkNotExists([
             $dataSet
         ]);
-        self::importCollections($dataSet, ...$dataSet->getCollections());
+        self::importCollections($dataSet, $dataSet->getCollections(), $ignoreCollections);
     }
 
-    public static function importCollections(DataSet $dataSet, string ...$collections): void
+    public static function importCollections(DataSet $dataSet, $collections, array $ignoreCollections = []): void
     {
+        if (! \is_array($collections))
+            $collections = [
+                $collections
+            ];
+
         DataSets::checkNotExists([
             $dataSet
         ]);
@@ -186,7 +191,7 @@ final class MongoImport
             $collectionName = $partition->getCollectionName();
             $jsonFile = $partition->getJsonFile();
 
-            if (self::collectionExists($collectionName)) {
+            if ($ignoreCollections[$collectionName] ?? self::collectionExists($collectionName)) {
                 echo "$collectionName: already exists\n";
                 continue;
             }

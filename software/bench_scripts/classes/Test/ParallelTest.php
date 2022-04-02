@@ -39,6 +39,12 @@ final class ParallelTest extends AbstractTest
 
     public function execute()
     {
+        {
+            $xmlLoader = \XMLLoader::of($this->ds);
+            $xmlLoader->convert();
+            $xmlLoader->load();
+        }
+
         $header = \str_repeat('=', \strlen((string) $this->ds));
         echo "\n$header\nPARALLEL TEST\n$this->ds\n";
 

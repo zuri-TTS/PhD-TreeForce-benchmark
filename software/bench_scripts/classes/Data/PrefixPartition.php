@@ -10,9 +10,9 @@ final class PrefixPartition extends PhysicalPartition
 
     private string $cname;
 
-    public function __construct(\DataSet $ds, string $collectionName, string $id, string $prefix)
+    public function __construct(\DataSet $ds, string $collectionName, string $id, string $prefix, ?IPartitioning $logical = null)
     {
-        parent::__construct($id);
+        parent::__construct($id, '', $logical);
         $this->cname = $collectionName;
 
         $this->prefix = \explode('.', $prefix);

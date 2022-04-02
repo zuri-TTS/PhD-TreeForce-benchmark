@@ -93,7 +93,15 @@ final class DataSets
         if (empty($ids))
             $ids = (array) '';
 
-        return \array_map_merge(fn ($k) => DataSets::one($k), $ids);
+        return \array_map_merge(function ($k) {
+
+            if ($k instanceof DataSet)
+                return [
+                    $k
+                ];
+
+            return DataSets::one($k);
+        }, $ids);
     }
 
     private static function one(string $id): array

@@ -10,10 +10,15 @@ abstract class PhysicalPartition implements IPartition
 
     private ?IPartitioning $logical;
 
-    protected function __construct(string $id, string $json = '', ?Ipartitioning $logical = null)
+    protected function __construct(string $id, string $json = '', ?IPartitioning $logical = null)
     {
         $this->id = $id;
         $this->json = empty($json) ? "$id.json" : "$json.json";
+        $this->logical = $logical;
+    }
+
+    public function setLogicalPartitioning(?IPartitioning $logical)
+    {
         $this->logical = $logical;
     }
 

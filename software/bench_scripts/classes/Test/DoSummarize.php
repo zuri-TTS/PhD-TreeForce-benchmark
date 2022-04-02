@@ -21,7 +21,6 @@ final class DoSummarize extends AbstractTest
     public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType): void
     {
         $summArgs = [
-            $ds->id(),
             'cmd' => 'summarize',
             'skip-existing' => true,
             'generate-dataset' => false,
@@ -61,8 +60,9 @@ final class DoSummarize extends AbstractTest
         }
         $summaryName = \basename($summaryPath);
 
-        \XMLLoader::of($ds)->convert();
-        \MongoImport::importDataset($ds);
+        $xmlLoader = \XMLLoader::of($ds);
+        $xmlLoader->convert();
+        $xmlLoader->load();
         $doIt->execute();
         \clearstatcache();
     }
