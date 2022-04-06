@@ -443,7 +443,8 @@ final class XMLLoader
         $fp = $fileData['fp'][$i];
         $id = ++ $fileData['offsets'][$i];
         $id = [
-            '_id' => $id
+            '_id' => $id,
+            'pid' => $i,
         ];
         \fwrite($fp, \json_encode($id + $data) . "\n");
     }
