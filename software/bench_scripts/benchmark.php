@@ -15,9 +15,7 @@ while (! empty($argv)) {
     $parallelTest = $parsed['args']['parallel'];
     $cmd = $parsed['args']['cmd'];
 
-    if (! empty($parsed['args']['partitioning']))
-        $testClass = '\Test\DoPartitioning';
-    elseif ($cmd === 'summarize')
+    if ($cmd === 'summarize')
         $testClass = '\Test\DoSummarize';
     elseif ($parallelTest)
         $testClass = '\Test\ParallelTest';
