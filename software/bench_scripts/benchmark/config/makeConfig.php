@@ -56,6 +56,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         $benchSummary = [];
         $javaToNativeSummary = [];
         $javaPartition = [];
+        $benchPartition = [];
 
         foreach ($partitions as $partition) {
             $partID = $partition->getID();
@@ -66,9 +67,10 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             $javaToNativeSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
             $benchSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
 
-            if ($partition->isLogical())
+            if ($partition->isLogical()) {
                 $javaPartition[] = $fpartition($partition);
-            else
+                $benchPartition[] = $partition;
+            } else
                 $javaPartition[] = '';
         }
         $benchToNativeSummary = '';
@@ -79,9 +81,12 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             throw new \Exception("In sequential mode \$collections must be a \Data\IPartition; have " . print_r($partitions, true));
 
         $partition = $partitions;
+        $benchPartition = [];
 
-        if ($partition->isLogical())
+        if ($partition->isLogical()) {
             $javaPartition = $fpartition($partition);
+            $benchPartition = $partition;
+        }
 
         $partID = $partition->getID();
         $cprefix = empty($partID) ? '' : "$partID-";
@@ -95,7 +100,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
         }
 
-            if (empty($cmdArg['toNative_summary'])) {
+        if (empty($cmdArg['toNative_summary'])) {
             $javaToNativeSummary = '';
             $benchToNativeSummary = '';
         } else {
@@ -145,10 +150,11 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     // Note: for now only prefix partitions are presents
     if (isset($javaPartition)) {
+        $pattern = \Data\AbstractPartition::filePattern();
         $javaProperties = \array_merge($javaProperties, [
             'partition' => $javaPartition,
             'partition.mode' => 'prefix',
-            'partition.output.pattern' => '${dataset.baseDir}/partition.%s.txt'
+            'partition.output.pattern' => "\${dataset.baseDir}/$pattern"
         ]);
     }
     // <<< >>>
@@ -181,6 +187,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         'bench.query.native.pattern' => $hasNative ? "$dataSetPath/queries/%s_each-native-$native.txt" : '',
         'bench.cold' => $cold,
         'dataSet' => $dataSet,
+        'partition' => $benchPartition,
         'summary' => $benchSummary,
         'toNative.summary' => $benchToNativeSummary,
         'test.existing' => $test_existing,

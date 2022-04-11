@@ -1,10 +1,8 @@
 <?php
 namespace Data;
 
-abstract class PhysicalPartition implements IPartition
+abstract class PhysicalPartition extends AbstractPartition
 {
-
-    private string $id;
 
     private string $json;
 
@@ -12,7 +10,7 @@ abstract class PhysicalPartition implements IPartition
 
     protected function __construct(string $id, string $json = '', ?IPartitioning $logical = null)
     {
-        $this->id = $id;
+        parent::__construct($id);
         $this->json = empty($json) ? "$id.json" : "$json.json";
         $this->logical = $logical;
     }
@@ -20,11 +18,6 @@ abstract class PhysicalPartition implements IPartition
     public function setLogicalPartitioning(?IPartitioning $logical)
     {
         $this->logical = $logical;
-    }
-
-    public function getID(): string
-    {
-        return $this->id;
     }
 
     public function getJsonFile(): string

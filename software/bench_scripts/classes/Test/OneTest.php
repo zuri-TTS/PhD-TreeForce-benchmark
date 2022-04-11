@@ -14,6 +14,8 @@ final class OneTest extends AbstractTest
 
     private bool $needNativeSummary = false;
 
+    private bool $needPartition = false;
+
     private bool $needSummary = false;
 
     private bool $displayHeader = true;
@@ -42,6 +44,7 @@ final class OneTest extends AbstractTest
         ])) {
             $this->needSummary = true;
             $this->needNativeSummary = true;
+            $this->needPartition = true;
         }
 
         if (\in_array($args['cmd'], [
@@ -157,14 +160,42 @@ final class OneTest extends AbstractTest
             foreach ((array) $this->testConfig['summary'] as $summary)
                 $this->checkSummary($summary);
         }
+        if ($this->needPartition) {
+            $lpartitions = \ensureArray($this->testConfig['partition']);
+            $this->ensurePartition();
+            $this->checkPartition($lpartitions);
+        }
     }
 
-    private function ensurePartition(string $partition): void
+    private function checkPartition(array $lpartitions): void
     {
-        if (empty($type))
-            return;
+        foreach ($lpartitions as $lpart) {
 
-        DoSummarize::summarize($this->ds, $this->partition, $type);
+            if (! $lpart->fileExists($this->ds)) {
+                $path = $lpart->filePath($this->ds);
+                throw new \Exception("The partition file $path must exists");
+            }
+        }
+    }
+
+    private function ensurePartition(): void
+    {
+        $summArgs = [
+            $this->ds,
+            'cmd' => 'partition',
+            'skip-existing' => true,
+            'generate-dataset' => false,
+            'clean-db' => false,
+            'output' => \sys_get_temp_dir(),
+            'plot' => false,
+            'doonce' => true,
+            'forget-results' => true
+        ];
+        $doItParser = CmdArgs::default();
+        $doItParser->parse($summArgs);
+        $doIt = new OneTest($this->ds, $this->partition, $doItParser);
+        $doIt->setDisplayHeader(false);
+        $doIt->execute();
     }
 
     private function ensureSummary(string $summary, \Data\IPartition $partition): void

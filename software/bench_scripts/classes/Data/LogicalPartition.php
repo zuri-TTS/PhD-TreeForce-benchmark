@@ -1,19 +1,12 @@
 <?php
 namespace Data;
 
-abstract class LogicalPartition implements IPartition
+abstract class LogicalPartition extends AbstractPartition
 {
-
-    private string $id;
 
     protected function __construct(string $id)
     {
-        $this->id = $id;
-    }
-
-    public function getID(): string
-    {
-        return $this->id;
+        parent::__construct($id);
     }
 
     public function isLogical(): bool

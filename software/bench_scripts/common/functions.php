@@ -15,6 +15,16 @@ if (! function_exists('str_starts_with')) {
     }
 }
 
+function ensureArray($element): array
+{
+    if (\is_array($element))
+        return $element;
+
+    return [
+        $element
+    ];
+}
+
 function is_array_list($array): bool
 {
     return \is_array($array) && \array_is_list($array);
