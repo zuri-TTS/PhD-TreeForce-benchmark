@@ -10,52 +10,24 @@ final class DataSets
     private const groupsBasePath = 'benchmark/data';
 
     // ========================================================================
-    private static function allThings(callable $getAllThings, ...$args): array
-    {
-        $ids = \array_pop($args);
-
-        if (empty($ids))
-            return $getAllThings(...$args);
-
-        if (\is_string($ids))
-            $ids = (array) $ids;
-
-        $things = [];
-        $allThings = $getAllThings(...$args);
-
-        foreach ($ids as $id)
-            $things = \array_merge($things, self::oneThing($id, $allThings));
-
-        \natcasesort($things);
-        return \array_unique($things);
-    }
-
-    private static function oneThing(string $id, $allThings): array
-    {
-        $things = empty($id) ? $allThings : \explode(',', $id);
-        $things = \array_map_merge(fn ($t) => self::expand($t, fn () => $allThings), $things);
-        return $things;
-    }
-
-    // ========================================================================
     public static function allGroups($ids = null): array
     {
-        return self::allThings('DataSets::_getAllGroups', $ids);
+        return \Help\Thing::allThings('DataSets::getAllGroups', $ids);
     }
 
     public static function allRules(string $group, $ids = null): array
     {
-        return self::allThings('DataSets::_getAllRules', $group, $ids);
+        return \Help\Thing::allThings('DataSets::getAllRules', $group, $ids);
     }
 
     public static function allQueries(string $group, $ids = null): array
     {
-        return self::allThings('DataSets::_getAllQueries', $group, $ids);
+        return \Help\Thing::allThings('DataSets::getAllQueries', $group, $ids);
     }
 
     public static function allCollections(DataSet $ds, $ids = null): array
     {
-        return self::allThings(fn () => \Data\Partitions::getCollectionsOf($ds->getPartitions()), $ids);
+        return \Help\Thing::allThings(fn () => \Data\Partitions::getCollectionsOf($ds->getPartitions()), $ids);
     }
 
     // ========================================================================
@@ -153,23 +125,6 @@ final class DataSets
         return $ret[0];
     }
 
-    private static function expand(string $s, callable $getAll): array
-    {
-        $filter = null;
-
-        if ($s[0] === '!') {
-            $pattern = substr($s, 1);
-            $filter = fn ($p) => \fnmatch($pattern, $p);
-        } elseif ($s[0] === '~') {
-            $filter = fn ($p) => \preg_match($s, $p);
-        }
-
-        if (null !== $filter)
-            return \array_filter($getAll(), $filter);
-
-        return (array) $s;
-    }
-
     public static function getGroupConfig(string $group): array
     {
         return include self::getGroupPath($group) . '/config.php';
@@ -222,13 +177,13 @@ final class DataSets
     }
 
     // ========================================================================
-    private static function _getAllGroups(): array
+    public static function getAllGroups(): array
     {
         $ret = \scandirNoPoints(self::getGroupsBasePath());
         return \array_filter($ret, fn ($g) => $g[0] !== "#");
     }
 
-    private static function _getAllRules(string $group): array
+    public static function getAllRules(string $group): array
     {
         $dir = self::getRulesBasePath($group);
 
@@ -238,7 +193,7 @@ final class DataSets
         return \scandirNoPoints($dir);
     }
 
-    private static function _getAllQueries(string $group): array
+    public static function getAllQueries(string $group): array
     {
         $dir = self::getQueriesBasePath($group);
 
