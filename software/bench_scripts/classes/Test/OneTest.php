@@ -162,9 +162,25 @@ final class OneTest extends AbstractTest
         }
         if ($this->needPartition) {
             $lpartitions = \ensureArray($this->testConfig['partition']);
-            $this->ensurePartition();
-            $this->checkPartition($lpartitions);
+            $lpartitions = $this->partitionsMustBeGenerated($lpartitions);
+
+            if (! empty($lpartitions)) {
+                $this->ensurePartition();
+                $this->checkPartition($lpartitions);
+            }
         }
+    }
+
+    private function partitionsMustBeGenerated(array $lpartitions): array
+    {
+        $ret = [];
+
+        foreach ($lpartitions as $lpart) {
+
+            if (! $lpart->fileExists($this->ds))
+                $ret[] = $lpart;
+        }
+        return $ret;
     }
 
     private function checkPartition(array $lpartitions): void
