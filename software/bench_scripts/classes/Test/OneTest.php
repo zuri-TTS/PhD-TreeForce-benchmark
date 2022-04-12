@@ -44,7 +44,7 @@ final class OneTest extends AbstractTest
         ])) {
             $this->needSummary = true;
             $this->needNativeSummary = true;
-            $this->needPartition = true;
+            $this->needPartition = $partition->isLogical();
         }
 
         if (\in_array($args['cmd'], [
