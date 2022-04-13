@@ -15,7 +15,9 @@ while (! empty($argv)) {
     $parallelTest = $parsed['args']['parallel'];
     $cmd = $parsed['args']['cmd'];
 
-    if ($cmd === 'summarize')
+    if ($parsed['args']['print-java-config'])
+        $testClass = '\Test\PrintJavaConfig';
+    elseif ($cmd === 'summarize')
         $testClass = '\Test\DoSummarize';
     elseif ($parallelTest)
         $testClass = '\Test\ParallelTest';

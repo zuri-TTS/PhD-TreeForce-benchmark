@@ -22,6 +22,7 @@ final class CmdArgs
         'cmd' => 'querying',
         'parallel' => false,
         'doonce' => false,
+        'print-java-config' => false,
         'cold' => false,
         'output' => null,
         'skip-existing' => true,

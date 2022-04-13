@@ -112,6 +112,7 @@ final class Benchmark
         $p = &$ret['default'];
 
         foreach ($lines as $line) {
+
             if (preg_match("#\[(.+)\]#", $line, $matches)) {
                 $group = $matches[1];
                 $p = &$ret[$group];
@@ -355,6 +356,12 @@ final class Benchmark
             return $a['measures']['command']['r'] - $b['measures']['command']['r'];
         });
         return $measures;
+    }
+
+    public function printJavaConfig(): void
+    {
+        $incVars = $this->prepareIncVars();
+        echo $this->writeJavaProperties($incVars);
     }
 
     public function executeOnce()
