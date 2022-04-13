@@ -8,14 +8,14 @@ final class PrefixPartitioning extends AbstractPartitioning
 
     private bool $oneCollection;
 
-    private function __construct(bool $oneCollection, string $id, string $baseDir, array $partitionsPrefix)
+    private function __construct(bool $oneCollection, string $id, string $baseDir, array $partitionsPrefix, string $idPartitions)
     {
-        parent::__construct($id, $baseDir);
+        parent::__construct($id, $baseDir, $idPartitions);
         $this->partitionsPrefix = $partitionsPrefix;
         $this->oneCollection = $oneCollection;
     }
 
-    public function getPartitionsOf(\DataSet $ds): array
+    public function getAllPartitionsOf(\DataSet $ds): array
     {
         $ret = [];
 
@@ -39,13 +39,13 @@ final class PrefixPartitioning extends AbstractPartitioning
     }
 
     // ========================================================================
-    public static function create(string $id, string $baseDir, array $partitionsPrefix): IPartitioning
+    public static function create(string $id, string $baseDir, array $partitionsPrefix, string $idPartitions = ''): IPartitioning
     {
-        return new PrefixPartitioning(false, $id, $baseDir, $partitionsPrefix);
+        return new PrefixPartitioning(false, $id, $baseDir, $partitionsPrefix, $idPartitions);
     }
 
-    public static function oneCollection(string $id, string $baseDir, array $partitionsPrefix): IPartitioning
+    public static function oneCollection(string $id, string $baseDir, array $partitionsPrefix, string $idPartitions = ''): IPartitioning
     {
-        return new PrefixPartitioning(true, $id, $baseDir, $partitionsPrefix);
+        return new PrefixPartitioning(true, $id, $baseDir, $partitionsPrefix, $idPartitions);
     }
 }

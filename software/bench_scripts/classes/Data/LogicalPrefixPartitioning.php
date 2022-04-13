@@ -15,7 +15,7 @@ final class LogicalPrefixPartitioning extends AbstractPartitioning
         $this->partitionsPrefix = $partitionsPrefix;
     }
 
-    public function getPartitionsOf(\DataSet $ds): array
+    public function getAllPartitionsOf(\DataSet $ds): array
     {
         $ret = [];
         $cname = \MongoImport::getCollectionName($ds);

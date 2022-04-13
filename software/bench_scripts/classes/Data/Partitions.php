@@ -9,7 +9,7 @@ final class Partitions
         throw new \Error();
     }
 
-    function getCollectionsOf(array $partitions)
+    public static function getCollectionsOf(array $partitions)
     {
         $ret = [];
 
@@ -19,7 +19,18 @@ final class Partitions
         return $ret;
     }
 
-    function getPartitionWithCollectionName(array $partitions, string $collectionName): IPartition
+    public static function selectPartitionsWithID(array $partitions, array $IDs): array
+    {
+        $ret = [];
+
+        foreach ($partitions as $p)
+            if (\in_array($p->getID(), $IDs))
+                $ret[] = $p;
+
+        return $ret;
+    }
+
+    public static function getPartitionWithCollectionName(array $partitions, string $collectionName): IPartition
     {
         foreach ($partitions as $p)
             if ($p->getCollectionName() === $collectionName)
@@ -29,7 +40,7 @@ final class Partitions
         return null;
     }
 
-    function getPartitionForData(array $partitions, array $data): IPartition
+    public static function getPartitionForData(array $partitions, array $data): IPartition
     {
         foreach ($partitions as $p)
             if ($p->contains($data))
