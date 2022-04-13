@@ -34,10 +34,12 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
     $fsummary = function ($baseDir, $summPrefix, $summType) {
         return "$baseDir/{$summPrefix}summary-$summType.txt";
     };
-    $fpartition = function ($partition): string {
+    $cmdIsPartition = $cmd === 'partition';
+
+    $fpartition = function ($partition) use ($cmdIsPartition): string {
         $range = $partition->getLogicalRange();
 
-        if (empty($range))
+        if ($cmdIsPartition || empty($range))
             $range = '';
         else {
             $range = implode('..', $range);
