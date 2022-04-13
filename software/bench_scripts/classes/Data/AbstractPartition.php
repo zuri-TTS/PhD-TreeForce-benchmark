@@ -16,9 +16,14 @@ abstract class AbstractPartition implements IPartition
         return $this->id;
     }
 
-    public static function filePattern(): string
+    public static final function filePattern(string $id): string
     {
-        return 'partition.%s.txt';
+        if ($id === '_id')
+            $id = '';
+        if (! empty($id))
+            $id .= '.';
+
+        return "partition.$id%s.txt";
     }
 
     public function fileExists(\DataSet $dataSet): bool

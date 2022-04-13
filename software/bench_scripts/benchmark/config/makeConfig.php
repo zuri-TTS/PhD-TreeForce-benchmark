@@ -28,6 +28,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
     } elseif (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
+    $partitionID = $javaProperties['partition.id'];
     $outputDirGenerator = $common['bench.output.dir.generator'];
 
     $fsummary = function ($baseDir, $summPrefix, $summType) {
@@ -150,8 +151,9 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     // Note: for now only prefix partitions are presents
     if (isset($javaPartition)) {
-        $pattern = \Data\AbstractPartition::filePattern();
+        $pattern = \Data\AbstractPartition::filePattern($partitionID);
         $javaProperties = \array_merge($javaProperties, [
+            'partition.id' => $partitionID,
             'partition' => $javaPartition,
             'partition.mode' => 'prefix',
             'partition.output.pattern' => "\${dataset.baseDir}/$pattern"

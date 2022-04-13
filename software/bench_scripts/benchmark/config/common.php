@@ -29,7 +29,8 @@ return [
         'rewritings.deduplicate' => 'n',
         'data' => 'mongodb://localhost',
         'summary.prettyPrint' => 'n',
-        'summary.filter.types' => 'y'
+        'summary.filter.types' => 'y',
+        'partition.id' => '_id',
     ],
     'bench.measures' => [
         'default' => [
