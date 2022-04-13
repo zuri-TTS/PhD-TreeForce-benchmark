@@ -26,19 +26,14 @@ abstract class AbstractPartition implements IPartition
         return "partition.$id%s.txt";
     }
 
-    public function fileExists(\DataSet $dataSet): bool
+    public function fileName(string $partitionID): string
     {
-        return \is_file($this->filePath($dataSet));
+        return \sprintf(self::filePattern($partitionID), $this->getID());
     }
 
-    public function fileName(): string
+    public function filePath(\DataSet $dataSet, string $partitionID): string
     {
-        return \sprintf(self::filePattern(), $this->getID());
-    }
-
-    public function filePath(\DataSet $dataSet): string
-    {
-        $fname = $this->fileName();
+        $fname = $this->fileName($partitionID);
         return "{$dataSet->path()}/$fname";
     }
 }

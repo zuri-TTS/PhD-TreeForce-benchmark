@@ -22,6 +22,8 @@ final class OneTest extends AbstractTest
 
     private array $args;
 
+    private array $javaProperties;
+
     public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
     {
         parent::__construct($ds, $partition, $cmdParser);
@@ -71,6 +73,7 @@ final class OneTest extends AbstractTest
 
         $this->testConfig = \makeConfig($this->ds, $partition, $args, $parsed['javaProperties']);
         $this->args = $args;
+        $this->javaProperties = $javaProperties;
     }
 
     public function setDisplayHeader(bool $val)
@@ -148,7 +151,7 @@ final class OneTest extends AbstractTest
         if ($this->needNativeSummary) {
             $partition = $this->partition;
 
-            if ($this->args['cmd'] === 'partition')
+            if ($this->args['cmd'] === 'partition' && $partition->isLogical())
                 $partition = $partition->getPhysicalParent();
 
             $this->ensureSummary((string) $args['toNative_summary'], $partition);
@@ -162,35 +165,35 @@ final class OneTest extends AbstractTest
         }
         if ($this->needPartition) {
             $lpartitions = \ensureArray($this->testConfig['partition']);
-            $lpartitions = $this->partitionsMustBeGenerated($lpartitions);
+            $lpartitions = $this->partitionsMustBeGenerated($lpartitions, $this->javaProperties['partition.id']);
 
             if (! empty($lpartitions)) {
                 $this->ensurePartition();
-                $this->checkPartition($lpartitions);
+                $this->checkPartition($lpartitions, $this->javaProperties['partition.id']);
             }
         }
     }
 
-    private function partitionsMustBeGenerated(array $lpartitions): array
+    private function partitionsMustBeGenerated(array $lpartitions, string $partitionID): array
     {
         $ret = [];
 
         foreach ($lpartitions as $lpart) {
+            $path = $lpart->filePath($this->ds, $partitionID);
 
-            if (! $lpart->fileExists($this->ds))
+            if (! \is_file($path))
                 $ret[] = $lpart;
         }
         return $ret;
     }
 
-    private function checkPartition(array $lpartitions): void
+    private function checkPartition(array $lpartitions, string $partitionID): void
     {
         foreach ($lpartitions as $lpart) {
+            $path = $lpart->filePath($this->ds, $partitionID);
 
-            if (! $lpart->fileExists($this->ds)) {
-                $path = $lpart->filePath($this->ds);
+            if (! \is_file($path))
                 throw new \Exception("The partition file $path must exists");
-            }
         }
     }
 

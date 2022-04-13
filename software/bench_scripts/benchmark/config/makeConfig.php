@@ -36,10 +36,10 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
     };
     $cmdIsPartition = $cmd === 'partition';
 
-    $fpartition = function ($partition) use ($cmdIsPartition): string {
-        $range = $partition->getLogicalRange();
+    $fpartition = function ($partition) use ($cmdIsPartition, $partitionID): string {
+        $range = $cmdIsPartition ? '' : $partition->getLogicalRange($partitionID);
 
-        if ($cmdIsPartition || empty($range))
+        if (empty($range))
             $range = '';
         else {
             $range = implode('..', $range);

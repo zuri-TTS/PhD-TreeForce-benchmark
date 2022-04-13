@@ -39,15 +39,9 @@ final class LogicalPrefixPartition extends LogicalPartition
         return "partition.{$this->getID()}.txt";
     }
 
-    public function getLogicalRange(): array
+    public function getLogicalRange(string $partitionID): array
     {
-        $dspath = $this->ds->path();
-
-        if (! \is_dir($dspath))
-            return [];
-
-        \wdPush($dspath);
-        $fpath = $this->getRangeFilePath();
+        $fpath = $this->filePath($this->ds, $partitionID);
 
         if (! \is_file($fpath))
             $ret = [];
@@ -56,7 +50,6 @@ final class LogicalPrefixPartition extends LogicalPartition
             \preg_match_all('#\d+#', $contents, $matches);
             $ret = $matches[0];
         }
-        \wdPop();
         return $ret;
     }
 

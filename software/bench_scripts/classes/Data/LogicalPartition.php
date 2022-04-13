@@ -14,7 +14,7 @@ abstract class LogicalPartition extends AbstractPartition
         return true;
     }
 
-    abstract function getLogicalRange(): array;
+    abstract function getLogicalRange(string $partitionID): array;
 
     abstract function getPhysicalParent(): PhysicalPartition;
 }
