@@ -1,15 +1,15 @@
 <?php
 $graphics = new Plotter\Graphics();
-$nbPlots = \count($PLOTTER->getCutData());
-$nbMeasuresToPlot = \count($PLOTTER->getMeasuresToPlot());
+$plotterStrategy = $PLOTTER->getStrategy();
+
+$nbPlots = $PLOTTER->getNbGroups();
+$stacked = $plotterStrategy->plot_getStackedMeasures();
+$nbMeasuresToPlot = \count($stacked);
+
+list ($yMin, $yMax) = $plotterStrategy->plot_getYRange();
 
 $plot_wMin = 600;
 
-$yMax = 0;
-$yMin = PHP_INT_MAX;
-$nbMeasures = 0;
-
-$dirname = \basename(\dirname(\getcwd()));
 $nbQueries = \count($PLOTTER->getQueries());
 
 if ($nbQueries > 0)
@@ -18,21 +18,9 @@ if ($nbQueries > 0)
 $getMeasure = function ($csvData, $what, $time) {
     return (int) (($csvData[$what] ?? [])[$time] ?? 0);
 };
+$nbMeasures = 0;
 
-$measuresPresent = [];
-
-foreach ($PLOTTER->getCsvData() as $csvData) {
-
-    foreach ($PLOTTER->toPlot() as $what => $measure) {
-        $v = (int) $getMeasure($csvData, $what, $measure);
-        $yMax = \max($yMax, $v);
-        $yMin = \min($yMin, $v);
-
-        if ($v > 0)
-            $measuresPresent[$what] = true;
-    }
-}
-foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
+foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $nbMeasures = \max($nbMeasures, \count($csvPaths));
 }
 
@@ -90,42 +78,19 @@ set key off
 set ylabel offset 15,0 "[$yrange]"
 
 EOD;
-?>
+
+echo <<<EOD
 set logscale y
-
 set style fill pattern border -1
-set boxwidth <?=$boxwidth?>
-
+set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
-
-set term png size <?=$w?>, <?=$h?>
-
-set multiplot layout <?=$multiColLayout?> title "<?=$theTitle?>"
-
+set term png size $w, $h
+set multiplot layout $multiColLayout title "$theTitle"
 set rmargin 0
 set lmargin 0
 set bmargin 10
 
-<?php
-$stacked = [];
-
-if ($measuresPresent['rewriting.total'] ?? 0)
-    $stacked[] = [
-        3 => 'rewriting.total'
-        // 2 => 'rewriting.rules.apply.r'
-    ];
-if ($measuresPresent['rewriting.generation'] ?? 0)
-    $stacked[] = [
-        4 => 'rewritings.generation'
-    ];
-if ($measuresPresent['stats.db.time'] ?? 0)
-    $stacked[] = [
-        5 => 'stats.db.time'
-    ];
-if ($measuresPresent['threads.time'] ?? 0)
-    $stacked[] = [
-        6 => 'threads.time'
-    ];
+EOD;
 
 $xmax = $nbMeasures + $boxwidth;
 $xmin = - $boxwidth * 2;
@@ -135,7 +100,7 @@ echo "set xrange [$xmin:$xmax]\n";
 $ls = 1;
 $nbPlots = 0;
 
-foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
+foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $csvData = $PLOTTER->getCsvData($csvPaths[0]);
     $nbAnswers = $csvData['answers']['total'];
     $title = $PLOT->gnuplotSpecialChars($fname);
@@ -182,5 +147,3 @@ foreach ($PLOTTER->getCutData() as $fname => $csvPaths) {
 
     echo "plot", implode(',', $tmp), "\n";
 }
-
-    

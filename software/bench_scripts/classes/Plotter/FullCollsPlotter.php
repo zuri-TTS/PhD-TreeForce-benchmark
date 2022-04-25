@@ -47,7 +47,13 @@ final class FullCollsPlotter extends AbstractFullPlotter
         $groups = \array_map(function ($p) {
             $dirName = \basename($p);
             \preg_match("#^\[(.+)\]\[(.+)\]\[(.*)\]#U", $dirName, $matches);
-            list ($group, $coll) = \explode('.', $matches[1]);
+            list ($group, $partition, $coll) = \explode('.', $matches[1]) + [
+                '',
+                '',
+                ''
+            ];
+
+            $initialGroup = $matches[1];
             $rules = $matches[2];
             $qualifs = $matches[3];
 
@@ -59,7 +65,7 @@ final class FullCollsPlotter extends AbstractFullPlotter
                 $rules,
                 $qualifs,
                 $p,
-                \preg_replace("#^\[$group.$coll\]#U", "[$group]", $dirCleaned, 1)
+                \preg_replace("#^\[$initialGroup\]#U", "[$group]", $dirCleaned, 1)
             ];
         }, $dirs);
         $groups = \array_unique($groups, SORT_REGULAR);

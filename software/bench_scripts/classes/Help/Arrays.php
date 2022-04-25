@@ -25,4 +25,23 @@ final class Arrays
 
         return $a[\array_key_last($a)];
     }
+
+    public static function &follow(array &$array, array $path, $default = null)
+    {
+        $p = &$array;
+
+        for (;;) {
+            $k = \array_shift($path);
+
+            if (! \array_key_exists($k, $p))
+                return $default;
+
+            $p = &$p[$k];
+
+            if (empty($path))
+                return $p;
+            if (! is_array($p) && ! empty($path))
+                return $default;
+        }
+    }
 }
