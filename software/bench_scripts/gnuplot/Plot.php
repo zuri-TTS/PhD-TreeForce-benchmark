@@ -69,7 +69,7 @@ final class Plot
         $ret = [];
 
         foreach ($config['plotter.factory'] as $fact)
-            $ret[] = $fact($this);
+            $ret[] = $fact($this, $config['args'] ?? []);
 
         return $ret;
     }
@@ -79,19 +79,19 @@ final class Plot
 
     public function plot(array $config)
     {
-        $wdir = \getcwd();
         $this->plotters = $this->getPlotters($config);
         $csvFiles = [];
 
         foreach ($this->csvGroupByBasePath as $base => $csvFile) {
             echo "\nPlotting group\n<$base>/\n";
             $groupCsvFiles = \array_map(fn ($f) => "$base/$f.csv", $csvFile);
-            \chdir($base);
+            \wdPush($base);
             $this->_plotGroup($groupCsvFiles);
             $csvFiles = \array_merge($csvFiles, $groupCsvFiles);
+            \wdPop();
         }
 
-        \chdir($this->workingDir);
+        \wdPush($this->workingDir);
         $nbFiles = \count($csvFiles);
 
         foreach ($this->plotters as $plotter) {
@@ -102,11 +102,13 @@ final class Plot
 
                 if (! is_dir($outDir))
                     \mkdir($outDir);
-                \chdir($outDir);
+
+                \wdPush($outDir);
                 $this->plotFull($csvFiles, $plotter);
+                \wdPop();
             }
         }
-        \chdir($wdir);
+        \wdPop();
     }
 
     private function _plotGroup(array $csvFiles)
