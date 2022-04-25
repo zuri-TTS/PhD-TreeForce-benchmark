@@ -163,24 +163,22 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
     }
     // <<< >>>
 
-    $gfrom = [
+    $efrom = [
         '[',
         ']',
-        '\[',
-        '\]'
     ];
-    $gto = [
+    $eto = [
         '\[',
         '\]',
-        '[[]',
-        '[]]'
     ];
-    $testPattern = \sprintf($outDirPattern, "*");
-    $testPattern = \str_replace($gfrom, $gto, $testPattern);
+    $testRegex = $outDirPattern;
+    $testRegex = \str_replace($efrom, $eto, $testRegex);
+    $testRegex = \sprintf($testRegex, '[^\[\]]+');
+    $testRegex = "#^$testRegex$#";
 
     if ($cmdArg['skip-existing']) {
         \wdPush($bpath);
-        $test_existing = \glob($testPattern);
+        $test_existing = \array_filter(\scandirNoPoints('.'), fn($n) => \preg_match($testRegex, $n));
         $test_existing = \array_filter($test_existing, fn ($p) => \is_file("$p/@end"));
         \wdPop();
     } else
