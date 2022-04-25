@@ -60,15 +60,21 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         $javaToNativeSummary = [];
         $javaPartition = [];
         $benchPartition = [];
+        $noSummary = empty($cmdArg['summary']);
 
         foreach ($partitions as $partition) {
             $partID = $partition->getID();
             $cprefix = empty($partID) ? '' : "$partID-";
 
             $javaCollection[] = $partition->getCollectionName();
-            $javaSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
+
+            if ($noSummary) {
+                $javaSummary[] = $benchSummary[] = '';
+            } else {
+                $javaSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
+                $benchSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
+            }
             $javaToNativeSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
-            $benchSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
 
             if ($partition->isLogical()) {
                 $javaPartition[] = $fpartition($partition);
