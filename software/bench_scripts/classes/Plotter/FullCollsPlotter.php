@@ -16,15 +16,9 @@ final class FullCollsPlotter extends AbstractFullPlotter
 
     public function plot(array $csvPaths): void
     {
-        $this->csvPaths = $csvPaths;
         $this->cleanCurrentDir();
-        $this->queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvPaths));
-
-        $this->dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvPaths));
-        \natsort($this->dirs);
-
-        $this->cutData = self::cutData_colls_query($csvPaths);
-        $this->writeCsv($this->cutData);
+        $cutData = self::cutData_colls_query($csvPaths);
+        $this->writeCsv($cutData);
 
         $argv = [
             '',
@@ -46,26 +40,28 @@ final class FullCollsPlotter extends AbstractFullPlotter
         $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
         $groups = \array_map(function ($p) {
             $dirName = \basename($p);
-            \preg_match("#^\[(.+)\]\[(.+)\]\[(.*)\]#U", $dirName, $matches);
-            list ($group, $partition, $coll) = \explode('.', $matches[1]) + [
-                '',
-                '',
-                ''
-            ];
+            $pelements = \Help\Plotter::extractDirNameElements($dirName);
 
-            $initialGroup = $matches[1];
-            $rules = $matches[2];
-            $qualifs = $matches[3];
+            $initialGroup = $pelements['full_group'];
+            $group = $pelements['group'];
+            $partitioning = $pelements['partitioning'];
+            $rules = $pelements['rules'];
+            $qualifiers = $pelements['qualifiers'];
+
+            $gp = $group;
+
+            if (! empty($partitioning))
+                $gp .= ".$partitioning";
 
             // Remove cmd & date
-            $dirCleaned = \preg_replace("#\{.+\}\[.+\]#U", "", $dirName, 1);
+            $dirCleaned = \preg_replace("#\{.+\}\[.+\]#U", "%s", $dirName, 1);
             return [
                 $group,
-                $coll,
+                $partitioning,
                 $rules,
-                $qualifs,
-                $p,
-                \preg_replace("#^\[$initialGroup\]#U", "[$group]", $dirCleaned, 1)
+                $qualifiers,
+                // $p,
+                \preg_replace("#^\[$initialGroup\]#U", "[$gp%s]", $dirCleaned, 1)
             ];
         }, $dirs);
         $groups = \array_unique($groups, SORT_REGULAR);
@@ -78,15 +74,20 @@ final class FullCollsPlotter extends AbstractFullPlotter
         \natcasesort($queries);
 
         foreach ($groups as $group) {
-            list ($g, $c, $r, $q, $p, $d) = $group;
-            $pattern = "*\[$g\]\[$q\]*";
+            list ($g, $p, $r, $q, $dpattern) = $group;
+            $d = \sprintf($dpattern, '', '');
+            $regex = \preg_quote($dpattern);
+            $regex = \sprintf($regex, "(\..+)?", "\{.+\}\[.+\]");
 
-            $gdirs = \array_filter($dirs, fn ($d) => \fnmatch($pattern, $d));
+            $gdirs = \array_filter($dirs, fn ($dpattern) => \preg_match("#$regex#U", $dpattern));
+            \natcasesort($gdirs);
 
             foreach ($queries as $query) {
                 $dd = \array_map(fn ($p) => "$p/$query.csv", $gdirs);
-                \natcasesort($dd);
-                $ret[$query][$d][$c] = "$p/$query.csv";
+
+                foreach ($gdirs as $dir) {
+                    $ret[$query][$d][$dir] = "$dir/$query.csv";
+                }
             }
         }
         return $ret;
