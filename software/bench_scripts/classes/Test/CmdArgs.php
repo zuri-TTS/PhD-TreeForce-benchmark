@@ -16,7 +16,7 @@ final class CmdArgs
         'clean-db' => false,
         'pre-clean-db' => false,
         'post-clean-db' => false,
-        'summary' => 'key',
+        'summary' => 'key-type',
         'toNative_summary' => null, // Must be null for makeConfig()
         'native' => '',
         'cmd' => 'querying',
