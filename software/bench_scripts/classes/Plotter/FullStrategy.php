@@ -23,7 +23,7 @@ final class FullStrategy extends AbstractFullStrategy
         [
             5 => 'time'
         ]
-       ];
+    ];
 
     public function __construct()
     {
@@ -43,15 +43,15 @@ final class FullStrategy extends AbstractFullStrategy
         $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
         $groups = \array_map(function ($p) {
             $dirName = \basename($p);
-            \preg_match("#^\[(.+)(?:\..+)?\]#U", $dirName, $matches);
-            return $matches[1];
+            $elements = \Help\Plotter::extractDirNameElements($dirName);
+            return \Help\Strings::append('.', $elements['group'], $elements['full_partition']);
         }, $dirs);
         $groups = \array_unique($groups, SORT_REGULAR);
         \natcasesort($groups);
 
         foreach ($groups as $group) {
-            $regex = "#/\[$group(?:\..+)?\]#U";
-            $gdirs = \array_filter($dirs, fn ($d) => \preg_match($regex, $d));
+            $regex = "#^\[$group(?:\..+)?\]#U";
+            $gdirs = \array_filter($dirs, fn ($d) => \preg_match($regex, \basename($d)));
             $gscores = \array_map(fn ($d) => $this->sortScore(\basename($d)), $gdirs);
             $gdirs = \array_map(null, $gscores, $gdirs);
 
