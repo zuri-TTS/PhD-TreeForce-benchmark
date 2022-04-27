@@ -10,7 +10,7 @@ final class Strings
     }
 
     // ========================================================================
-    public static function append(string $delimiter, string ...$s)
+    public static function append(string $delimiter, ...$s)
     {
         $ret = \array_shift($s);
 
