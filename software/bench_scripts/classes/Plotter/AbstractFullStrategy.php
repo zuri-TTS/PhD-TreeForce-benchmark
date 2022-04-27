@@ -25,9 +25,16 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $this;
     }
 
-    public function plot_getConfig(): array
+    public function plot_getConfig(array $default = []): array
     {
-        return [
+        $wd = getcwd();
+        $confFile = "$wd/../full_{$this->getID()}.php";
+        $ret = [];
+
+        if (\is_file($confFile))
+            $ret = include $confFile;
+
+        return $ret + $default + [
             'plot.yrange' => 'global',
             'plot.yrange.step' => 10,
             'logscale' => true
