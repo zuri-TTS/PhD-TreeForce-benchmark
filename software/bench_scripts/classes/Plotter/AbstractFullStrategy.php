@@ -149,16 +149,32 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $score += 10;
 
             if ($partitioning[0] !== 'L')
-                $score += 10;
+                $score += 100;
             if (! empty($pid))
                 $score += 5;
         }
 
-        $summary = $elements['summary'];
-        $score += self::summaryScore[$summary] * 1;
-
         if ($elements['parallel'])
             $score += 100;
+
+        if ($score >= 100) {
+            $score = 100;
+
+            if (! empty($partitioning)) {
+                $score += 10;
+
+                if ($partitioning[0] !== 'L') {
+                    $score += 10;
+
+                    if ($elements['parallel'])
+                        $score += 10;
+                }
+                if (! empty($pid))
+                    $score += 5;
+            }
+        }
+        $summary = $elements['summary'];
+        $score += self::summaryScore[$summary] * 1;
 
         return $score;
     }
