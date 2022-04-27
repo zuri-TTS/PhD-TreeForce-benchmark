@@ -1,4 +1,6 @@
 <?php
+$timeDiv = 1000;
+
 $graphics = new Plotter\Graphics();
 $plotterStrategy = $PLOTTER->getStrategy();
 
@@ -47,6 +49,8 @@ $yRangeMax = $yLog;
 while ($yRangeMax < $yMax)
     $yRangeMax += $yLog;
 
+$yMin /= $timeDiv;
+$yRangeMax /= $timeDiv;
 $yrange = "$yMin:$yRangeMax";
 
 $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
@@ -64,7 +68,7 @@ set key off
 unset ylabel
 set key inside center center title "Times"
 set key autotitle columnheader
-set format y "%gms"
+set format y "%gs"
 
 EOD;
 
@@ -137,7 +141,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
 
         foreach ($stack as $pos => $measure) {
             $measure = $PLOT->gnuplotSpecialChars($measure);
-            $tmp[] = "'$fname.dat' u ($0 + $offset):$pos$xtics with boxes title '$measure' ls $ls fs pattern $pattern \\\n";
+            $tmp[] = "'$fname.dat' u ($0 + $offset):(\$$pos/$timeDiv)$xtics with boxes title '$measure' ls $ls fs pattern $pattern \\\n";
             $xtics = null;
             $pattern ++;
         }

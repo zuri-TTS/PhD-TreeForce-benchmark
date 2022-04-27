@@ -4,7 +4,7 @@ namespace Plotter;
 final class FullPlotter extends AbstractFullPlotter
 {
 
-    private const template = __DIR__ . '/templates/full.plot.php';
+    private $template = __DIR__ . '/templates/full.plot.php';
 
     private \Plot $plot;
 
@@ -14,6 +14,12 @@ final class FullPlotter extends AbstractFullPlotter
     {
         $this->plot = $plot;
         $this->strategy = $strategy;
+    }
+
+    public function setTemplate(string $name, string $dir = __DIR__ . '/templates'): self
+    {
+        $this->template = "$dir/$name";
+        return $this;
     }
 
     public function getID(): string
@@ -74,7 +80,7 @@ final class FullPlotter extends AbstractFullPlotter
         $this->writeCsv($csvGroups);
         $this->csvGroups = $csvGroups;
 
-        $contents = \get_include_contents(self::template, [
+        $contents = \get_include_contents($this->template, [
             'PLOT' => $this->plot,
             'PLOTTER' => $this
         ]);
