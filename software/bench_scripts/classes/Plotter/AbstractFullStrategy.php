@@ -99,12 +99,13 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     {
         $score = 0;
         $elements = \Help\Plotter::extractDirNameElements($dirName);
-        $partition = $elements['partition'];
+        $partitioning = $elements['partitioning'];
+        $pid = $elements['partition_id'];
 
-        if (! empty($partition)) {
+        if (! empty($partitioning)) {
             $score += 10;
 
-            if ($partition[0] !== 'L')
+            if ($partitioning[0] !== 'L')
                 $score += 10;
         }
 
@@ -122,7 +123,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $elements = \Help\Plotter::extractDirNameElements($dirName);
         $group = $elements['group'];
         $summary = $elements['summary'];
-        $partition = $elements['partition'];
+        $partition = $elements['full_partition'];
         $parallel = $elements['parallel'];
 
         if ($parallel)
