@@ -107,6 +107,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
             if ($partitioning[0] !== 'L')
                 $score += 10;
+            if (! empty($pid))
+                $score += 5;
         }
 
         $summary = $elements['summary'];
@@ -125,7 +127,10 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $summary = $elements['summary'];
         $partition = $elements['full_partition'];
         $parallel = $elements['parallel'];
+        $pid = $elements['partition_id'];
 
+        if (! empty($pid))
+            $pid = "($pid)";
         if ($parallel)
             $parallel = "[parallel]";
         if (! empty($summary))
@@ -133,6 +138,6 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         if (! empty($partition))
             $partition = ".$partition";
 
-        return "$group$partition$summary$parallel($nbReformulations,$nbAnswers)";
+        return "$group$partition$pid$summary$parallel($nbReformulations,$nbAnswers)";
     }
 }

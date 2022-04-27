@@ -30,7 +30,8 @@ final class Plotter
             'toNative' => null,
             'parallel' => false,
             'full_group' => null,
-            'full_partition' => null
+            'full_partition' => null,
+            'partition_id' => null
         ];
 
         \preg_match("#^\[((.+)(?:\.(.+))?)\]\[(.+)\]\[(.+)\]#U", $dirName, $matches);
@@ -44,6 +45,8 @@ final class Plotter
             null,
             null
         ];
+        if (\preg_match("#\[pid-(.+)\]#U", $dirName, $matches))
+            $ret['partition_id'] = $matches[1] ?? null;
 
         if (\preg_match("#\[summary-(.+)\]#U", $dirName, $matches))
             $ret['summary'] = $matches[1] ?? null;

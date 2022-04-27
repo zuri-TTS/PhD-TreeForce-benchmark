@@ -85,6 +85,8 @@ return [
             $outDir .= "[summary-{$cmdArg['summary']}]";
         if ($javaProperties['summary.filter.types'] === 'y')
             $outDir .= '[filter-types]';
+        if ($javaProperties['partition.id'] !== '_id')
+            $outDir .= "[pid-{$javaProperties['partition.id']}]";
         if ($has2Summary)
             $outDir .= "[toNative-{$cmdArg['toNative_summary']}]";
         if ($hasNative)
