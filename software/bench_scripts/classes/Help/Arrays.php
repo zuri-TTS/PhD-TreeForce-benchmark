@@ -26,6 +26,16 @@ final class Arrays
         return $a[\array_key_last($a)];
     }
 
+    public static function subSelect(array $a, array $keys, $default = null)
+    {
+        $ret = [];
+
+        foreach ($keys as $k)
+            $ret[$k] = $a[$k] ?? $default;
+
+        return $ret;
+    }
+
     public static function &follow(array &$array, array $path, $default = null)
     {
         $p = &$array;

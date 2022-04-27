@@ -45,8 +45,6 @@ final class FullCollsPlotter extends AbstractFullPlotter
             $initialGroup = $pelements['full_group'];
             $group = $pelements['group'];
             $partitioning = $pelements['partitioning'];
-            $rules = $pelements['rules'];
-            $qualifiers = $pelements['qualifiers'];
 
             $gp = $group;
 
@@ -54,41 +52,32 @@ final class FullCollsPlotter extends AbstractFullPlotter
                 $gp .= ".$partitioning";
 
             // Remove cmd & date
-            $dirCleaned = \preg_replace("#\{.+\}\[.+\]#U", "%s", $dirName, 1);
-            return [
-                $group,
-                $partitioning,
-                $rules,
-                $qualifiers,
-                // $p,
-                \preg_replace("#^\[$initialGroup\]#U", "[$gp%s]", $dirCleaned, 1)
-            ];
+            return $pelements;
         }, $dirs);
-        $groups = \array_unique($groups, SORT_REGULAR);
-        \usort($groups, function ($a, $b) {
-            $ret = \strnatcasecmp($a[0], $b[0]);
-            if ($ret)
-                return $ret;
-            return \strnatcasecmp($a[1], $b[1]);
-        });
         \natcasesort($queries);
 
-        foreach ($groups as $group) {
-            list ($g, $p, $r, $q, $dpattern) = $group;
-            $d = \sprintf($dpattern, '', '');
-            $regex = \preg_quote($dpattern);
-            $regex = \sprintf($regex, "(\..+)?", "\{.+\}\[.+\]");
+        $selection = [
+            'group',
+            'partitioning',
+            'qualifiers',
+            'summary'
+        ];
+        $gdirs = [];
 
-            $gdirs = \array_filter($dirs, fn ($dpattern) => \preg_match("#$regex#U", $dpattern));
-            \natcasesort($gdirs);
+        foreach ($dirs as $dpath) {
+            $d = \basename($dpath);
+            $delements = \Help\Plotter::extractDirNameElements($d);
+            $sdelements = \Help\Arrays::subSelect($delements, $selection);
+            $g = \Help\Strings::append('.', $delements['group'], $delements['partitioning']);
 
-            foreach ($queries as $query) {
-                $dd = \array_map(fn ($p) => "$p/$query.csv", $gdirs);
+            $summary = $delements['summary'];
+            if (! empty($summary))
+                $summary = "[summary-$summary]";
 
-                foreach ($gdirs as $dir) {
-                    $ret[$query][$d][$dir] = "$dir/$query.csv";
-                }
-            }
+            $dirGroup = "[$g][{$delements['rules']}][{$delements['qualifiers']}]$summary";
+
+            foreach ($queries as $query)
+                $ret[$query][$dirGroup][] = "$dpath/$query.csv";
         }
         return $ret;
     }
