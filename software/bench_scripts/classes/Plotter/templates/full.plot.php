@@ -4,9 +4,13 @@ $timeDiv = 1000;
 $graphics = new Plotter\Graphics();
 $plotterStrategy = $PLOTTER->getStrategy();
 
+$plotConfig = $plotterStrategy->plot_getConfig();
 $nbPlots = $PLOTTER->getNbGroups();
 $stacked = $plotterStrategy->plot_getStackedMeasures();
 $nbMeasuresToPlot = \count($stacked);
+
+$ystep = $plotConfig['plot.yrange.step'];
+$logscale = $plotConfig['logscale'];
 
 list ($yMin, $yMax) = $plotterStrategy->plot_getYRange();
 
@@ -79,12 +83,13 @@ set ytics scale .2 nomirror
 set border 1
 set grid ytics
 set key off
-set ylabel offset 15,0 "[$yrange]"
 
 EOD;
 
+if ($logscale)
+    echo "set logscale y\n";
+
 echo <<<EOD
-set logscale y
 set style fill pattern border -1
 set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
@@ -129,6 +134,25 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
         $ls ++;
     }
 
+    if ($plotConfig['plot.yrange'] === 'local') {
+        list ($min, $max) = $plotterStrategy->plot_getYRange(...$csvPaths);
+        $min /= $timeDiv;
+        $max /= $timeDiv;
+
+        if (! $logscale) {
+            $minZone = $maxZone = 0;
+
+            for ($i = 0; $i < $min; $i += $ystep, $minZone ++);
+            for ($i = 0; $i < $max; $i += $ystep, $maxZone ++);
+
+            $min = ($minZone - 1) * $ystep;
+            $max = $maxZone * $ystep;
+        }
+        $yrange = "$min:$max";
+        echo "set yrange [$yrange]\n";
+    }
+
+    echo "set ylabel offset 15,0 \"[$yrange]\"\n";
     echo "set title \"$title\\n($nbAnswers answers)\"\n";
 
     $nb = 0;

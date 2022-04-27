@@ -4,9 +4,7 @@ namespace Plotter;
 abstract class AbstractFullStrategy implements IFullPlotterStrategy
 {
 
-    private int $yMax = 0;
-
-    private int $yMin = PHP_INT_MAX;
+    private array $ranges = [];
 
     protected array $toPlot;
 
@@ -27,12 +25,46 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $this;
     }
 
-    public function plot_getYRange(): array
+    public function plot_getConfig(): array
     {
         return [
-            $this->yMin,
-            $this->yMax
+            'plot.yrange' => 'global',
+            'plot.yrange.step' => 10,
+            'logscale' => true
         ];
+    }
+
+    // ========================================================================
+    private const MAX_RANGE = [
+        PHP_INT_MAX,
+        0
+    ];
+
+    private function &getRange(string $csvPath = ''): array
+    {
+        if (! isset($this->range[$csvPath]))
+            $this->range[$csvPath] = self::MAX_RANGE;
+
+        return $this->range[$csvPath];
+    }
+
+    public function plot_getYRange(string ...$csvPath): array
+    {
+        if (empty($csvPath))
+            $csvPath = [
+                ''
+            ];
+
+        if (\count($csvPath) === 1)
+            return $this->range[$csvPath[0]] ?? self::MAX_RANGE;
+
+        return \array_reduce($csvPath, function ($a, $b) {
+            list ($bmin, $bmax) = $this->range[$b];
+            return [
+                \min($a[0], $bmin),
+                \max($a[1], $bmax)
+            ];
+        }, self::MAX_RANGE);
     }
 
     public function plot_getStackedMeasures(): array
@@ -40,6 +72,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $this->stackedMeasuresToPlot;
     }
 
+    // ========================================================================
     public function getDataHeader(): array
     {
         $ret[] = 'test';
@@ -67,6 +100,14 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $xtic = $this->makeXTic($dirName, $nbReformulations, $nbAnswers);
         $ret[] = $xtic;
 
+        $globalRange = &$this->getRange();
+        $gyMin = &$globalRange[0];
+        $gyMax = &$globalRange[1];
+
+        $range = &$this->getRange($csvPath);
+        $yMin = &$range[0];
+        $yMax = &$range[1];
+
         foreach ($this->toPlot as $what => $time) {
 
             foreach (explode('|', $what) as $what) {
@@ -76,14 +117,16 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 ], 0);
 
                 if ($v !== 0) {
-                    $this->yMax = \max($this->yMax, $v);
-                    $this->yMin = \min($this->yMin, $v);
                     $ret[] = $v;
                     break;
                 }
             }
-            
-            if($v === 0)
+            $gyMax = \max($gyMax, $v);
+            $gyMin = \min($gyMin, $v);
+            $yMax = \max($yMax, $v);
+            $yMin = \min($yMin, $v);
+
+            if ($v === 0)
                 $ret[] = 0;
         }
         return $ret;
