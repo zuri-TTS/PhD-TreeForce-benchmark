@@ -20,6 +20,7 @@ return [
         'data.batchSize' => 100,
         'leaf.checkTerminal' => null,
         'querying.mode' => 'explain',
+        'querying.filter' => '',
         'inhibitBatchStreamTime' => 'y',
         'querying.display.answers' => 'n',
         'output.pattern' => '${output.path}/${query.name}_%s.txt',
