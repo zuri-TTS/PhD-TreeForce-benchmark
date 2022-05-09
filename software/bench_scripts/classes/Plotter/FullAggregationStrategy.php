@@ -26,15 +26,6 @@ final class FullAggregationStrategy extends AbstractFullStrategy
         return 'aggregation';
     }
 
-    public function plot_getConfig(): array
-    {
-        return parent::plot_getConfig([
-            'plot.yrange' => 'local',
-            'plot.yrange.step' => 5,
-            'logscale' => false
-        ]);
-    }
-
     function groupCSVFiles(array $csvFiles): array
     {
         $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));

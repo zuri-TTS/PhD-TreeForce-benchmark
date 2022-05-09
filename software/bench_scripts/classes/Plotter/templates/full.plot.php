@@ -4,15 +4,27 @@ $timeDiv = 1000;
 $graphics = new Plotter\Graphics();
 $plotterStrategy = $PLOTTER->getStrategy();
 
-$plotConfig = $plotterStrategy->plot_getConfig();
+$plotConfig = $PLOTTER->plot_getConfig();
+$csvGroups = $PLOTTER->getCsvGroups();
+$csvFiles = \array_merge(...\array_values($csvGroups));
 $nbPlots = $PLOTTER->getNbGroups();
 $stacked = $plotterStrategy->plot_getStackedMeasures();
 $nbMeasuresToPlot = \count($stacked);
 
+$plotYLabelYOffset = ($plotConfig['plot.ylabel.yoffset'] ?? null);
+$plotYLabelXOffset = ($plotConfig['plot.ylabel.xoffset'] ?? null);
+$plotYLabel = false;
+
+if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
+    $plotYLabel = true;
+    $plotYLabelXOffset = $plotYLabelXOffset ?? 0;
+    $plotYLabelYOffset = $plotYLabelYOffset ?? 0;
+}
+
 $ystep = $plotConfig['plot.yrange.step'];
 $logscale = $plotConfig['logscale'];
 
-list ($yMin, $yMax) = $plotterStrategy->plot_getYRange();
+list ($yMin, $yMax) = $plotterStrategy->plot_getYRange(...$csvFiles);
 
 $plot_wMin = 600;
 
@@ -53,9 +65,22 @@ $yRangeMax = $yLog;
 while ($yRangeMax < $yMax)
     $yRangeMax += $yLog;
 
+$yMax = $yRangeMax;
+unset($yRangeMax);
+
 $yMin /= $timeDiv;
-$yRangeMax /= $timeDiv;
-$yrange = "$yMin:$yRangeMax";
+
+if ($yMin < 1)
+    $yMin = 0;
+
+$configYRangeMax = $plotConfig['plot.yrange.max'] ?? 0;
+
+if ($configYRangeMax)
+    $yMax = $configYRangeMax;
+else
+    $yMax /= $timeDiv;
+
+$yrange = "$yMin:$yMax";
 
 $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
 
@@ -79,7 +104,7 @@ EOD;
 $normalPlot = <<<EOD
 set xtics rotate by 30 right
 set xtics scale 0
-set ytics scale .2 nomirror
+set ytics scale .2 nomirror $ystep
 set border 1
 set grid ytics
 set key off
@@ -136,23 +161,25 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
 
     if ($plotConfig['plot.yrange'] === 'local') {
         list ($min, $max) = $plotterStrategy->plot_getYRange(...$csvPaths);
-        $min /= $timeDiv;
-        $max /= $timeDiv;
+        $yMin /= $timeDiv;
+        $yMax /= $timeDiv;
 
         if (! $logscale) {
             $minZone = $maxZone = 0;
 
-            for ($i = 0; $i < $min; $i += $ystep, $minZone ++);
-            for ($i = 0; $i < $max; $i += $ystep, $maxZone ++);
+            for ($i = 0; $i < $yMin; $i += $ystep, $minZone ++);
+            for ($i = 0; $i < $yMax; $i += $ystep, $maxZone ++);
 
-            $min = ($minZone - 1) * $ystep;
-            $max = $maxZone * $ystep;
+            $yMin = ($minZone - 1) * $ystep;
+            $yMax = $maxZone * $ystep;
         }
-        $yrange = "$min:$max";
+        $yrange = "$yMin:$yMax";
         echo "set yrange [$yrange]\n";
     }
 
-    echo "set ylabel offset 15,0 \"[$yrange]\"\n";
+    if ($plotConfig['plot.yrange.display'] ?? false)
+        echo "set ylabel offset 15,0 \"[$yrange]\"\n";
+
     echo "set title \"$title\\n($nbAnswers answers)\"\n";
 
     $nb = 0;
@@ -166,6 +193,13 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
         foreach ($stack as $pos => $measure) {
             $measure = $PLOT->gnuplotSpecialChars($measure);
             $tmp[] = "'$fname.dat' u ($0 + $offset):(\$$pos/$timeDiv)$xtics with boxes title '$measure' ls $ls fs pattern $pattern \\\n";
+
+            if ($plotYLabel)
+                $tmp[] = "'' u " . //
+                "($0 + $offset +  (\$$pos/$timeDiv > $yMax ? $plotYLabelXOffset : 0)):" . //
+                "((\$$pos/$timeDiv > $yMax ? $yMax - $plotYLabelYOffset : \$$pos/$timeDiv + $plotYLabelYOffset) ):" . //
+                "(sprintf(\"%.2f\", \$$pos/$timeDiv))" . //
+                " with labels font \",8\"";
             $xtics = null;
             $pattern ++;
         }

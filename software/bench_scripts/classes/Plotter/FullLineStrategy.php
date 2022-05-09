@@ -30,35 +30,38 @@ final class FullLineStrategy extends AbstractFullStrategy
         return self::plotConfig;
     }
 
+    private const SELECT_ELEMENTS = [
+        'full_group',
+        'summary'
+    ];
+
     function groupCSVFiles(array $csvFiles): array
     {
-        $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
-        $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
-        $groups = \array_map(function ($p) {
-            $dirName = \basename($p);
+        $ret = [];
+        $groups = [];
+
+        foreach ($csvFiles as $csvFile) {
+            $dirName = \basename(\dirname($csvFile));
             $elements = \Help\Plotter::extractDirNameElements($dirName);
-            return $elements['full_group'];
-        }, $dirs);
-        $groups = \array_unique($groups, SORT_REGULAR);
-        \natcasesort($groups);
+            $group = $elements['full_group'];
 
-        foreach ($groups as $group) {
-            $regex = "#^\[$group#";
-            $gdirs = \array_filter($dirs, fn ($d) => \preg_match($regex, \basename($d)));
-            $gscores = \array_map(fn ($d) => $this->sortScore(\basename($d)), $gdirs);
-            $gdirs = \array_map(null, $gscores, $gdirs);
+            $summary = $elements['summary'];
+            $parallel = $elements['parallel'] ? 'parallel' : '';
 
-            \usort($gdirs, function ($a, $b) {
+            if (! empty($summary))
+                $summary = "[$summary]";
+            if (! empty($parallel))
+                $parallel = "[$parallel]";
 
-                if ($a[0] !== $b[0])
-                    return $a[0] - $b[0];
-
-                return \strnatcasecmp($a[1], $b[1]);
-            });
-            $gdirs = \array_column($gdirs, 1);
-
-            $ret[$group] = \array_values(\array_filter($csvFiles, fn ($csv) => \preg_match($regex, \basename(\dirname($csv)))));
+            $k = "$group$summary$parallel";
+            $ret[$k][] = $csvFile;
+            $groups[$k] = $this->sortScore($elements);
         }
+        $scoreKeys = \Help\Arrays::flipKeys($groups);
+        sort($groups);
+        $scoreKeys = \Help\Arrays::subSelect($scoreKeys, $groups);
+        $groups = \array_map(null, ...$scoreKeys);
+        $ret = \Help\Arrays::subSelect($ret, $groups[0]);
         return $ret;
     }
 }

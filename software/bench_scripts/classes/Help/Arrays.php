@@ -26,6 +26,16 @@ final class Arrays
         return $a[\array_key_last($a)];
     }
 
+    public static function flipKeys(array $a, $default = null)
+    {
+        $ret = [];
+
+        foreach ($a as $k => $v)
+            $ret[$v][] = $k;
+
+        return $ret;
+    }
+
     public static function subSelect(array $a, array $keys, $default = null)
     {
         $ret = [];

@@ -41,6 +41,8 @@ final class FullPlotter extends AbstractFullPlotter
 
     private array $queries;
 
+    private array $plotConfig;
+
     public function getStrategy()
     {
         return $this->strategy;
@@ -69,29 +71,71 @@ final class FullPlotter extends AbstractFullPlotter
         return \CSVReader::read($csvPath);
     }
 
+    public function plot_getConfig(): array
+    {
+        return $this->plotConfig;
+    }
+
     public function plot(array $csvPaths): void
     {
         $this->csvPaths = $csvPaths;
         $this->cleanCurrentDir();
-        $this->queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvPaths));
+        $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvPaths));
 
         $csvGroups = $this->strategy->groupCSVFiles($csvPaths);
         $this->writeDat($csvGroups);
         $this->writeCsv($csvGroups);
-        $this->csvGroups = $csvGroups;
 
-        $contents = \get_include_contents($this->template, [
-            'PLOT' => $this->plot,
-            'PLOTTER' => $this
-        ]);
-        $plotFileName = 'all_time.plot';
-        \file_put_contents($plotFileName, $contents);
+        $plotConfig = $this->strategy->plot_getConfig();
+        $plotGroups = $plotConfig['plot.groups'] ?? null;
 
-        $outFileName = 'all_time.png';
-        $cmd = "gnuplot '$plotFileName' > '$outFileName'";
-        echo "plotting $outFileName\n";
+        if (empty($plotGroups))
+            $plotGroups = [
+                [
+                    'queries' => $queries,
+                    'config' => []
+                ]
+            ];
 
-        system($cmd);
+        $nbGroups = \count($plotGroups);
+
+        foreach ($plotGroups as $groupName => $group) {
+            $groupQueries = $group['queries'];
+            $groupConfig = $group['config'] ?? [];
+            $this->csvGroups = [];
+
+            foreach ($csvGroups as $csvGroup => $files) {
+                $files = \array_filter($files, fn ($p) => in_array(\basename($p, '.csv'), $groupQueries));
+
+                if (empty($files))
+                    continue;
+
+                $this->csvGroups[$csvGroup] = $files;
+            }
+
+            if (empty($this->csvGroups))
+                continue;
+
+            $this->queries = $groupQueries;
+            $this->plotConfig = \array_merge($plotConfig, $groupConfig);
+
+            $contents = \get_include_contents($this->template, [
+                'PLOT' => $this->plot,
+                'PLOTTER' => $this
+            ]);
+            $fileName = "all_time";
+
+            if ($nbGroups > 1)
+                $fileName .= $groupName;
+
+            $plotFileName = "$fileName.plot";
+            \file_put_contents($plotFileName, $contents);
+
+            $outFileName = "$fileName.png";
+            $cmd = "gnuplot '$plotFileName' > '$outFileName'";
+            echo "plotting $outFileName\n";
+            system($cmd);
+        }
     }
 
     // ========================================================================

@@ -36,8 +36,13 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
         return $ret + $default + [
             'plot.yrange' => 'global',
-            'plot.yrange.step' => 10,
-            'logscale' => true
+            'plot.yrange.display' => true,
+            'plot.yrange.max' => null,
+            'plot.ylabel.yoffset' => 0.25,
+            'plot.ylabel.xoffset' => .5,
+            'plot.yrange.step' => 100,
+            'logscale' => true,
+            'queries' => null // array
         ];
     }
 
@@ -145,10 +150,21 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         'path' => 2
     ];
 
-    protected function sortScore(string $dirName): int
+    protected const SCORE_ELEMENTS = [
+        'partitioning',
+        'partition_id',
+        'parallel',
+        'summary'
+    ];
+
+    protected function sortScore($dirNameOrElements): int
     {
+        if (is_string($dirNameOrElements))
+            $elements = \Help\Plotter::extractDirNameElements($dirNameOrElements);
+        else
+            $elements = (array) $dirNameOrElements;
+
         $score = 0;
-        $elements = \Help\Plotter::extractDirNameElements($dirName);
         $partitioning = $elements['partitioning'];
         $pid = $elements['partition_id'];
 
