@@ -137,7 +137,13 @@ $nbPlots = 0;
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $csvData = $PLOTTER->getCsvData($csvPaths[0]);
     $nbAnswers = $csvData['answers']['total'];
-    $title = $PLOT->gnuplotSpecialChars($fname);
+
+    if (null !== ($f = $plotConfig['plot.title']))
+        $title = $f($fname, $nbAnswers);
+    else
+        $title = "$fname\\n($nbAnswers answers)";
+
+    $title = $PLOT->gnuplotSpecialChars($title);
 
     if (($nbPlots % $nbXPlots) === 0) {
         $tmp = [];
@@ -180,10 +186,10 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     if ($plotConfig['plot.yrange.display'] ?? false)
         echo "set ylabel offset 15,0 \"[$yrange]\"\n";
 
-    echo "set title \"$title\\n($nbAnswers answers)\"\n";
+    echo "set title \"$title\"\n";
 
     $nb = 0;
-    $pattern = 0;
+    $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
     $tmp = [];
     $xtics = ':xtic(1)';
 

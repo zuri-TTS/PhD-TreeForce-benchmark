@@ -27,6 +27,11 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     public function plot_getConfig(array $default = []): array
     {
+        static $conf = null;
+
+        if ($conf !== null)
+            return $conf;
+
         $wd = getcwd();
         $confFile = "$wd/../full_{$this->getID()}.php";
         $ret = [];
@@ -34,13 +39,16 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         if (\is_file($confFile))
             $ret = include $confFile;
 
-        return $ret + $default + [
+        return $conf = $ret + $default + [
             'plot.yrange' => 'global',
             'plot.yrange.display' => true,
             'plot.yrange.max' => null,
             'plot.ylabel.yoffset' => 0.25,
             'plot.ylabel.xoffset' => .5,
             'plot.yrange.step' => 100,
+            'plot.pattern.offset' => 0,
+            'plot.xtic' => null, // function
+            'plot.title' => null, // function
             'logscale' => true,
             'queries' => null // array
         ];
@@ -97,6 +105,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     public function getDataLine(string $csvPath = ''): array
     {
+        $plotConfig = $this->plot_getConfig();
         $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
 
         $nbReformulations = \Help\Arrays::follow($data, [
@@ -109,7 +118,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         ], - 1);
 
         $dirName = \basename(\dirname($csvPath));
-        $xtic = $this->makeXTic($dirName, $nbReformulations, $nbAnswers);
+        $makeXTics = $plotConfig['plot.xtic'] ?? [$this, 'makeXTic'];
+        $xtic = $makeXTics($dirName, $nbReformulations, $nbAnswers);
         $ret[] = $xtic;
 
         $globalRange = &$this->getRange();
