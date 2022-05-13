@@ -27,7 +27,8 @@ final class CmdArgs
         'output' => null,
         'skip-existing' => true,
         'plot' => '',
-        'forget-results' => false
+        'forget-results' => false,
+        'sort-measure' => 'stats.db.time',
     ];
 
     // ========================================================================

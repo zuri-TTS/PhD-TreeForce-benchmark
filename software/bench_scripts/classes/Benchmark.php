@@ -357,8 +357,9 @@ final class Benchmark
                 ]
             ] + $this->parseJavaOutput();
         }
-        \usort($measures, function ($a, $b) {
-            return $a['measures']['command']['r'] - $b['measures']['command']['r'];
+        $sortMeasure = $this->config['bench.sort.measure'];
+        \usort($measures, function ($a, $b) use($sortMeasure) {
+            return $a['measures'][$sortMeasure]['r'] - $b['measures'][$sortMeasure]['r'];
         });
         return $measures;
     }
