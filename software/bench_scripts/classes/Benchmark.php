@@ -328,6 +328,7 @@ final class Benchmark
         }
 
         $incVars = $this->prepareIncVars($queryFile);
+        $i = 1;
 
         while ($nbMeasures --) {
 
@@ -350,7 +351,11 @@ final class Benchmark
             if ($this->config['app.output.display'])
                 \readfile($this->tmpOutFile);
 
-            $measures[] = $this->parseJavaOutput();
+            $measures[] = [
+                'test' => [
+                    'index' => $i ++
+                ]
+            ] + $this->parseJavaOutput();
         }
         \usort($measures, function ($a, $b) {
             return $a['measures']['command']['r'] - $b['measures']['command']['r'];
