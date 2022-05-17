@@ -40,6 +40,7 @@ final class Plotter
         $ret['full_partition'] = $matches[3] ?? null;
         $ret['rules'] = $matches[4] ?? null;
         $ret['qualifiers'] = $matches[5] ?? null;
+        $ret['full_pattern'] = \preg_replace('#\}\[(.+)\]#U', '}[%s]', $dirName);
 
         list ($ret['partitioning'], $ret['partition']) = explode('.', $ret['full_partition']) + [
             null,

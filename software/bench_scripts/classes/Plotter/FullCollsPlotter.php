@@ -74,7 +74,9 @@ final class FullCollsPlotter extends AbstractFullPlotter
             if (! empty($summary))
                 $summary = "[summary-$summary]";
 
-            $dirGroup = "[$g][{$delements['rules']}][{$delements['qualifiers']}]$summary";
+            $dirGroup = $delements['full_pattern'];
+            $dirGroup = \preg_replace('#^\[(.+)\]#U', '', $dirGroup);
+            $dirGroup = "[$g]$dirGroup";
 
             foreach ($queries as $query)
                 $ret[$query][$dirGroup][] = "$dpath/$query.csv";
