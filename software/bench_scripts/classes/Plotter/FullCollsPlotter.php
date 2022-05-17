@@ -14,6 +14,16 @@ final class FullCollsPlotter extends AbstractFullPlotter
         return \Plot::PROCESS_FULL;
     }
 
+    protected function cleanCurrentDir()
+    {
+        parent::cleanCurrentDir();
+
+        foreach (\scandirNoPoints('.') as $file) {
+            if (\is_dir($file))
+                rrmdir($file);
+        }
+    }
+
     public function plot(array $csvPaths): void
     {
         $this->cleanCurrentDir();
