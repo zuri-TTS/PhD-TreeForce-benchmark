@@ -157,7 +157,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     if (($nbPlots % $nbXPlots) === 0) {
         $tmp = [];
         $ls = 1;
-        $pattern = 0;
+        $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
 
         foreach ($stacked as $stack) {
 
