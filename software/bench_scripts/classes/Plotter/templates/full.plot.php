@@ -68,7 +68,12 @@ while ($yRangeMax < $yMax)
 $yMax = $yRangeMax;
 unset($yRangeMax);
 
-$yMin /= $timeDiv;
+$configYRangeMin = $plotConfig['plot.yrange.min'] ?? 0;
+
+if ($configYRangeMin)
+    $yMin = $configYRangeMin;
+else
+    $yMin /= $timeDiv;
 
 if ($yMin < 1)
     $yMin = 0;
@@ -207,7 +212,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
             if ($plotYLabel)
                 $tmp[] = "'' u " . //
                 "($0 + $offset +  (\$$pos/$timeDiv > $yMax ? $plotYLabelXOffset : 0)):" . //
-                "((\$$pos/$timeDiv > $yMax ? $yMax - $plotYLabelYOffset : \$$pos/$timeDiv + $plotYLabelYOffset) ):" . //
+                "((\$$pos/$timeDiv > $yMax ? $yMax - $plotYLabelYOffset : (\$$pos/$timeDiv > $yMin ? \$$pos/$timeDiv + $plotYLabelYOffset : $yMin + $plotYLabelYOffset)) ):" . //
                 "(sprintf(\"%.2f\", \$$pos/$timeDiv))" . //
                 " with labels font \",8\"";
             $xtics = null;
