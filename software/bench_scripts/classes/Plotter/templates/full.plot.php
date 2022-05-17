@@ -82,8 +82,6 @@ else
 
 $yrange = "$yMin:$yMax";
 
-$theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
-
 $boxwidth = 0.25;
 
 $placeholderPlot = <<<EOD
@@ -114,12 +112,18 @@ EOD;
 if ($logscale)
     echo "set logscale y\n";
 
+if ($plotConfig['multiplot.title'] === true) {
+    $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
+    $multiplotTitle = "title \"$theTitle\"\n";
+} else
+    $multiplotTitle = null;
+
 echo <<<EOD
 set style fill pattern border -1
 set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
 set term png size $w, $h
-set multiplot layout $multiColLayout title "$theTitle"
+set multiplot layout $multiColLayout $multiplotTitle
 set rmargin 0
 set lmargin 0
 set bmargin 10

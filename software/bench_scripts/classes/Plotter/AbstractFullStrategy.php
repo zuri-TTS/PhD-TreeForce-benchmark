@@ -49,6 +49,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'plot.pattern.offset' => 0,
             'plot.xtic' => null, // function
             'plot.title' => null, // function
+            'multiplot.title' => true,
             'logscale' => true,
             'queries' => null // array
         ];
