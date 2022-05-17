@@ -45,7 +45,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'plot.yrange.max' => null,
             'plot.yrange.min' => null,
             'plot.ylabel.yoffset' => 0.25,
-            'plot.ylabel.xoffset' => .5,
+            // 'plot.ylabel.xoffset' => .5,
             'plot.yrange.step' => 100,
             'plot.pattern.offset' => 0,
             'plot.xtic' => null, // function
@@ -120,7 +120,10 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         ], - 1);
 
         $dirName = \basename(\dirname($csvPath));
-        $makeXTics = $plotConfig['plot.xtic'] ?? [$this, 'makeXTic'];
+        $makeXTics = $plotConfig['plot.xtic'] ?? [
+            $this,
+            'makeXTic'
+        ];
         $xtic = $makeXTics($dirName, $nbReformulations, $nbAnswers);
         $ret[] = $xtic;
 
@@ -233,5 +236,40 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $partition = ".$partition";
 
         return "$group$partition$pid$summary$parallel($nbReformulations,$nbAnswers)";
+    }
+
+    public static function makeXTic_clean(string $testName = "test", bool $showNbAnswers = false)
+    {
+        return function ($dirName, $nbReformulations, $nbAnswers) use ($testName, $showNbAnswers) {
+            $elements = \Help\Plotter::extractDirNameElements($dirName);
+            $group = $elements['group'];
+            $summary = $elements['summary'];
+            $partition = $elements['full_partition'];
+            $parallel = $elements['parallel'];
+            $pid = $elements['partition_id'];
+
+            if (! empty($pid))
+                $pid = "($pid)";
+            if ($parallel)
+                $parallel = "[parallel]";
+            if (! empty($summary))
+                $summary = "($summary)";
+
+            switch ($partition) {
+                case "":
+                    $partition = $testName;
+                    break;
+                case "Lcolls":
+                    $partition = "logical";
+                    break;
+                case "colls":
+                    $partition = "physical";
+                    break;
+                default:
+                    $partition = "Error";
+            }
+            $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
+            return "$partition$pid$summary$parallel($nbReformulations$nbAnswers)";
+        };
     }
 }
