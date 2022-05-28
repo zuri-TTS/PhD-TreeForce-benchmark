@@ -199,7 +199,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         'summary' => $benchSummary,
         'toNative.summary' => $benchToNativeSummary,
         'test.existing' => $test_existing,
-        'bench.sort.measure' => $cmdArg['sort-measure'],
+        'bench.sort.measure' => $cmdArg['sort-measure'] ?? ($cmdArg['parallel'] ? 'threads.time' : 'stats.db.time'),
         'bench.output.dir' => $outDir,
         'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
