@@ -44,7 +44,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'plot.yrange.display' => true,
             'plot.yrange.max' => null,
             'plot.yrange.min' => null,
-            'plot.ylabel.yoffset' => 0.25,
+            'plot.ylabel.yoffset' => 1,
             // 'plot.ylabel.xoffset' => .5,
             'plot.yrange.step' => 100,
             'plot.pattern.offset' => 0,

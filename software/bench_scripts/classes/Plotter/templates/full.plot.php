@@ -20,6 +20,7 @@ if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
     $plotYLabelXOffset = $plotYLabelXOffset ?? 0;
     $plotYLabelYOffset = $plotYLabelYOffset ?? 0;
 }
+$plotYLabelYOffsetSub = $plotYLabelYOffset;
 
 $ystep = $plotConfig['plot.yrange.step'];
 $logscale = $plotConfig['logscale'];
@@ -111,8 +112,11 @@ set key off
 
 EOD;
 
-if ($logscale)
+if ($logscale) {
     echo "set logscale y\n";
+    $plotYLabelYOffsetPattern = "($plotYLabelYOffset * 10 ** (log10(%s)-1))";
+    $plotYLabelYOffsetSubPattern = "($plotYLabelYOffset * 10 ** (log10($yMax)-1))";
+}
 
 if ($plotConfig['multiplot.title'] === true) {
     $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
@@ -210,12 +214,19 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
             $measure = $PLOT->gnuplotSpecialChars($measure);
             $tmp[] = "'$fname.dat' u ($0 + $offset):(\$$pos/$timeDiv)$xtics with boxes title '$measure' ls $ls fs pattern $pattern \\\n";
 
-            if ($plotYLabel)
+            if ($plotYLabel) {
+
+                if ($logscale) {
+                    $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "\$$pos/$timeDiv");
+                    $plotYLabelYOffsetSub = sprintf($plotYLabelYOffsetSubPattern, "\$$pos/$timeDiv");
+                }
+
                 $tmp[] = "'' u " . //
-                "($0 + $offset +  (\$$pos/$timeDiv > $yMax ? $plotYLabelXOffset : 0)):" . //
-                "((\$$pos/$timeDiv > $yMax ? $yMax - $plotYLabelYOffset : (\$$pos/$timeDiv > $yMin ? \$$pos/$timeDiv + $plotYLabelYOffset : $yMin + $plotYLabelYOffset)) ):" . //
+                "($0 + $offset +  (\$$pos/$timeDiv >= $yMax ? 1 : 0)):" . //
+                "((\$$pos/$timeDiv >= $yMax ? $yMax - $plotYLabelYOffsetSub : (\$$pos/$timeDiv > $yMin ? \$$pos/$timeDiv + $plotYLabelYOffset : $yMin + $plotYLabelYOffset)) ):" . //
                 "(sprintf(\"%.2f\", \$$pos/$timeDiv))" . //
                 " with labels font \",8\"";
+            }
             $xtics = null;
             $pattern ++;
         }
