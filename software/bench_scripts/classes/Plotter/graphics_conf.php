@@ -10,8 +10,9 @@ return [
     'w.space' => 250,
 
     // Bar
+    'bar.offset.factor' => 1,
+    'bar.end.factor' => 1,
     'bar.w' => 15,
-    // 'bar.nb' => 2,
     'bar.gap.factor' => 1,
 
     // Plot
@@ -20,6 +21,7 @@ return [
     'plot.w' => - 1,
     'plot.h' => - 1,
     'plot.w.full' => - 1,
+    'plot.w.full.bar.nb' => - 1,
     'plot.h.full' => - 1,
     'plot.w.space' => 300,
     'plot.h.space' => 100,

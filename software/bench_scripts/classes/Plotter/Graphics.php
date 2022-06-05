@@ -54,8 +54,11 @@ final class Graphics implements \ArrayAccess
 
         $g['plot.y.step.nb'] = (int) ceil(log10($g['plot.y.max']));
 
-        $nbBarsWithGaps = $nbBars + ($nbBarGroups * $g['bar.gap.factor']);
-        $g['plot.w'] = $nbBarsWithGaps * $g['bar.w'];
+        $gaps = $nbBarGroups * $g['bar.gap.factor'];
+
+        $g['plot.w.full.bar.nb'] = $nbBars + $gaps + $g['bar.offset.factor'] + $g['bar.end.factor'];
+
+        $g['plot.w'] = $g['plot.w.full.bar.nb'] * $g['bar.w'];
         $g['plot.w'] = max($g['plot.w'], $g['plot.w.min']);
         $g['plot.h'] = $g['plot.y.step.nb'] * $g['plot.y.step'] + $g['plot.h.space'];
 

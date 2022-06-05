@@ -40,7 +40,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $nbMeasures = \max($nbMeasures, \count($csvPaths));
 }
 
-$nbBars = $nbMeasures * $nbMeasuresToPlot + 1;
+$nbBars = $nbMeasures * $nbMeasuresToPlot;
 $graphics->compute($nbBars, $nbMeasures, $yMax);
 $yMin = \max(1, $yMin - 1);
 
@@ -84,7 +84,7 @@ else
 
 $yrange = "$yMin:$yMax";
 
-$boxwidth = 0.25;
+$boxwidth = 1;
 
 $placeholderPlot = <<<EOD
 unset title
@@ -132,8 +132,12 @@ set bmargin 10
 
 EOD;
 
-$xmax = $nbMeasures + $boxwidth;
-$xmin = - $boxwidth * 2;
+$xmax = $boxwidth * $nbBars - $boxwidth / 2;
+$xmin = - $boxwidth / 2;
+
+$xmin -= $boxwidth * $graphics['bar.offset.factor'];
+$xmax += $boxwidth * $graphics['bar.end.factor'];
+
 echo "set yrange [$yrange]\n";
 echo "set xrange [$xmin:$xmax]\n";
 
