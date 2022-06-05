@@ -214,7 +214,8 @@ final class OneTest extends AbstractTest
             'output' => \sys_get_temp_dir(),
             'plot' => false,
             'doonce' => true,
-            'forget-results' => true
+            'forget-results' => true,
+            'Ppartition.id' => $this->javaProperties['partition.id']
         ];
         $doItParser = CmdArgs::default();
         $doItParser->parse($summArgs);
