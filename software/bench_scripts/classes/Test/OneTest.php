@@ -146,6 +146,12 @@ final class OneTest extends AbstractTest
 
             if (! $collExists)
                 throw new \Exception("The collection treeforce.$this->collection must exists in the database");
+
+            // Load the index
+            if ($this->args['cmd'] === 'querying' && $this->partition->isLogical()) {
+                $partitionId = $this->javaProperties['partition.id'];
+                $this->loadIndex($partitionId);
+            }
         }
 
         if ($this->needNativeSummary) {

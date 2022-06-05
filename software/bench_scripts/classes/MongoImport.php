@@ -153,6 +153,29 @@ final class MongoImport
         return self::$collections_cache = \json_decode($output);
     }
 
+    public static function createIndex($collection, string $indexName, int $order = 1): void
+    {
+        if (is_string($collection))
+            $collections = (array) $collection;
+        elseif ($collection instanceof DataSet)
+            $collections = $collection->getCollections();
+        elseif (is_array($collection))
+            $collections = $collection;
+        else
+            throw new \Exception("Error, argument \$collection of type " . gettype($collections) . "is invalid");
+
+        echo "Create the index '$indexName' for treeforce.$collection\n";
+
+        $script = [];
+        foreach ($collections as $collection)
+            $script[] = "db.getCollection(\"$collection\").createIndex({ \"$indexName\" : $order });";
+
+        $script = \escapeshellarg(implode("\n", $script));
+        $cmd = "mongosh treeforce --quiet --eval $script";
+        \simpleExec($cmd, $output, $err);
+        echo $output;
+    }
+
     public static function importDataSet(DataSet $dataSet, array $ignoreCollections = []): void
     {
         DataSets::checkNotExists([

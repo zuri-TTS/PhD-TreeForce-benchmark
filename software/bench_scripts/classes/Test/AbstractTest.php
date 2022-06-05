@@ -49,6 +49,13 @@ abstract class AbstractTest
             $this->xmlLoader->clean($clean);
     }
 
+    public final function loadIndex(string $indexName): void
+    {
+        if (empty($this->collection))
+            return;
+        \MongoImport::createIndex($this->collection, $indexName);
+    }
+
     public final function loadCollection(): void
     {
         if (empty($this->collection))
