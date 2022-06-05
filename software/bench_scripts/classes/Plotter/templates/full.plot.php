@@ -26,8 +26,6 @@ $logscale = $plotConfig['logscale'];
 
 list ($yMin, $yMax) = $plotterStrategy->plot_getYRange(...$csvFiles);
 
-$plot_wMin = 600;
-
 $nbQueries = \count($PLOTTER->getQueries());
 
 if ($nbQueries > 0)
@@ -53,7 +51,6 @@ $plotXSize = 1.0 / ($nbXPlots);
 $multiColLayout = "$nbYPlots, $nbXPlots";
 $plotSize = (1.0 / $nbXPlots) . "," . (1.0 / $nbYPlots);
 
-$graphics['w'] = \max($graphics['w'], $plot_wMin);
 $graphics['w'] *= $nbXPlots;
 $graphics['h'] *= $nbYPlots;
 $h = $graphics['h'];

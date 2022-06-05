@@ -16,6 +16,7 @@ return [
 
     // Plot
     'plot.header.h' => 60,
+    'plot.w.min' => 100,
     'plot.w' => - 1,
     'plot.h' => - 1,
     'plot.w.full' => - 1,

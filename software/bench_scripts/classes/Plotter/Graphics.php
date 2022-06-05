@@ -56,6 +56,7 @@ final class Graphics implements \ArrayAccess
 
         $nbBarsWithGaps = $nbBars + ($nbBarGroups * $g['bar.gap.factor']);
         $g['plot.w'] = $nbBarsWithGaps * $g['bar.w'];
+        $g['plot.w'] = max($g['plot.w'], $g['plot.w.min']);
         $g['plot.h'] = $g['plot.y.step.nb'] * $g['plot.y.step'] + $g['plot.h.space'];
 
         $g['plot.x'] = $g['plot.lmargin'];
