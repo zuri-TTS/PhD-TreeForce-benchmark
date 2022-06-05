@@ -6,9 +6,11 @@ final class Graphics implements \ArrayAccess
 
     private array $graphics;
 
-    public function __construct()
+    public function __construct(array $conf = [])
     {
-        $this->graphics = include __DIR__ . '/graphics_conf.php';
+        $g = include __DIR__ . '/graphics_conf.php';
+        $conf = \array_intersect_key($conf, $g);
+        $this->graphics = $conf + $g;
     }
 
     // ========================================================================
@@ -64,7 +66,7 @@ final class Graphics implements \ArrayAccess
 
         $g['w'] = $g['plot.w.full'] + $g['plot.rmargin'];
         $g['h'] = $g['plot.h.full'];
-        
+
         $g['blocs.w'] = 0;
         $g['blocs.h'] = 0;
     }
@@ -105,12 +107,11 @@ final class Graphics implements \ArrayAccess
         $this->updateWidth();
         return $ret;
     }
-    
+
     private function updateWidth()
     {
         $g = &$this->graphics;
         $g['w'] = \max($g['w'], $g['blocs.w']);
-        
     }
 
     private function computeFooterBlocGraphics(array $bloc): array
@@ -139,9 +140,9 @@ final class Graphics implements \ArrayAccess
         ];
 
         foreach ($arrOfCsvData as $csvData) {
-            
+
             foreach ($csvData as $meas) {
-                
+
                 if (! \Plot::isTimeMeasure($meas))
                     continue;
 

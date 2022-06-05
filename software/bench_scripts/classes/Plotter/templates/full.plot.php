@@ -1,7 +1,6 @@
 <?php
 $timeDiv = 1000;
 
-$graphics = new Plotter\Graphics();
 $plotterStrategy = $PLOTTER->getStrategy();
 
 $plotConfig = $PLOTTER->plot_getConfig();
@@ -11,6 +10,7 @@ $nbPlots = $PLOTTER->getNbGroups();
 $stacked = $plotterStrategy->plot_getStackedMeasures();
 $nbMeasuresToPlot = \count($stacked);
 
+$graphics = new Plotter\Graphics($plotConfig);
 $plotYLabelYOffset = ($plotConfig['plot.ylabel.yoffset'] ?? null);
 $plotYLabelXOffset = ($plotConfig['plot.ylabel.xoffset'] ?? null);
 $plotYLabel = false;
