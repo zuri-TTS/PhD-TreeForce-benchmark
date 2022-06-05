@@ -91,16 +91,17 @@ final class FullPlotter extends AbstractFullPlotter
 
         if (empty($plotGroups))
             $plotGroups = [
-                [
-                    'queries' => $queries,
-                    'config' => []
-                ]
+                null
             ];
 
         $nbGroups = \count($plotGroups);
 
         foreach ($plotGroups as $groupName => $group) {
-            $groupQueries = $group['queries'];
+
+            if (empty($group))
+                $group = [];
+
+            $groupQueries = $group['queries'] ?? $queries;
             $groupConfig = $group['config'] ?? [];
             $this->csvGroups = [];
 
