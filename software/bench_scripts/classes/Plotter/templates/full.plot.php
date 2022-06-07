@@ -125,10 +125,12 @@ if ($plotConfig['multiplot.title'] === true) {
     $multiplotTitle = null;
 
 echo <<<EOD
+if(!exists("terminal")) terminal="png"
+
 set style fill pattern border -1
 set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
-set term png size $w, $h
+set term terminal size $w, $h
 set multiplot layout $multiColLayout $multiplotTitle
 set rmargin 0
 set lmargin 0

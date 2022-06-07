@@ -132,10 +132,19 @@ final class FullPlotter extends AbstractFullPlotter
             $plotFileName = "$fileName.plot";
             \file_put_contents($plotFileName, $contents);
 
-            $outFileName = "$fileName.png";
-            $cmd = "gnuplot '$plotFileName' > '$outFileName'";
-            echo "plotting $outFileName\n";
-            system($cmd);
+            $extensions = $this->plotConfig['terminal'] ?? (array) 'png';
+
+            if (! is_array($extensions))
+                $extensions = [
+                    $extensions
+                ];
+
+            foreach ($extensions as $extension) {
+                $outFileName = "$fileName.$extension";
+                $cmd = "gnuplot -e 'terminal=\"$extension\"' '$plotFileName' > '$outFileName'";
+                echo "plotting $outFileName\n";
+                system($cmd);
+            }
         }
     }
 
