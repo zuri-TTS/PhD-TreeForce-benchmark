@@ -29,7 +29,7 @@ list ($yMin, $yMax) = $plotterStrategy->plot_getYRange(...$csvFiles);
 
 $nbQueries = \count($PLOTTER->getQueries());
 
-if ($nbQueries > 0)
+if ($nbQueries > 0 && !($graphics['plots.max.x'] > 0))
     $graphics['plots.max.x'] = $nbQueries;
 
 $getMeasure = function ($csvData, $what, $time) {
