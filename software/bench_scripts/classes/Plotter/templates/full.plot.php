@@ -7,7 +7,7 @@ $plotConfig = $PLOTTER->plot_getConfig();
 $csvGroups = $PLOTTER->getCsvGroups();
 $csvFiles = \array_merge(...\array_values($csvGroups));
 $nbPlots = $PLOTTER->getNbGroups();
-$stacked = $plotterStrategy->plot_getStackedMeasures();
+$stacked = $plotterStrategy->plot_getStackedMeasures($plotConfig['plot.measures'] ?? []);
 $nbMeasuresToPlot = \count($stacked);
 
 $graphics = new Plotter\Graphics($plotConfig);

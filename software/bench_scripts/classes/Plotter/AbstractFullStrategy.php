@@ -8,7 +8,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     protected array $toPlot;
 
-    protected array $stackedMeasuresToPlot;
+    protected array $stackedMeasuresToPlot_default;
 
     protected function __construct()
     {}
@@ -21,7 +21,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     public function setStackedMeasuresToPlot(array $stackedMeasures): AbstractFullStrategy
     {
-        $this->stackedMeasuresToPlot = $stackedMeasures;
+        $this->stackedMeasuresToPlot_default = $stackedMeasures;
         return $this;
     }
 
@@ -52,7 +52,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'plot.title' => null, // function
             'multiplot.title' => true,
             'logscale' => true,
-            'queries' => null // array
+            'queries' => null // array,
         ];
     }
 
@@ -89,9 +89,50 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         }, self::MAX_RANGE);
     }
 
-    public function plot_getStackedMeasures(): array
+    private function toPlotIndex(): array
     {
-        return $this->stackedMeasuresToPlot;
+        $index = [];
+        $i = 2;
+
+        foreach ($this->toPlot as $name => $v) {
+            $k = \explode('|', $name);
+
+            foreach ($k as $k)
+                $index[$k] = $i;
+
+            $i ++;
+        }
+        return $index;
+    }
+
+    public function plot_getStackedMeasures(array $measures = []): array
+    {
+        if (empty($measures))
+            return $this->stackedMeasuresToPlot_default;
+
+        $ret = [];
+        $toPlotIndex = $this->toPlotIndex();
+
+        foreach ($measures as $key => $stack) {
+
+            if (is_string($stack)) {
+
+                if (is_int($key))
+                    $key = $stack;
+
+                $stack = [
+                    $key => $stack
+                ];
+            }
+            $s = [];
+
+            foreach ($stack as $measure => $displayName) {
+                $i = $toPlotIndex[$measure];
+                $s[$i] = $displayName;
+            }
+            $ret[] = $s;
+        }
+        return $ret;
     }
 
     // ========================================================================
