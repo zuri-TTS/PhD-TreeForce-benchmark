@@ -33,13 +33,21 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             return $conf;
 
         $wd = getcwd();
-        $confFile = "$wd/../full_{$this->getID()}.php";
-        $ret = [];
+        $path_ex = explode(DIRECTORY_SEPARATOR, $wd);
+        $PARENT = [];
+        $conf = [];
 
-        if (\is_file($confFile))
-            $ret = include $confFile;
+        for ($i = 1, $c = \count($path_ex); $i <= $c; $i ++) {
+            $path = \implode(DIRECTORY_SEPARATOR, \array_slice($path_ex, 0, $i));
+            $confFile = "$path/full_{$this->getID()}.php";
 
-        return $conf = $ret + $default + [
+            if (\is_file($confFile)) {
+                $conf = \array_merge($conf, include $confFile);
+                $PARENT = $conf;
+            }
+        }
+
+        return $conf += $default + [
             'plot.yrange' => 'global',
             'plot.yrange.display' => true,
             'plot.yrange.max' => null,
