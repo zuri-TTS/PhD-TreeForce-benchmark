@@ -12,6 +12,7 @@ $nbMeasuresToPlot = \count($stacked);
 
 $graphics = new Plotter\Graphics($plotConfig);
 $plotYLabelYOffset = ($plotConfig['plot.ylabel.yoffset'] ?? null);
+$plotYLabelYOffsetSub = ($plotConfig['plot.ylabel.yoffset.sub'] ?? $plotYLabelYOffset);
 $plotYLabelXOffset = ($plotConfig['plot.ylabel.xoffset'] ?? null);
 $plotYLabel = false;
 
@@ -19,9 +20,8 @@ if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
     $plotYLabel = true;
     $plotYLabelXOffset = $plotYLabelXOffset ?? 0;
     $plotYLabelYOffset = $plotYLabelYOffset ?? 0;
+    $plotYLabelYOffsetSub = $plotYLabelYOffsetSub ?? $plotYLabelYOffset;
 }
-$plotYLabelYOffsetSub = $plotYLabelYOffset;
-
 $ystep = $plotConfig['plot.yrange.step'];
 $logscale = $plotConfig['logscale'];
 
@@ -29,7 +29,7 @@ list ($yMin, $yMax) = $plotterStrategy->plot_getYRange(...$csvFiles);
 
 $nbQueries = \count($PLOTTER->getQueries());
 
-if ($nbQueries > 0 && !($graphics['plots.max.x'] > 0))
+if ($nbQueries > 0 && ! ($graphics['plots.max.x'] > 0))
     $graphics['plots.max.x'] = $nbQueries;
 
 $getMeasure = function ($csvData, $what, $time) {
@@ -115,7 +115,7 @@ EOD;
 if ($logscale) {
     echo "set logscale y\n";
     $plotYLabelYOffsetPattern = "($plotYLabelYOffset * 10 ** (log10(%s)-1))";
-    $plotYLabelYOffsetSubPattern = "($plotYLabelYOffset * 10 ** (log10($yMax)-1))";
+    $plotYLabelYOffsetSubPattern = "($plotYLabelYOffsetSub * 10 ** (log10($yMax)-1))";
 }
 
 if ($plotConfig['multiplot.title'] === true) {
@@ -126,6 +126,8 @@ if ($plotConfig['multiplot.title'] === true) {
 
 echo <<<EOD
 if(!exists("terminal")) terminal="png"
+
+tm(x)=x/$timeDiv
 
 set style fill pattern border -1
 set boxwidth $boxwidth
@@ -142,13 +144,14 @@ $xmax = $boxwidth * $nbBars - $boxwidth / 2;
 $xmin = - $boxwidth / 2;
 
 $xmin -= $boxwidth * $graphics['bar.offset.factor'];
-$xmax += $boxwidth * $graphics['bar.end.factor'];
+$xmax += $boxwidth * ($graphics['bar.end.factor'] + $graphics['bar.gap.nb']);
 
 echo "set yrange [$yrange]\n";
 echo "set xrange [$xmin:$xmax]\n";
 
 $ls = 1;
 $nbPlots = 0;
+$gap = $graphics['bar.gap.factor'];
 
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $csvData = $PLOTTER->getCsvData($csvPaths[0]);
@@ -204,37 +207,36 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
 
     echo "set title \"$title\"\n";
 
-    $nb = 0;
     $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
     $tmp = [];
     $xtics = ':xtic(1)';
+    $spaceFactor = $boxwidth * $nbMeasuresToPlot + $gap;
+    $stacked_i = 0;
 
     foreach ($stacked as $stack) {
-        $offset = $nb * $boxwidth;
 
         foreach ($stack as $pos => $measure) {
             $measure = $PLOT->gnuplotSpecialChars($measure);
-            $tmp[] = "'$fname.dat' u ($0 + $offset):(\$$pos/$timeDiv)$xtics with boxes title '$measure' ls $ls fs pattern $pattern \\\n";
+            $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes title '$measure' ls $ls fs pattern $pattern";
 
             if ($plotYLabel) {
 
                 if ($logscale) {
-                    $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "\$$pos/$timeDiv");
-                    $plotYLabelYOffsetSub = sprintf($plotYLabelYOffsetSubPattern, "\$$pos/$timeDiv");
+                    $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "tm(\$$pos)");
+                    $plotYLabelYOffsetSub = sprintf($plotYLabelYOffsetSubPattern, "tm(\$$pos)");
                 }
-
                 $tmp[] = "'' u " . //
-                "($0 + $offset +  (\$$pos/$timeDiv >= $yMax ? 1 : 0)):" . //
-                "((\$$pos/$timeDiv >= $yMax ? $yMax - $plotYLabelYOffsetSub : (\$$pos/$timeDiv > $yMin ? \$$pos/$timeDiv + $plotYLabelYOffset : $yMin + $plotYLabelYOffset)) ):" . //
-                "(sprintf(\"%.2f\", \$$pos/$timeDiv))" . //
+                "(\$0 * $spaceFactor + $stacked_i + (tm(\$$pos) >= $yMax ? $plotYLabelXOffset : 0)):" . //
+                "(tm(\$$pos) + $plotYLabelYOffset >= $yMax) ? $yMax - $plotYLabelYOffsetSub : ( (tm(\$$pos) > $yMin ? tm(\$$pos) : $yMin) + $plotYLabelYOffset):" . //
+                "(sprintf(\"%.2f\", tm(\$$pos)))" . //
                 " with labels font \",8\"";
             }
             $xtics = null;
             $pattern ++;
         }
-        $nb ++;
+        $stacked_i += $boxwidth;
     }
     $nbPlots ++;
 
-    echo "plot", implode(',', $tmp), "\n";
+    echo "plot\\\n", implode(",\\\n", $tmp), "\n";
 }

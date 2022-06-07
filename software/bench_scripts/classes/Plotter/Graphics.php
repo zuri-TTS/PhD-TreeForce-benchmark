@@ -49,12 +49,12 @@ final class Graphics implements \ArrayAccess
         $g = &$this->graphics;
         $g = [
             'plot.y.max' => $yMax,
-            'plot.gap.nb' => $nbBarGroups + 1
+            'bar.gap.nb' => ($nbBarGroups - 1) * $g['bar.gap.factor']
         ] + $g;
 
         $g['plot.y.step.nb'] = (int) ceil(log10($g['plot.y.max']));
 
-        $gaps = $nbBarGroups * $g['bar.gap.factor'];
+        $gaps = $g['bar.gap.nb'];
 
         $g['plot.w.full.bar.nb'] = $nbBars + $gaps + $g['bar.offset.factor'] + $g['bar.end.factor'];
 

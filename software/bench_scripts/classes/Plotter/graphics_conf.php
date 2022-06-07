@@ -14,6 +14,7 @@ return [
     'bar.end.factor' => 1,
     'bar.w' => 15,
     'bar.gap.factor' => 1,
+    'bar.gap.nb' => -1,
 
     // Plot
     'plot.header.h' => 60,
