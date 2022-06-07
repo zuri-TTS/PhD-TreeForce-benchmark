@@ -289,8 +289,13 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $parallel = $elements['parallel'];
             $pid = $elements['partition_id'];
 
-            if (! empty($pid))
-                $pid = "($pid)";
+            if (! empty($partition)) {
+
+                if (! empty($pid))
+                    $pid = "($pid)";
+            } else
+                $pid = '';
+
             if ($parallel)
                 $parallel = "[parallel]";
             if (! empty($summary))
