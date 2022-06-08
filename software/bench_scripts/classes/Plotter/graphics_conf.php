@@ -26,9 +26,9 @@ return [
     'plot.h.full' => - 1,
     'plot.w.space' => 300,
     'plot.h.space' => 100,
-    'plot.rmargin' => 10,
-    'plot.lmargin' => 130,
-    'plot.bmargin' => 130,
+    'plot.rmargin' => 0,
+    'plot.lmargin' => 0,
+    'plot.bmargin' => 5,
 
     'plot.x' => - 1,
 //     'plot.x.step' => - 1,

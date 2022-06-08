@@ -150,9 +150,9 @@ set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
 set term terminal size $w, $h
 set multiplot layout $multiColLayout $multiplotTitle
-set rmargin 0
-set lmargin 0
-set bmargin 10
+set rmargin ${graphics['plot.rmargin']}
+set lmargin ${graphics['plot.lmargin']}
+set bmargin ${graphics['plot.bmargin']}
 set yrange [$yrange]
 set xrange [$xmin:$xmax]
 
