@@ -19,9 +19,13 @@ $plotYLabel = false;
 if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
     $plotYLabel = true;
     $plotYLabelXOffset = $plotYLabelXOffset ?? 0;
-    $plotYLabelYOffset = $plotYLabelYOffset ?? 0;
-    $plotYLabelYOffsetSub = $plotYLabelYOffsetSub ?? $plotYLabelYOffset;
 }
+
+if ($plotYLabelYOffset < 0) {
+    $plotYLabelYOffset = $graphics['font.size'] * ($plotConfig['plot.yrange.step'] / $graphics['plot.y.step']);
+}
+$plotYLabelYOffsetSub = $plotYLabelYOffset;
+
 $ystep = $plotConfig['plot.yrange.step'];
 $logscale = $plotConfig['logscale'];
 
