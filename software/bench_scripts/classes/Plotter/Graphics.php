@@ -44,31 +44,38 @@ final class Graphics implements \ArrayAccess
         return $this->graphics;
     }
 
-    public function compute(int $nbBars, int $nbBarGroups, int $yMax)
+    public function compute(int $nbBars, int $nbBarGroups)
     {
         $g = &$this->graphics;
         $g = [
-            'plot.y.max' => $yMax,
             'bar.gap.nb' => ($nbBarGroups - 1) * $g['bar.gap.factor']
         ] + $g;
 
-        $g['plot.y.step.nb'] = (int) ceil(log10($g['plot.y.max']));
-
+        if ($g['logscale']) {
+            $base = is_int($g['logscale']) ? $g['logscale'] : $g['plot.yrange.step'];
+            $g['plot.y.step.nb'] = \ceil(\log($g['plot.yrange.max'] - $g['plot.yrange.min'], $base));
+        } else {
+            $g['plot.y.step.nb'] = ($g['plot.yrange.max'] - $g['plot.yrange.min']) / $g['plot.yrange.step'];
+        }
+        $onlyPlotH = $g['plot.y.step.nb'] * $g['plot.y.step'];
+        $g['plot.lmargin.pixels'] = $g['plot.lmargin'] * $g['font.size'];
+        $g['plot.rmargin.pixels'] = $g['plot.rmargin'] * $g['font.size'];
+        $g['plot.bmargin.pixels'] = $g['plot.bmargin'] * $g['font.size'];
         $gaps = $g['bar.gap.nb'];
 
         $g['plot.w.full.bar.nb'] = $nbBars + $gaps + $g['bar.offset.factor'] + $g['bar.end.factor'];
 
         $g['plot.w'] = $g['plot.w.full.bar.nb'] * $g['bar.w'];
         $g['plot.w'] = max($g['plot.w'], $g['plot.w.min']);
-        $g['plot.h'] = $g['plot.y.step.nb'] * $g['plot.y.step'] + $g['plot.h.space'];
+        $g['plot.h'] = $onlyPlotH + $g['plot.h.space'];
 
-        $g['plot.x'] = $g['plot.lmargin'];
-        $g['plot.y'] = $g['plot.bmargin'];
+        $g['plot.x'] = $g['plot.lmargin.pixels'];
+        $g['plot.y'] = $g['plot.bmargin.pixels'];
 
-        $g['plot.w.full'] = $g['plot.w'] + $g['plot.lmargin'];
-        $g['plot.h.full'] = $g['plot.h'] + $g['plot.bmargin'];
+        $g['plot.w.full'] = $g['plot.w'] + $g['plot.lmargin.pixels'] + $g['plot.rmargin.pixels'];
+        $g['plot.h.full'] = $g['plot.h'] + $g['plot.bmargin.pixels'];
 
-        $g['w'] = $g['plot.w.full'] + $g['plot.rmargin'];
+        $g['w'] = $g['plot.w.full'];
         $g['h'] = $g['plot.h.full'];
 
         $g['blocs.w'] = 0;

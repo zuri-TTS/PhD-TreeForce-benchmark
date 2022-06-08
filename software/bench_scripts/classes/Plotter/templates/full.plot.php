@@ -23,8 +23,9 @@ if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
 }
 
 if ($plotYLabelYOffset < 0) {
-    $plotYLabelYOffset = $graphics['font.size'] * ($plotConfig['plot.yrange.step'] / $graphics['plot.y.step']);
+    $plotYLabelYOffset = (float) $graphics['plot.yrange.step'] * $graphics['font.size'] / $graphics['plot.y.step'];
 }
+
 $plotYLabelYOffsetSub = $plotYLabelYOffset;
 
 $ystep = $plotConfig['plot.yrange.step'];
@@ -46,9 +47,38 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $nbMeasures = \max($nbMeasures, \count($csvPaths));
 }
 
+{ // YRange
+
+    $yLog = 10 ** floor(\log10($yMax));
+    $yRangeMax = $yLog;
+
+    while ($yRangeMax < $yMax)
+        $yRangeMax += $yLog;
+
+    $yMax = $yRangeMax;
+    unset($yRangeMax);
+
+    $configYRangeMin = $plotConfig['plot.yrange.min'] ?? 0;
+
+    if ($configYRangeMin)
+        $yMin = $configYRangeMin;
+    else
+        $yMin /= $timeDiv;
+
+    $yMin = \max(1, $yMin - 1);
+
+    $configYRangeMax = $plotConfig['plot.yrange.max'] ?? 0;
+
+    if ($configYRangeMax)
+        $yMax = $configYRangeMax;
+    else
+        $yMax /= $timeDiv;
+
+    $yrange = "$yMin:$yMax";
+}
+
 $nbBars = $nbMeasures * $nbMeasuresToPlot;
-$graphics->compute($nbBars, $nbMeasures, $yMax);
-$yMin = \max(1, $yMin - 1);
+$graphics->compute($nbBars, $nbMeasures);
 
 $nbXPlots = $graphics['plots.max.x'] + 1;
 $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
@@ -61,34 +91,6 @@ $graphics['w'] *= $nbXPlots;
 $graphics['h'] *= $nbYPlots;
 $h = $graphics['h'];
 $w = $graphics['w'];
-
-$yLog = 10 ** floor(\log10($yMax));
-$yRangeMax = $yLog;
-
-while ($yRangeMax < $yMax)
-    $yRangeMax += $yLog;
-
-$yMax = $yRangeMax;
-unset($yRangeMax);
-
-$configYRangeMin = $plotConfig['plot.yrange.min'] ?? 0;
-
-if ($configYRangeMin)
-    $yMin = $configYRangeMin;
-else
-    $yMin /= $timeDiv;
-
-if ($yMin < 1)
-    $yMin = 0;
-
-$configYRangeMax = $plotConfig['plot.yrange.max'] ?? 0;
-
-if ($configYRangeMax)
-    $yMax = $configYRangeMax;
-else
-    $yMax /= $timeDiv;
-
-$yrange = "$yMin:$yMax";
 
 $boxwidth = 1;
 
@@ -123,7 +125,13 @@ set key off
 EOD;
 
 if ($logscale) {
-    echo "set logscale y\n";
+
+    if (is_int($logscale))
+        $logscaleBase = (int) $logscale;
+    else
+        $logscaleBase = $graphics['plot.yrange.step'];
+
+    echo "set logscale y $logscaleBase\n";
     $plotYLabelYOffsetPattern = "($plotYLabelYOffset * 10 ** (log10(%s)-1))";
     $plotYLabelYOffsetSubPattern = "($plotYLabelYOffsetSub * 10 ** (log10($yMax)-1))";
 }

@@ -9,13 +9,11 @@ final class FullStrategy extends AbstractFullStrategy
         'rewriting.total' => 'r',
         'rewritings.generation' => 'r',
         'stats.db.time|threads.time' => 'r'
-        // 'threads.time' => 'r'
     ];
 
     private const stackedMeasuresToPlot = [
         [
             3 => 'rewriting.total'
-            // 2 => 'rewriting.rules.apply.r'
         ],
         [
             4 => 'rewritings.generation'

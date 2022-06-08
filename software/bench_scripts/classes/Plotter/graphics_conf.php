@@ -1,7 +1,7 @@
 <?php
 return [
-
-    'font.size' => 12,
+    'logscale' => false,
+    'font.size' => 19,
 
     // Terminal (png)
     'w' => - 1,
@@ -14,7 +14,7 @@ return [
     'bar.end.factor' => 1,
     'bar.w' => 15,
     'bar.gap.factor' => 1,
-    'bar.gap.nb' => -1,
+    'bar.gap.nb' => - 1,
 
     // Plot
     'plot.header.h' => 60,
@@ -29,18 +29,22 @@ return [
     'plot.rmargin' => 0,
     'plot.lmargin' => 0,
     'plot.bmargin' => 5,
+    'plot.rmargin.pixels' => - 1,
+    'plot.lmargin.pixels' => - 1,
+    'plot.bmargin.pixels' => - 1,
 
+    // Offset coordinates
     'plot.x' => - 1,
-//     'plot.x.step' => - 1,
-//     'plot.x.step.nb' => - 1,
-
     'plot.y' => - 1,
-    'plot.y.step' => 150,
+
+    'plot.y.step' => 100,
     'plot.y.step.nb' => - 1,
-    'plot.y.max' => - 1,
 
-    'plots.max.x' => 2,
+    'plot.yrange.max' => null,
+    'plot.yrange.min' => null,
+    'plot.ylabel.yoffset' => null,
+    'plot.ylabel.xoffset' => null,
+    'plot.yrange.step' => 100,
 
-    // Infos
-//     'queries.nb' => - 1
+    'plots.max.x' => null
 ];
