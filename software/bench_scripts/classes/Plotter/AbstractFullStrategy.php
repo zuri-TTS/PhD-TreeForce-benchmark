@@ -56,6 +56,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'plot.ylabel.xoffset' => null,
             'plot.yrange.step' => 100,
             'plot.pattern.offset' => 0,
+            'plot.legend' => true,
             'plot.xtic' => null, // function
             'plot.title' => null, // function
             'multiplot.title' => true,

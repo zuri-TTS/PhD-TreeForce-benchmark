@@ -11,6 +11,7 @@ $stacked = $plotterStrategy->plot_getStackedMeasures($plotConfig['plot.measures'
 $nbMeasuresToPlot = \count($stacked);
 
 $graphics = new Plotter\Graphics($plotConfig);
+$plotLegend = $plotConfig['plot.legend'];
 $plotYLabelYOffset = ($plotConfig['plot.ylabel.yoffset'] ?? null);
 $plotYLabelYOffsetSub = ($plotConfig['plot.ylabel.yoffset.sub'] ?? $plotYLabelYOffset);
 $plotYLabelXOffset = ($plotConfig['plot.ylabel.xoffset'] ?? null);
@@ -91,6 +92,12 @@ $yrange = "$yMin:$yMax";
 
 $boxwidth = 1;
 
+$key = $plotLegend ? <<<EOD
+set key off
+set key inside center center title "Times"
+
+EOD : null;
+
 $placeholderPlot = <<<EOD
 unset title
 unset key
@@ -98,10 +105,9 @@ unset xtics
 unset ytics
 set border 0
 unset grid
-set key off
 unset ylabel
-set key inside center center title "Times"
 set key autotitle columnheader
+$key
 set format y "%gs"
 
 EOD;
@@ -128,6 +134,12 @@ if ($plotConfig['multiplot.title'] === true) {
 } else
     $multiplotTitle = null;
 
+$xmax = $boxwidth * $nbBars - $boxwidth / 2;
+$xmin = - $boxwidth / 2;
+
+$xmin -= $boxwidth * $graphics['bar.offset.factor'];
+$xmax += $boxwidth * ($graphics['bar.end.factor'] + $graphics['bar.gap.nb']);
+
 echo <<<EOD
 if(!exists("terminal")) terminal="png"
 
@@ -141,17 +153,10 @@ set multiplot layout $multiColLayout $multiplotTitle
 set rmargin 0
 set lmargin 0
 set bmargin 10
+set yrange [$yrange]
+set xrange [$xmin:$xmax]
 
 EOD;
-
-$xmax = $boxwidth * $nbBars - $boxwidth / 2;
-$xmin = - $boxwidth / 2;
-
-$xmin -= $boxwidth * $graphics['bar.offset.factor'];
-$xmax += $boxwidth * ($graphics['bar.end.factor'] + $graphics['bar.gap.nb']);
-
-echo "set yrange [$yrange]\n";
-echo "set xrange [$xmin:$xmax]\n";
 
 $ls = 1;
 $nbPlots = 0;
@@ -176,7 +181,8 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
         foreach ($stacked as $stack) {
 
             foreach ($stack as $pos => $measure) {
-                $tmp[] = "1/0 with boxes title '$measure' ls $ls fs pattern $pattern";
+                $legendTitle = $plotLegend ? "title '$measure'" : "";
+                $tmp[] = "1/0 with boxes $legendTitle ls $ls fs pattern $pattern";
                 $pattern ++;
             }
         }
