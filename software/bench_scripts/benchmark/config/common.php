@@ -58,6 +58,7 @@ return [
         $hasSummary = ! empty($cmdArg['summary']);
         $has2Summary = ! empty($cmdArg['toNative_summary']);
         $hasNative = ! empty($native);
+        $hasPartitioning = ! ($dataSet->getPartitioning() instanceof \Data\NoPartitioning);
 
         if ($theRules === 'original') {
             $native = '';
@@ -86,7 +87,7 @@ return [
             $outDir .= "[summary-{$cmdArg['summary']}]";
         if ($javaProperties['summary.filter.types'] === 'y')
             $outDir .= '[filter-types]';
-        if ($javaProperties['partition.id'] !== '_id')
+        if ($hasPartitioning && $javaProperties['partition.id'] !== '_id')
             $outDir .= "[pid-{$javaProperties['partition.id']}]";
         if ($has2Summary)
             $outDir .= "[toNative-{$cmdArg['toNative_summary']}]";
