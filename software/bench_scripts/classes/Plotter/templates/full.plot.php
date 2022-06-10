@@ -32,6 +32,7 @@ $ystep = $plotConfig['plot.yrange.step'];
 $logscale = $plotConfig['logscale'];
 
 list ($yMin, $yMax) = $plotterStrategy->plot_getYRange(...$csvFiles);
+$yMin = \max(1, $yMin - 1);
 
 $nbQueries = \count($PLOTTER->getQueries());
 
@@ -46,10 +47,14 @@ $nbMeasures = 0;
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $nbMeasures = \max($nbMeasures, \count($csvPaths));
 }
+$nbBars = $nbMeasures * $nbMeasuresToPlot;
+
+$graphics->compute($nbBars, $nbMeasures);
+
+$logscaleBase = $graphics['logscale.base'];
 
 { // YRange
-
-    $yLog = 10 ** floor(\log10($yMax));
+    $yLog = $logscaleBase ** ceil(\log($yMax, $logscaleBase));
     $yRangeMax = $yLog;
 
     while ($yRangeMax < $yMax)
@@ -65,8 +70,6 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     else
         $yMin /= $timeDiv;
 
-    $yMin = \max(1, $yMin - 1);
-
     $configYRangeMax = $plotConfig['plot.yrange.max'] ?? 0;
 
     if ($configYRangeMax)
@@ -77,8 +80,6 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $yrange = "$yMin:$yMax";
 }
 
-$nbBars = $nbMeasures * $nbMeasuresToPlot;
-$graphics->compute($nbBars, $nbMeasures);
 
 $nbXPlots = $graphics['plots.max.x'] + 1;
 $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
@@ -125,12 +126,6 @@ set key off
 EOD;
 
 if ($logscale) {
-
-    if (is_int($logscale))
-        $logscaleBase = (int) $logscale;
-    else
-        $logscaleBase = $graphics['plot.yrange.step'];
-
     echo "set logscale y $logscaleBase\n";
     $plotYLabelYOffsetPattern = "($plotYLabelYOffset * 10 ** (log10(%s)-1))";
     $plotYLabelYOffsetSubPattern = "($plotYLabelYOffsetSub * 10 ** (log10($yMax)-1))";

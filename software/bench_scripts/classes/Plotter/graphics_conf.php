@@ -1,6 +1,7 @@
 <?php
 return [
     'logscale' => false,
+    'logscale.base' => -1,
     'font.size' => 19,
 
     // Terminal (png)

@@ -52,10 +52,12 @@ final class Graphics implements \ArrayAccess
         ] + $g;
 
         if ($g['logscale']) {
-            $base = is_int($g['logscale']) ? $g['logscale'] : $g['plot.yrange.step'];
-            $g['plot.y.step.nb'] = \ceil(\log($g['plot.yrange.max'] - $g['plot.yrange.min'], $base));
+            $base = is_int($g['logscale']) ? $g['logscale'] : ($g['plot.yrange.step'] ?? 10);
+            $g['logscale.base'] = $base;
+            $g['plot.y.step.nb'] = \ceil(\log($g['plot.yrange.max'], $base)) - \ceil(\log($g['plot.yrange.min'], $base));
         } else {
             $g['plot.y.step.nb'] = ($g['plot.yrange.max'] - $g['plot.yrange.min']) / $g['plot.yrange.step'];
+            $g['logscale.base'] = 10;
         }
         $onlyPlotH = $g['plot.y.step.nb'] * $g['plot.y.step'];
         $g['plot.lmargin.pixels'] = $g['plot.lmargin'] * $g['font.size'];
