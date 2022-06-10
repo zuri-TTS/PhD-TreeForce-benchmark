@@ -160,11 +160,11 @@ final class OneTest extends AbstractTest
             if ($this->args['cmd'] === 'partition' && $partition->isLogical())
                 $partition = $partition->getPhysicalParent();
 
-            $this->ensureSummary((string) $args['toNative_summary'], $partition);
+            $this->ensureSummary((string) $args['toNative_summary'], $partition, 0);
             $this->checkSummary($this->testConfig['toNative.summary']);
         }
         if ($this->needSummary) {
-            $this->ensureSummary($args['summary'], $this->partition);
+            $this->ensureSummary($args['summary'], $this->partition, (int) $this->javaProperties['summary.filter.stringValuePrefix']);
 
             foreach ((array) $this->testConfig['summary'] as $summary)
                 $this->checkSummary($summary);
@@ -224,12 +224,12 @@ final class OneTest extends AbstractTest
         $doIt->execute();
     }
 
-    private function ensureSummary(string $summary, \Data\IPartition $partition): void
+    private function ensureSummary(string $summary, \Data\IPartition $partition, int $strValuePrefix): void
     {
         if (empty($summary))
             return;
 
-        DoSummarize::summarize($this->ds, $partition, $summary);
+        DoSummarize::summarize($this->ds, $partition, $summary, $strValuePrefix);
     }
 
     private function checkSummary(string $path): void

@@ -6,6 +6,8 @@ final class DoSummarize extends AbstractTest
 
     private string $summaryType;
 
+    private int $strPrefixSize;
+
     public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
     {
         parent::__construct($ds, $partition, $cmdParser);
@@ -16,9 +18,10 @@ final class DoSummarize extends AbstractTest
             throw new \Exception(__CLASS__ . " cannot handle cmd=$cmd");
 
         $this->summaryType = $args['summary'];
+        $this->strPrefixSize = $cmdParser->parsed()['javaProperties']['summary.filter.stringValuePrefix'];
     }
 
-    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType): void
+    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType, int $strPrefixSize): void
     {
         $summArgs = [
             'cmd' => 'summarize',
@@ -29,7 +32,8 @@ final class DoSummarize extends AbstractTest
             'output' => \sys_get_temp_dir(),
             'plot' => false,
             'doonce' => true,
-            'forget-results' => true
+            'forget-results' => true,
+            'Psummary.filter.stringValuePrefix' => $strPrefixSize
         ];
         $doItParser = CmdArgs::default();
         $doItParser->parse($summArgs);
@@ -70,6 +74,6 @@ final class DoSummarize extends AbstractTest
 
     public function execute()
     {
-        self::summarize($this->ds, $this->partition, $this->summaryType);
+        self::summarize($this->ds, $this->partition, $this->summaryType, $this->strPrefixSize);
     }
 }

@@ -31,6 +31,7 @@ return [
         'data' => 'mongodb://localhost',
         'summary.prettyPrint' => 'n',
         'summary.filter.types' => 'y',
+        'summary.filter.stringValuePrefix' => 0,
         'partition.id' => '_id'
     ],
     'bench.measures' => [
@@ -87,6 +88,8 @@ return [
             $outDir .= "[summary-{$cmdArg['summary']}]";
         if ($javaProperties['summary.filter.types'] === 'y')
             $outDir .= '[filter-types]';
+        if (($i = $javaProperties['summary.filter.stringValuePrefix']) !== 0)
+            $outDir .= "[filter-prefix-$i]";
         if ($hasPartitioning && $javaProperties['partition.id'] !== '_id')
             $outDir .= "[pid-{$javaProperties['partition.id']}]";
         if ($has2Summary)

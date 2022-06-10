@@ -29,10 +29,18 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
     $partitionID = $javaProperties['partition.id'];
+    $filterStrPrefix = $javaProperties['summary.filter.stringValuePrefix'];
+
     $outputDirGenerator = $common['bench.output.dir.generator'];
 
-    $fsummary = function ($baseDir, $summPrefix, $summType) {
-        return "$baseDir/{$summPrefix}summary-$summType.txt";
+    $fsummary = function ($baseDir, $summPrefix, $summType) use ($filterStrPrefix) {
+
+        if (empty($filterStrPrefix))
+            $filterStrPrefix = "";
+        else
+            $filterStrPrefix = "-$filterStrPrefix";
+
+        return "$baseDir/{$summPrefix}summary-$summType$filterStrPrefix.txt";
     };
     $cmdIsPartition = $cmd === 'partition';
 
@@ -171,11 +179,11 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     $efrom = [
         '[',
-        ']',
+        ']'
     ];
     $eto = [
         '\[',
-        '\]',
+        '\]'
     ];
     $testRegex = $outDirPattern;
     $testRegex = \str_replace($efrom, $eto, $testRegex);
@@ -184,7 +192,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     if ($cmdArg['skip-existing']) {
         \wdPush($bpath);
-        $test_existing = \array_filter(\scandirNoPoints('.'), fn($n) => \preg_match($testRegex, $n));
+        $test_existing = \array_filter(\scandirNoPoints('.'), fn ($n) => \preg_match($testRegex, $n));
         $test_existing = \array_filter($test_existing, fn ($p) => \is_file("$p/@end"));
         \wdPop();
     } else
