@@ -23,8 +23,8 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     if ($dataSet->isSimplified()) {
 
-        if (null === $cmdArg['toNative_summary'] || 'key' === $cmdArg['toNative_summary'])
-            $cmdArg['toNative_summary'] = 'key-type';
+        if (null === $cmdArg['toNative_summary'])
+            $cmdArg['toNative_summary'] = 'label';
     } elseif (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
@@ -146,7 +146,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
     // Inhibit summary.filter.types for summary without type infos
     if (\in_array($cmdArg['summary'], [
         '',
-        'key'
+        'label'
     ]))
         $javaProperties['summary.filter.types'] === 'n';
 
