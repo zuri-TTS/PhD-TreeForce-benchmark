@@ -37,6 +37,8 @@ final class FullPlotter extends AbstractFullPlotter
 
     private array $csvGroups;
 
+    private array $groupsInfos;
+
     private array $csvData;
 
     private array $queries;
@@ -51,6 +53,11 @@ final class FullPlotter extends AbstractFullPlotter
     public function getQueries(): array
     {
         return $this->queries;
+    }
+
+    public function getGroupsInfos(): array
+    {
+        return $this->groupsInfos;
     }
 
     public function getCsvGroups(): array
@@ -112,6 +119,7 @@ final class FullPlotter extends AbstractFullPlotter
                     continue;
 
                 $this->csvGroups[$csvGroup] = $files;
+                $this->groupsInfos[$csvGroup]['nb'] = \count($files);
             }
 
             if (empty($this->csvGroups))

@@ -46,9 +46,9 @@ $getMeasure = function ($csvData, $what, $time) {
 };
 $nbMeasures = 0;
 
-foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
-    $nbMeasures = \max($nbMeasures, \count($csvPaths));
-}
+foreach ($PLOTTER->getGroupsInfos() as $groupName => $infos)
+    $nbMeasures = \max($nbMeasures, $infos['nb']);
+
 $nbBars = $nbMeasures * $nbMeasuresToPlot;
 
 $graphics->compute($nbBars, $nbMeasures);
