@@ -18,6 +18,28 @@ final class Plotter
         return $v;
     }
 
+    public function readJavaProperties($stream)
+    {
+        if (is_string($stream)) {
+            $s = $stream;
+            $stream = \fopen('php://memory', 'r+');
+            fwrite($stream, $s);
+            rewind($stream);
+        }
+
+        $ret = [];
+        while (false !== ($line = \fgets($stream))) {
+            $line = \trim($line);
+            if (empty($line))
+                continue;
+            $parts = \explode('=', $line, 2);
+
+            $ret[$parts[0]] = \trim($parts[1]);
+        }
+        \fclose($stream);
+        return $ret;
+    }
+
     public function encodeDirNameElements(array $elements)
     {
         $fullPattern = $elements['full_pattern'] ?? null;

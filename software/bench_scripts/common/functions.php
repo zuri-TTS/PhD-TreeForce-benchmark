@@ -25,6 +25,24 @@ function ensureArray($element): array
     ];
 }
 
+function error(string ...$params)
+{
+    foreach ($params as $p)
+        fwrite(STDERR, implode('', $params));
+}
+
+function error_dump(...$params)
+{
+    foreach ($params as $p)
+        fwrite(STDERR, print_r($p, true) . "\n");
+}
+
+function error_dump_exit(...$params)
+{
+    error_dump(...$params);
+    exit();
+}
+
 function is_array_list($array): bool
 {
     return \is_array($array) && \array_is_list($array);

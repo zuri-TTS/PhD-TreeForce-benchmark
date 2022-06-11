@@ -13,4 +13,8 @@ interface IFullPlotterStrategy
     function getDataHeader(): array;
 
     function plot_getStackedMeasures(): array;
+
+    function setPlotter(FullPlotter $plotter): void;
+
+    function getPlotter(): FullPlotter;
 }

@@ -1,6 +1,4 @@
 <?php
-$timeDiv = 1000;
-
 $plotterStrategy = $PLOTTER->getStrategy();
 
 $plotConfig = $PLOTTER->plot_getConfig();
@@ -13,11 +11,13 @@ $nbMeasuresToPlot = \count($stacked);
 $graphics = new Plotter\Graphics($plotConfig);
 $plotLegend = $plotConfig['plot.legend'];
 $plotYTicsStep = $plotConfig['plot.ytics.step'];
-$nbYTics_max = (int)$plotConfig['plot.ytics.nb'];
+$nbYTics_max = (int) $plotConfig['plot.ytics.nb'];
 $plotYLabelYOffset = ($plotConfig['plot.ylabel.yoffset'] ?? null);
 $plotYLabelYOffsetSub = ($plotConfig['plot.ylabel.yoffset.sub'] ?? $plotYLabelYOffset);
 $plotYLabelXOffset = ($plotConfig['plot.ylabel.xoffset'] ?? null);
 $plotYLabel = false;
+$timeDiv = $plotConfig['measure.div'];
+$formatY = $plotConfig['plot.format.y'];
 
 if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
     $plotYLabel = true;
@@ -115,7 +115,7 @@ $key
 
 EOD;
 
-$plotYTics = "set format y \"%gs\"\n";
+$plotYTics = "set format y \"$formatY\"\n";
 
 $normalPlot = <<<EOD
 set xtics rotate by 30 right
@@ -148,7 +148,7 @@ $xmax += $boxwidth * ($graphics['bar.end.factor'] + $graphics['bar.gap.nb']);
 echo <<<EOD
 if(!exists("terminal")) terminal="png"
 
-tm(x)=x/$timeDiv
+tm(x)=x/($timeDiv)
 
 set style fill pattern border -1
 set boxwidth $boxwidth

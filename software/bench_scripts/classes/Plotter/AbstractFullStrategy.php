@@ -10,8 +10,20 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     protected array $stackedMeasuresToPlot_default;
 
+    protected FullPlotter $plotter;
+
     protected function __construct()
     {}
+
+    public function setPlotter(FullPlotter $plotter): void
+    {
+        $this->plotter = $plotter;
+    }
+
+    public function getPlotter(): FullPlotter
+    {
+        return $this->plotter;
+    }
 
     public function setToPlot(array $toPlot): AbstractFullStrategy
     {
@@ -56,8 +68,11 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'plot.ytics.nb' => null,
             'plot.xtic' => null, // function
             'plot.title' => null, // function
+            'plot.format.y' => "%gs",
             'multiplot.title' => true,
-            'queries' => null // array,
+            'queries' => null, // array,
+            'query.dat.file' => null, // function
+            'measure.div' => 1000
         ];
     }
 
@@ -94,12 +109,24 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         }, self::MAX_RANGE);
     }
 
+    private function toPlot()
+    {
+        $plotter = $this->getPlotter();
+        $plotConfig = $plotter->plot_getConfig();
+        $toPlot = $plotConfig['toPlot'] ?? null;
+
+        if (null === $toPlot)
+            return $this->toPlot;
+
+        return $toPlot;
+    }
+
     private function toPlotIndex(): array
     {
         $index = [];
         $i = 2;
 
-        foreach ($this->toPlot as $name => $v) {
+        foreach ($this->toPlot() as $name => $v) {
             $k = \explode('|', $name);
 
             foreach ($k as $k)
@@ -145,7 +172,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     {
         $ret[] = 'test';
 
-        foreach ($this->toPlot as $what => $time)
+        foreach ($this->toPlot() as $what => $time)
             $ret[] = "$what.$time";
 
         return $ret;
@@ -181,7 +208,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $yMin = &$range[0];
         $yMax = &$range[1];
 
-        foreach ($this->toPlot as $what => $time) {
+        foreach ($this->toPlot() as $what => $time) {
 
             foreach (explode('|', $what) as $what) {
                 $v = (int) \Help\Arrays::follow($data, [

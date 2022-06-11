@@ -14,6 +14,7 @@ final class FullPlotter extends AbstractFullPlotter
     {
         $this->plot = $plot;
         $this->strategy = $strategy;
+        $strategy->setPlotter($this);
     }
 
     public function setTemplate(string $name, string $dir = __DIR__ . '/templates'): self
@@ -89,12 +90,13 @@ final class FullPlotter extends AbstractFullPlotter
         $this->cleanCurrentDir();
         $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvPaths));
 
+        $plotConfig = $this->strategy->plot_getConfig();
+        $plotGroups = $plotConfig['plot.groups'] ?? null;
+        $this->plotConfig = $plotConfig;
+
         $csvGroups = $this->strategy->groupCSVFiles($csvPaths);
         $this->writeDat($csvGroups);
         $this->writeCsv($csvGroups);
-
-        $plotConfig = $this->strategy->plot_getConfig();
-        $plotGroups = $plotConfig['plot.groups'] ?? null;
 
         if (empty($plotGroups))
             $plotGroups = [

@@ -35,7 +35,7 @@ final class FullStrategy extends AbstractFullStrategy
         return 'group_query';
     }
 
-    function groupCSVFiles(array $csvFiles): array
+    public function groupCSVFiles(array $csvFiles): array
     {
         $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
         $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
