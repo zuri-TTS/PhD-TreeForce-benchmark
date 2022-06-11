@@ -161,6 +161,8 @@ set bmargin ${graphics['plot.bmargin']}
 set yrange [$yrange]
 set xrange [$xmin:$xmax]
 
+set style textbox opaque noborder
+
 EOD;
 
 $ls = 1;
@@ -253,7 +255,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                 "(\$0 * $spaceFactor + $stacked_i + (tm(\$$pos) >= $yMax ? $plotYLabelXOffset : 0)):" . //
                 "(tm(\$$pos) + $plotYLabelYOffset >= $yMax) ? $yMax - $plotYLabelYOffsetSub : ( (tm(\$$pos) > $yMin ? tm(\$$pos) : $yMin) + $plotYLabelYOffset):" . //
                 "(sprintf(\"%.2f\", tm(\$$pos)))" . //
-                " with labels font \",8\"";
+                " with labels boxed font \",8\"";
             }
             $xtics = null;
             $pattern ++;
