@@ -41,6 +41,8 @@ final class Plotter
         $ret['rules'] = $matches[4] ?? null;
         $ret['qualifiers'] = $matches[5] ?? null;
         $ret['full_pattern'] = \preg_replace('#\}\[(.+)\]#U', '}[%s]', $dirName);
+        \preg_match("#\[filter-prefix-(\d+)\]#U", $dirName, $matches);
+        $ret['filter_prefix'] = $matches[1] ?? null;
 
         list ($ret['partitioning'], $ret['partition']) = explode('.', $ret['full_partition']) + [
             null,

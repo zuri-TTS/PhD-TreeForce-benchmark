@@ -206,6 +206,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     private const summaryScore = [
         '' => 0,
         'key-type' => 1,
+        'label' => 1,
         'path' => 2
     ];
 
@@ -291,6 +292,10 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $partition = $elements['full_partition'];
             $parallel = $elements['parallel'];
             $pid = $elements['partition_id'];
+            $filterPrefix = $elements['filter_prefix'];
+
+            if ($summary == 'key-type')
+                $summary = 'label';
 
             if (! empty($partition)) {
 
@@ -303,6 +308,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 $parallel = "[parallel]";
             if (! empty($summary))
                 $summary = "($summary)";
+            if (! empty($filterPrefix))
+                $filterPrefix = "[vprefix]";
 
             switch ($partition) {
                 case "":
@@ -318,7 +325,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                     $partition = "Error";
             }
             $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
-            return "$partition$pid$summary$parallel($nbReformulations$nbAnswers)";
+            return "$partition$pid$summary$filterPrefix$parallel($nbReformulations$nbAnswers)";
         };
     }
 }
