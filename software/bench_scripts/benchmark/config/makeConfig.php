@@ -33,7 +33,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
 
-    $fsummary = function ($baseDir, $summPrefix, $summType) use ($filterStrPrefix) {
+    $fsummary = function ($baseDir, $summPrefix, $summType, $filterStrPrefix = null) {
 
         if (empty($filterStrPrefix))
             $filterStrPrefix = "";
@@ -79,8 +79,8 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             if ($noSummary) {
                 $javaSummary[] = $benchSummary[] = '';
             } else {
-                $javaSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
-                $benchSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
+                $javaSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}', $filterStrPrefix);
+                $benchSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['summary'], $filterStrPrefix);
             }
             $javaToNativeSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
 
@@ -113,8 +113,8 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             $javaSummary = '';
             $benchSummary = '';
         } else {
-            $javaSummary = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}');
-            $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary']);
+            $javaSummary = $fsummary('${dataset.baseDir}', $cprefix, '${summary.type}', $filterStrPrefix);
+            $benchSummary = $fsummary($dataSetPath, $cprefix, $cmdArg['summary'], $filterStrPrefix);
         }
 
         if (empty($cmdArg['toNative_summary'])) {
