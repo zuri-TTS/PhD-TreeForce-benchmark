@@ -18,6 +18,41 @@ final class Plotter
         return $v;
     }
 
+    public function encodeDirNameElements(array $elements)
+    {
+        $fullPattern = $elements['full_pattern'] ?? null;
+        $group = $elements['group'];
+        $theRules = $elements['rules'];
+        $qualifiers = $elements['qualifiers'] ?? null;
+
+        if (isset($elements['full_partition']))
+            $coll = $elements['full_partition'];
+        else {
+            $pid = $elements['partitioning'];
+            $coll = empty($pid) ? '' : ".$pid";
+            $pid = $elements['partition'];
+            $coll .= empty($pid) ? '' : ".$pid";
+        }
+        $outDir = "[$group$coll][$theRules][$qualifiers]";
+        $outDir .= '%s';
+
+        if ($elements['parallel'])
+            $outDir .= '[parall]';
+
+        if ($summary = $elements['summary'] ?? null)
+            $outDir .= "[summary-{$summary}]";
+        if ($elements['filter_types'] ?? false)
+            $outDir .= '[filter-types]';
+        if ($i = $elements['filter_prefix'])
+            $outDir .= "[filter-prefix-$i]";
+        if (! empty($coll) && ($pid = $elements['partition_id'] ?? null) && $pid !== '_id')
+            $outDir .= "[pid-$pid]";
+        if ($summary = $elements['toNative'] ?? null)
+            $outDir .= "[toNative-{$elements['toNative']}]";
+
+        return $outDir;
+    }
+
     public function extractDirNameElements(string $dirName)
     {
         $ret = [
@@ -31,7 +66,9 @@ final class Plotter
             'parallel' => false,
             'full_group' => null,
             'full_partition' => null,
-            'partition_id' => null
+            'partition_id' => null,
+            'filter_types' => false,
+            'filter_prefix' => null
         ];
 
         \preg_match("#^\[((.+)(?:\.(.+))?)\]\[(.+)\]\[(.+)\]#U", $dirName, $matches);
@@ -48,6 +85,9 @@ final class Plotter
             null,
             null
         ];
+        if (\preg_match("#\[filter-types\]#U", $dirName, $matches))
+            $ret['filter_types'] = $matches[1] ?? null;
+
         if (\preg_match("#\[pid-(.+)\]#U", $dirName, $matches))
             $ret['partition_id'] = $matches[1] ?? null;
 

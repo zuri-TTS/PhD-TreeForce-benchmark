@@ -51,6 +51,7 @@ return [
         $group = $dataSet->group();
         $theRules = $dataSet->rules();
         $qualifiers = $dataSet->qualifiersString('[]');
+        $qualifiers = \substr($qualifiers, 1, - 1);
 
         $cmd = $cmdArg['cmd'];
         $cold = $cmdArg['cold'];
@@ -70,30 +71,21 @@ return [
         $coll = empty($pid) ? '' : ".$pid";
         $pid = $partition->getID();
         $coll .= empty($pid) ? '' : ".$pid";
+        $elements = [
+            'group' => $group,
+            'full_partition' => $coll,
+            'rules' => $theRules,
+            'qualifiers' => $qualifiers,
+            'summary' => $cmdArg['summary'],
+            'toNative' => $cmdArg['toNative_summary'],
+            'parallel' => $cmdArg['parallel'],
+            'partition_id' => $javaProperties['partition.id'],
+            'filter_types' => $javaProperties['summary.filter.types'] !== 'n',
+            'filter_prefix' => $javaProperties['summary.filter.stringValuePrefix']
+        ];
+        $outDir = \Help\Plotter::encodeDirNameElements($elements);
+        $outDir = \sprintf($outDir, '[%s]');
 
-        $outDir = "[$group$coll][$theRules]$qualifiers";
-
-        if ($cmd === 'querying') {
-            $mode = $javaProperties['querying.mode'];
-            $outDir .= "{{$mode}}";
-        } else
-            $outDir .= "{{$cmd}}";
-
-        $outDir .= '[%s]';
-
-        if ($cmdArg['parallel'])
-            $outDir .= '[parall]';
-
-        if ($hasSummary)
-            $outDir .= "[summary-{$cmdArg['summary']}]";
-        if ($javaProperties['summary.filter.types'] === 'y')
-            $outDir .= '[filter-types]';
-        if (($i = $javaProperties['summary.filter.stringValuePrefix']) !== 0)
-            $outDir .= "[filter-prefix-$i]";
-        if ($hasPartitioning && $javaProperties['partition.id'] !== '_id')
-            $outDir .= "[pid-{$javaProperties['partition.id']}]";
-        if ($has2Summary)
-            $outDir .= "[toNative-{$cmdArg['toNative_summary']}]";
         if ($hasNative)
             $outDir .= "[native-$native]";
         if ($javaProperties['querying.mode'] === 'each')
