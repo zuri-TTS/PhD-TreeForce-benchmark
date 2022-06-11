@@ -12,6 +12,8 @@ $nbMeasuresToPlot = \count($stacked);
 
 $graphics = new Plotter\Graphics($plotConfig);
 $plotLegend = $plotConfig['plot.legend'];
+$plotYTicsStep = $plotConfig['plot.ytics.step'];
+$nbYTics_max = (int)$plotConfig['plot.ytics.nb'];
 $plotYLabelYOffset = ($plotConfig['plot.ylabel.yoffset'] ?? null);
 $plotYLabelYOffsetSub = ($plotConfig['plot.ylabel.yoffset.sub'] ?? $plotYLabelYOffset);
 $plotYLabelXOffset = ($plotConfig['plot.ylabel.xoffset'] ?? null);
@@ -80,7 +82,6 @@ $logscaleBase = $graphics['logscale.base'];
     $yrange = "$yMin:$yMax";
 }
 
-
 $nbXPlots = $graphics['plots.max.x'] + 1;
 $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
 $plotXSize = 1.0 / ($nbXPlots);
@@ -111,16 +112,17 @@ unset grid
 unset ylabel
 set key autotitle columnheader
 $key
-set format y "%gs"
 
 EOD;
+
+$plotYTics = "set format y \"%gs\"\n";
 
 $normalPlot = <<<EOD
 set xtics rotate by 30 right
 set xtics scale 0
-set ytics scale .2 nomirror $ystep
 set border 1
 set grid ytics
+set ytics scale .2 nomirror $ystep
 set key off
 
 EOD;
@@ -163,6 +165,7 @@ EOD;
 
 $ls = 1;
 $nbPlots = 0;
+
 $gap = $graphics['bar.gap.factor'];
 
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
@@ -177,6 +180,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $title = $PLOT->gnuplotSpecialChars($title);
 
     if (($nbPlots % $nbXPlots) === 0) {
+        $nbYTics = 0;
         $tmp = [];
         $ls = 1;
         $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
@@ -219,6 +223,13 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
         echo "set ylabel offset 15,0 \"[$yrange]\"\n";
 
     echo "set title \"$title\"\n";
+
+    if ($nbYTics !== $nbYTics_max && $plotYTicsStep && ($nbPlots % $nbXPlots - 1) % $plotYTicsStep == 0) {
+        echo $plotYTics;
+        $nbYTics ++;
+    } else {
+        echo "set format y \"\"\n";
+    }
 
     $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
     $tmp = [];
