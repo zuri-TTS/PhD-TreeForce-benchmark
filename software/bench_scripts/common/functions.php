@@ -68,9 +68,9 @@ function rrmdir(string $dir, bool $rmRoot = true)
     \RecursiveIteratorIterator::CHILD_FIRST);
 
     foreach ($paths as $pathInfo) {
-        $p = $pathInfo->getRealPath();
+        $p = $pathInfo->getPathName();
 
-        if ($pathInfo->isFile())
+        if ($pathInfo->isFile() || $pathInfo->isLink())
             \unlink($p);
         else
             \rmdir($p);
