@@ -51,11 +51,17 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
         for ($i = 1, $c = \count($path_ex); $i <= $c; $i ++) {
             $path = \implode(DIRECTORY_SEPARATOR, \array_slice($path_ex, 0, $i));
-            $confFile = "$path/full_{$this->getID()}.php";
+            $confFiles = [
+                "$path/full.php",
+                "$path/full_{$this->getID()}.php"
+            ];
 
-            if (\is_file($confFile)) {
-                $conf = \array_merge($conf, include $confFile);
-                $PARENT = $conf;
+            foreach ($confFiles as $confFile) {
+
+                if (\is_file($confFile)) {
+                    $conf = \array_merge($conf, include $confFile);
+                    $PARENT = $conf;
+                }
             }
         }
 
