@@ -99,7 +99,7 @@ final class Plotter
         $ret['full_partition'] = $matches[3] ?? null;
         $ret['rules'] = $matches[4] ?? null;
         $ret['qualifiers'] = $matches[5] ?? null;
-        $ret['full_pattern'] = \preg_replace('#\}\[(.+)\]#U', '}[%s]', $dirName);
+        $ret['full_pattern'] = \preg_replace('#\[(\d\d\d\d-\d\d-\d\d.+)\]#U', '}[%s]', $dirName);
         \preg_match("#\[filter-prefix-(\d+)\]#U", $dirName, $matches);
         $ret['filter_prefix'] = $matches[1] ?? null;
 
