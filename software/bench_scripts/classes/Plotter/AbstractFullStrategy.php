@@ -318,7 +318,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $elements = \Help\Plotter::extractDirNameElements($dirName);
             $group = $elements['group'];
             $summary = $elements['summary'];
-            $partition = $elements['full_partition'];
+            $partitioning = $elements['partitioning'];
+            $partition = $elements['partition'];
             $parallel = $elements['parallel'];
             $pid = $elements['partition_id'];
             $filterPrefix = $elements['filter_prefix'];
@@ -326,7 +327,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             if ($summary == 'key-type')
                 $summary = 'label';
 
-            if (! empty($partition)) {
+            if (! empty($partitioning)) {
 
                 if (! empty($pid))
                     $pid = "($pid)";
@@ -340,21 +341,25 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             if (! empty($filterPrefix))
                 $filterPrefix = "[vprefix]";
 
-            switch ($partition) {
+            switch ($partitioning) {
                 case "":
-                    $partition = $testName;
+                    $partitioning = $testName;
                     break;
                 case "Lcolls":
-                    $partition = "logical";
+                    $partitioning = "logical";
                     break;
                 case "colls":
-                    $partition = "physical";
+                    $partitioning = "physical";
                     break;
                 default:
-                    $partition = "Error";
+                    $partitioning = "Error:$partitioning";
             }
             $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
-            return "$partition$pid$summary$filterPrefix$parallel($nbReformulations$nbAnswers)";
+
+            if (! empty($partition))
+                $partition = ".$partition";
+
+            return "$partitioning$partition$pid$summary$filterPrefix$parallel($nbReformulations$nbAnswers)";
         };
     }
 }
