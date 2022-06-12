@@ -20,6 +20,8 @@ final class OneTest extends AbstractTest
 
     private bool $displayHeader = true;
 
+    private string $cleanDBGlob;
+
     private array $args;
 
     private array $javaProperties;
@@ -33,6 +35,7 @@ final class OneTest extends AbstractTest
         $javaProperties = $parsed['javaProperties'];
 
         $this->doonce = $args['doonce'];
+        $this->cleanDBGlob = $args['clean-db-json'] ? '*.json' : '';
 
         if (\in_array($args['cmd'], [
             'partition'
@@ -133,7 +136,7 @@ final class OneTest extends AbstractTest
             $collExists = $this->collectionExists();
 
             if ($args['pre-clean-db'] || $args['clean-db']) {
-                $this->dropCollection();
+                $this->dropCollection($this->cleanDBGlob);
                 $collExists = $this->collectionExists();
             }
             if ($args['generate-dataset']) {
@@ -247,7 +250,7 @@ final class OneTest extends AbstractTest
         $config = $this->testConfig;
 
         if ($args['post-clean-db'] || $args['clean-db'])
-            $this->dropCollection();
+            $this->dropCollection($this->cleanDBGlob);
 
         if ($args['forget-results'] && \is_dir($config['bench.output.path']))
             \rrmdir($config['bench.output.path']);

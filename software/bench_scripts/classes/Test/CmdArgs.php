@@ -14,6 +14,7 @@ final class CmdArgs
         'generate-dataset' => true,
         'cmd-display-output' => false,
         'clean-db' => false,
+        'clean-db-json' => false,
         'pre-clean-db' => false,
         'post-clean-db' => false,
         'summary' => 'label',
