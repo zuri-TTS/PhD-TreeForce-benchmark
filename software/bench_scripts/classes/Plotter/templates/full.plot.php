@@ -25,7 +25,7 @@ if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
 }
 
 if ($plotYLabelYOffset < 0) {
-    $plotYLabelYOffset = (float) $graphics['plot.yrange.step'] * $graphics['font.size'] / $graphics['plot.y.step'];
+    $plotYLabelYOffset = (float) $graphics['plot.yrange.step'] * $graphics['font.size'] / $graphics['plot.y.step'] / 2;
 }
 
 $plotYLabelYOffsetSub = $plotYLabelYOffset;
@@ -252,7 +252,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                     $plotYLabelYOffsetSub = sprintf($plotYLabelYOffsetSubPattern, "tm(\$$pos)");
                 }
                 $tmp[] = "'' u " . //
-                "(\$0 * $spaceFactor + $stacked_i + (tm(\$$pos) >= $yMax ? $plotYLabelXOffset : 0)):" . //
+                "(\$0 * $spaceFactor + $stacked_i):" . //
                 "(tm(\$$pos) + $plotYLabelYOffset >= $yMax) ? $yMax - $plotYLabelYOffsetSub : ( (tm(\$$pos) > $yMin ? tm(\$$pos) : $yMin) + $plotYLabelYOffset):" . //
                 "(sprintf(\"%.2f\", tm(\$$pos)))" . //
                 " with labels boxed font \",8\"";
