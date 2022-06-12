@@ -214,6 +214,9 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         'bench.plot.types' => $cmdArg['plot'],
         'app.output.display' => $cmdArg['cmd-display-output']
     ]);
+    $ret['bench.measures']['default']['nb'] = (int) $cmdArg['bench-measures-nb'];
+    $ret['bench.measures']['default']['forget'] = (int) $cmdArg['bench-measures-forget'];
+
     $ret['java.properties'] = $javaProperties;
 
     if ($hasRules)

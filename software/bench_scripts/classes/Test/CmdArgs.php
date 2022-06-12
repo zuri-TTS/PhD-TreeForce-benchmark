@@ -30,6 +30,8 @@ final class CmdArgs
         'plot' => '',
         'forget-results' => false,
         'sort-measure' => null,
+        'bench-measures-nb' => 1,
+        'bench-measures-forget' => 0,
     ];
 
     // ========================================================================

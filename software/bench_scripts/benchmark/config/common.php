@@ -1,9 +1,6 @@
 <?php
 $basePath = getBenchmarkBasePath();
 
-$measuresNb = 3;
-$measuresForget = 0;
-
 $time = \date(DATE_ATOM);
 $outDir = $time;
 
@@ -14,7 +11,7 @@ return [
     'java.properties' => [
         'db' => 'treeforce',
         'base.path' => $basePath,
-        'output.measures' => "std://out" . ($measuresNb > 1 ? '' : ",\${output.path}/\${query.name}_measures.txt"),
+        'output.measures' => "std://out",
         'query.native' => "",
         'query.batchSize' => 1000,
         'data.batchSize' => 100,
@@ -36,9 +33,9 @@ return [
     ],
     'bench.measures' => [
         'default' => [
-            'nb' => $measuresNb,
+            'nb' => null,
             // We delete this number of measure from the start and the end of the sorted array of measures
-            'forget' => $measuresForget
+            'forget' => null
         ]
     ],
     'bench.cold.function' => function () {
