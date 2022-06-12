@@ -14,9 +14,9 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
         return \Plot::PROCESS_FULL;
     }
 
-    protected function cleanCurrentDir()
+    protected function cleanCurrentDir(string $glob = '*.dat')
     {
-        parent::cleanCurrentDir();
+        parent::cleanCurrentDir($glob);
 
         foreach (\scandirNoPoints('.') as $file) {
             if (\is_dir($file))
