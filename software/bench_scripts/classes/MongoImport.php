@@ -181,6 +181,10 @@ final class MongoImport
         DataSets::checkNotExists([
             $dataSet
         ]);
+
+        foreach ($dataSet->getCollections() as $c)
+            $ignoreCollections[$c] = MongoImport::collectionExists($c);
+
         self::importCollections($dataSet, $dataSet->getCollections(), $ignoreCollections);
     }
 

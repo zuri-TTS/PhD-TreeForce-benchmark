@@ -75,7 +75,7 @@ while (! empty($argv)) {
             $converter->convert();
 
         if ($cmdParsed['load'])
-            $converter->load($dataSets);
+            $converter->load();
 
         if ($cmdParsed['post-clean'] || $cmdParsed['post-clean-all'])
             $converter->clean();

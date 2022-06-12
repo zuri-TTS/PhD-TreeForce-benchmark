@@ -61,8 +61,9 @@ abstract class AbstractTest
         if (empty($this->collection))
             return;
         $this->xmlLoader->convert();
+        \MongoImport::importDataSet($this->ds);
         // Load only one collection
-        \MongoImport::importCollections($this->ds, $this->collection);
+        // \MongoImport::importCollections($this->ds, $this->collection);
     }
 
     public final function reportErrors(?array $errors = null): void
