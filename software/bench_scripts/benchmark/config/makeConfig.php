@@ -138,7 +138,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         'toNative.summary.type' => $cmdArg['toNative_summary']
     ], $javaProperties) + $common['java.properties'];
 
-    $outDir = sprintf($outDirPattern, $common['bench.datetime']->format('Y-m-d H:i:s v'));
+    $outDir = sprintf($outDirPattern, $common['bench.datetime']->format($common['datetime.format']));
 
     $pp = $cmdArg['output'] ?? $common['bench.output.base.path'];
     $bpath = \realpath($pp);
