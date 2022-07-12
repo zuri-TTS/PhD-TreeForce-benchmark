@@ -100,6 +100,8 @@ final class Plotter
         $ret['rules'] = $matches[4] ?? null;
         $ret['qualifiers'] = $matches[5] ?? null;
         $ret['full_pattern'] = \preg_replace('#\[(\d\d\d\d-\d\d-\d\d.+)\]#U', '}[%s]', $dirName);
+        \preg_match('#\[(\d\d\d\d-\d\d-\d\d.+)\]#U', $dirName, $matches);
+        $ret['time'] = $matches[1];
         \preg_match("#\[filter-prefix-(\d+)\]#U", $dirName, $matches);
         $ret['filter_prefix'] = $matches[1] ?? null;
 
