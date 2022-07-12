@@ -127,7 +127,7 @@ function wdOp(string $workingDir, callable $exec)
     return $ret;
 }
 
-function scandirNoPoints(string $path, bool $getPath = false)
+function scandirNoPoints(string $path = '.', bool $getPath = false)
 {
     $ret = \array_filter(\scandir($path), fn ($f) => $f[0] !== '.');
     \natcasesort($ret);
@@ -264,8 +264,7 @@ function &array_follow(array &$array, array $path, $default = null)
 
             if (! empty($path))
                 return $default;
-        }
-        elseif (empty($path))
+        } elseif (empty($path))
             return $p;
     }
 }
@@ -327,9 +326,9 @@ function array_delete_branch(array &$array, array $branch): bool
     return true;
 }
 
-function array_partition(array $array, callable $filter): array
+function array_partition(array $array, callable $filter, int $mode = 0): array
 {
-    $a = \array_filter($array, $filter);
+    $a = \array_filter($array, $filter, $mode);
     $b = \array_diff_key($array, $a);
     return [
         $a,
