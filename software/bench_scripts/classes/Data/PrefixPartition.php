@@ -8,6 +8,8 @@ final class PrefixPartition extends PhysicalPartition
 
     private array $prefix;
 
+    private array $prefix_regex;
+
     private string $cname;
 
     public function __construct(\DataSet $ds, string $collectionName, string $id, string $prefix, ?IPartitioning $logical = null)
@@ -17,6 +19,10 @@ final class PrefixPartition extends PhysicalPartition
 
         $this->prefix = \explode('.', $prefix);
         $this->prefix_s = $prefix;
+        $this->prefix_regex = \array_map(fn ($k) => [
+            $k,
+            "q_($k)_\d+"
+        ], $this->prefix);
     }
 
     public function getPrefix(): string
@@ -32,7 +38,27 @@ final class PrefixPartition extends PhysicalPartition
     public function contains(array $data): bool
     {
         $noPrefix = (object) null;
-        $f = \array_follow($data, $this->prefix, $noPrefix);
+
+        $f = \array_ufollow($data, $this->prefix_regex, $noPrefix, function ($item_regex, $array) {
+            list ($prefix, $regex) = $item_regex;
+
+            if (\array_key_exists($prefix, $array))
+                return $prefix;
+
+            $keys = [];
+
+            foreach (\array_keys($array) as $k) {
+                if (\preg_match("#^$regex$#", $k))
+                    $keys[] = $k;
+            }
+
+            if (count($keys) === 0)
+                return false;
+            if (count($keys) > 1)
+                throw new \Exception("Error, more than one key to follow: " . \print_r($keys, true));
+
+            return $keys[0];
+        });
         return $f !== $noPrefix;
     }
 }

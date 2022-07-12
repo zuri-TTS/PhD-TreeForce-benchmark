@@ -269,6 +269,36 @@ function &array_follow(array &$array, array $path, $default = null)
     }
 }
 
+function &array_ufollow(array &$array, array $path, $default = null, $validKey = null)
+{
+    if (null === $validKey)
+        $validKey = function ($k, $array) {
+            if (! \array_key_exists($k, $array))
+                return false;
+
+            return $k;
+        };
+
+    $array = &$array;
+
+    for (;;) {
+        $k = \array_shift($path);
+        $k = $validKey($k, $array);
+
+        if (false === $k)
+            return $default;
+
+        $array = &$array[$k];
+
+        if (! is_array($array)) {
+
+            if (! empty($path))
+                return $default;
+        } elseif (empty($path))
+            return $array;
+    }
+}
+
 function array_kdelete_get(array &$array, $key, $default = null)
 {
     if (! \array_key_exists($key, $array))
