@@ -19,6 +19,7 @@ final class MongoImport
         $this->importDataSet($this->dataSet);
     }
 
+    // ========================================================================
     public static function countDocuments(DataSet $dataSet, bool $forceEval = false): int
     {
         if (! $forceEval) {
@@ -52,30 +53,27 @@ final class MongoImport
         }
     }
 
-    public static function dropCollection(string $collection): void
+    // ========================================================================
+    public static function dropDataSets(array $dataSets): void
     {
-        self::_dropCollection($collection);
+        foreach ($dataSets as $ds)
+            self::dropDataSet($ds);
     }
 
-    public static function dropCollectionsOf(DataSet $dataSet): void
+    public static function dropDataSet(DataSet $dataSet): void
     {
-        self::dropCollections([
+        DataSets::checkNotExists([
             $dataSet
         ]);
+        self::_dropCollections(...$dataSet->getCollections());
     }
 
-    public static function dropCollections(array $dataSets): void
+    public static function dropCollection(string $collection): void
     {
-        $collections = [];
-
-        foreach ($dataSets as $ds) {
-            $dscolls = $ds->getCollections();
-            $collections = \array_merge($collections, $dscolls);
-        }
-        self::_dropCollection(...$collections);
+        self::_dropCollection((array) $collection);
     }
 
-    private static function _dropCollection(string ...$collections): void
+    private static function _dropCollections(string ...$collections): void
     {
         if (null !== self::$collections_cache)
             $delCache = function (array $collections) {
@@ -130,6 +128,7 @@ final class MongoImport
         }
     }
 
+    // ========================================================================
     public static function collectionExists(string $collection): bool
     {
         return \in_array($collection, self::getCollections());
@@ -176,28 +175,27 @@ final class MongoImport
         echo $output;
     }
 
-    public static function importDataSet(DataSet $dataSet, array $ignoreCollections = []): void
+    // ========================================================================
+    public static function importDataSet(DataSet $dataSet): void
     {
         DataSets::checkNotExists([
             $dataSet
         ]);
-
-        foreach ($dataSet->getCollections() as $c)
-            $ignoreCollections[$c] = MongoImport::collectionExists($c);
-
-        self::importCollections($dataSet, $dataSet->getCollections(), $ignoreCollections);
+        self::importCollections($dataSet, $dataSet->getCollections());
     }
 
-    public static function importCollections(DataSet $dataSet, $collections, array $ignoreCollections = []): void
+    public static function importCollection(DataSet $dataSet, string $collection): void
     {
-        if (! \is_array($collections))
-            $collections = [
-                $collections
-            ];
+        self::importCollections($dataSet, $collection);
+    }
 
-        DataSets::checkNotExists([
-            $dataSet
-        ]);
+    public static function importCollections(DataSet $dataSet, $collections): void
+    {
+        self::_importCollections($dataSet, (array) $collections);
+    }
+
+    private static function _importCollections(DataSet $dataSet, array $collections): int
+    {
         $dsColls = $dataSet->getCollections();
         $invalidColls = \array_diff($collections, $dsColls);
 
@@ -206,36 +204,22 @@ final class MongoImport
             $dsColls = implode(',', $dsColls);
             throw new \Exception("$dataSet does not have collections [$invalidColls]; has [$dsColls]");
         }
+        $ignoreCollections = \array_diff($dsColls, $collections);
+        $ignoreCollections = \array_combine($ignoreCollections, \array_fill(0, \count($ignoreCollections), true));
+
         echo "\nImporting $dataSet\n";
 
         $partitions = $dataSet->getPartitions();
-
-        \wdPush($dataSet->path());
-
         $nbFails = 0;
 
         foreach ($partitions as $partition) {
             $collectionName = $partition->getCollectionName();
-            $jsonFile = $partition->getJsonFile();
 
-            if ($ignoreCollections[$collectionName] ?? self::collectionExists($collectionName)) {
+            if (isset($ignoreCollections[$collectionName]));
+            elseif (self::collectionExists($collectionName))
                 echo "$collectionName: already exists\n";
-                continue;
-            }
-            echo "$jsonFile in collection: $collectionName\n";
-
-            if (! \is_file($jsonFile))
-                throw new \Exception("The file $jsonFile does not exists");
-
-            $cname = \escapeshellarg($collectionName);
-            $jsonFile = \escapeshellarg($jsonFile);
-            \simpleExec("mongoimport -d treeforce -c $cname --file $jsonFile", $output, $err);
-
-            \preg_match('/(\d+) document\(s\) failed/', $err, $matches);
-            $nbFails += (int) $matches[1];
-
-            if (null !== self::$collections_cache)
-                self::$collections_cache[] = $collectionName;
+            else
+                $nbFails += self::importPartition($dataSet, $partition);
         }
 
         if (0 === $nbFails)
@@ -243,10 +227,36 @@ final class MongoImport
         else
             echo "Failed ($nbFails documents)";
 
-        \wdPop();
         echo "\n";
+        return $nbFails;
     }
 
+    private static function importPartition(DataSet $dataSet, \Data\PhysicalPartition $partition): int
+    {
+        \wdPush($dataSet->path());
+
+        $collectionName = $partition->getCollectionName();
+        $jsonFile = $partition->getJsonFile();
+        echo "$jsonFile in collection: $collectionName\n";
+
+        if (! \is_file($jsonFile))
+            throw new \Exception("The file $jsonFile does not exists");
+
+        $cname = \escapeshellarg($collectionName);
+        $jsonFile = \escapeshellarg($jsonFile);
+        \simpleExec("mongoimport -d treeforce -c $cname --file $jsonFile", $output, $err);
+
+        \preg_match('/(\d+) document\(s\) failed/', $err, $matches);
+        $nbFails = (int) ($matches[1] ?? - 1);
+
+        if (null !== self::$collections_cache)
+            self::$collections_cache[] = $collectionName;
+
+        \wdPop();
+        return $nbFails;
+    }
+
+    // ========================================================================
     public static function getCollectionName(DataSet $dataSet)
     {
         if (! $dataSet->hasQueryingVocabulary())

@@ -43,7 +43,11 @@ abstract class AbstractTest
     {
         if (empty($this->collection))
             return;
-        \MongoImport::dropCollection($this->collection);
+
+        if ($this->cmdParser['args']['write-all-partitions'])
+            \MongoImport::dropDataset($this->ds);
+        else
+            \MongoImport::dropCollection($this->collection);
 
         if (! empty($clean))
             $this->xmlLoader->clean($clean);
@@ -61,9 +65,11 @@ abstract class AbstractTest
         if (empty($this->collection))
             return;
         $this->xmlLoader->convert();
-        \MongoImport::importDataSet($this->ds);
-        // Load only one collection
-        // \MongoImport::importCollections($this->ds, $this->collection);
+
+        if ($this->cmdParser['args']['write-all-partitions'])
+            \MongoImport::importDataset($this->ds);
+        else
+            \MongoImport::importCollection($this->ds, $this->collection);
     }
 
     public final function reportErrors(?array $errors = null): void

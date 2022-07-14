@@ -69,5 +69,7 @@ while (! empty($argv)) {
 
         if (! empty($errors))
             $test->reportErrors($errors);
+        else
+            echo "\nTest end without error\n\n";
     }
 }

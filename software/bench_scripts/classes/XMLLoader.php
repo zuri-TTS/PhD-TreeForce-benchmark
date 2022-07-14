@@ -203,16 +203,9 @@ final class XMLLoader
     public function load()
     {
         $dataSets = $this->dataSets;
-        $ignoreCollections = [];
 
-        foreach ($dataSets as $ds) {
-            $colls = $ds->getCollections();
-
-            foreach ($colls as $c)
-                $ignoreCollections[$c] = MongoImport::collectionExists($c);
-        }
         foreach ($dataSets as $ds)
-            MongoImport::importDataSet($ds, $ignoreCollections);
+            MongoImport::importDataSet($ds);
     }
 
     // ========================================================================
@@ -444,7 +437,7 @@ final class XMLLoader
         $id = ++ $fileData['offsets'][$i];
         $id = [
             '_id' => $id,
-            'pid' => $i,
+            'pid' => $i
         ];
         \fwrite($fp, \json_encode($id + $data) . "\n");
     }

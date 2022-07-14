@@ -13,6 +13,7 @@ final class CmdArgs implements \ArrayAccess
     private const cmdArgsDef = [
         'generate-dataset' => true,
         'cmd-display-output' => false,
+        'write-all-partitions' => true,
         'clean-db' => false,
         'clean-db-json' => false,
         'pre-clean-db' => false,
