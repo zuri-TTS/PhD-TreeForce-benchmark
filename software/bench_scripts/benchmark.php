@@ -44,7 +44,23 @@ while (! empty($argv)) {
                 $partitions
             ];
 
-        foreach ($partitions as $partition) {
+        $first = \array_key_first($partitions);
+        $last = \array_key_last($partitions);
+
+        // Inhibit db clean until the first or last test
+        $preCleanDB = $cmdParser['args']['pre-clean-db'] || $cmdParser['args']['clean-db'];
+        $postCleanDB = $cmdParser['args']['post-clean-db'] || $cmdParser['args']['clean-db'];
+
+        $cmdParser['args']['clean-db'] = false;
+        $cmdParser['args']['pre-clean-db'] = $preCleanDB;
+
+        foreach ($partitions as $k => $partition) {
+
+            if ($k != $first)
+                $cmdParser['args']['pre-clean-db'] = false;
+            if ($k == $last)
+                $cmdParser['args']['post-clean-db'] = $postCleanDB;
+
             $test = new $testClass($dataSet, $partition, $cmdParser);
             $test->execute();
             $test->reportErrors();

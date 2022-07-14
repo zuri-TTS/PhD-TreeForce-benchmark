@@ -1,7 +1,7 @@
 <?php
 namespace Test;
 
-final class CmdArgs
+final class CmdArgs implements \ArrayAccess
 {
 
     private array $default;
@@ -31,7 +31,7 @@ final class CmdArgs
         'forget-results' => false,
         'sort-measure' => null,
         'bench-measures-nb' => 1,
-        'bench-measures-forget' => 0,
+        'bench-measures-forget' => 0
     ];
 
     // ========================================================================
@@ -76,6 +76,27 @@ final class CmdArgs
     public function parsed(): array
     {
         return $this->parsed;
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        $this->parsed[$offset] = $value;
+    }
+
+    public function offsetExists($offset)
+    {
+        return isset($this->parsed[$offset]);
+    }
+
+    public function offsetUnset($offset)
+    {
+        if (isset($this->parsed[$offset]))
+            $this->parsed[$offset] = null;
+    }
+
+    public function &offsetGet($offset)
+    {
+        return $this->parsed[$offset];
     }
 
     // ========================================================================
