@@ -181,7 +181,7 @@ final class MongoImport
         DataSets::checkNotExists([
             $dataSet
         ]);
-        self::importCollections($dataSet, $dataSet->getCollections());
+        self::_importCollections($dataSet, $dataSet->getCollections());
     }
 
     public static function importCollection(DataSet $dataSet, string $collection): void
@@ -197,6 +197,7 @@ final class MongoImport
     private static function _importCollections(DataSet $dataSet, array $collections): int
     {
         $dsColls = $dataSet->getCollections();
+        $collections = \array_unique($collections);
         $invalidColls = \array_diff($collections, $dsColls);
 
         if (! empty($invalidColls)) {
@@ -211,15 +212,18 @@ final class MongoImport
 
         $partitions = $dataSet->getPartitions();
         $nbFails = 0;
+        $loading = \array_combine($collections, \array_fill(0, \count($collections), false));
 
         foreach ($partitions as $partition) {
             $collectionName = $partition->getCollectionName();
 
             if (isset($ignoreCollections[$collectionName]));
-            elseif (self::collectionExists($collectionName))
+            elseif (! $loading[$collectionName] && self::collectionExists($collectionName))
                 echo "$collectionName: already exists\n";
-            else
+            else {
                 $nbFails += self::importPartition($dataSet, $partition);
+                $loading[$collectionName] = true;
+            }
         }
 
         if (0 === $nbFails)
