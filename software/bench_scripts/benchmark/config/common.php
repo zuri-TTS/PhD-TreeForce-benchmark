@@ -13,6 +13,7 @@ return [
         'db' => 'treeforce',
         'base.path' => $basePath,
         'output.measures' => "std://out",
+        'query.batches.nbThreads' => 1,
         'query.native' => "",
         'query.batchSize' => 1000,
         'data.batchSize' => 100,
