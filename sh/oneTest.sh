@@ -1,8 +1,13 @@
 #!/bin/bash
 
+# Execute one test on multiple summaries
+
+# cli parameters
+# dataset [output [cmd ...summaries]]
+
 # ENV VARIABLES
 # PARAMS: more parameters to send to the command
-# SUMMARIES: summaries to use
+# SUMMARIES: summaries to use if the cli argument is not set
 
 
 nl=$'\n'
