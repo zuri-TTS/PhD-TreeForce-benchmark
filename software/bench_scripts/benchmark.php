@@ -9,7 +9,6 @@ $cmdParser = \Test\CmdArgs::default();
 
 while (! empty($argv)) {
     $current_argv = \parseArgvShift($argv, ';');
-
     $parsed = $cmdParser->parse($current_argv);
     $dataSets = $parsed['dataSets'];
     $parallelTest = $parsed['args']['parallel'];
@@ -63,10 +62,14 @@ while (! empty($argv)) {
             if ($k == $last)
                 $cmdParser['args']['post-clean-db'] = $postCleanDB;
 
-            $test = new $testClass($dataSet, $cmdParser, ...$subPartitions);
-            $test->execute();
-            $test->reportErrors();
-            $errors = \array_merge($errors, $test->getErrors());
+            $cmdExpansions = $cmdParser->expand();
+
+            foreach ($cmdExpansions as $cmdParser) {
+                $test = new $testClass($dataSet, $cmdParser, ...$subPartitions);
+                $test->execute();
+                $test->reportErrors();
+                $errors = \array_merge($errors, $test->getErrors());
+            }
         }
 
         if (! empty($errors))

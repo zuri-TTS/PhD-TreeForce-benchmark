@@ -30,16 +30,10 @@ shift
 summaries="$@"
 
 if [ -z "$summaries" ] ; then
-	default="'' 'key-type' 'path'"
+	default="''"
 	summaries="${SUMMARIES:-$default}"
 fi
+summaries=$(printf '%q' "[$summaries]")
 
-
-command=$script
-for summary in $summaries
-do
-	command="$command \\$nl '$dataset' cmd: '$cmd' summary: $summary output: '$output' $PARAMS \;"
-done
-
+command="$script $command '$dataset' cmd: '$cmd' summary: $summaries output: '$output' $PARAMS \;"
 echo $"$command"
-

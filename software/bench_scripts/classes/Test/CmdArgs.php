@@ -49,6 +49,46 @@ final class CmdArgs implements \ArrayAccess
         return $ret;
     }
 
+    public function expand(): array
+    {
+        $expandables = [
+            'args' => [
+                'summary',
+                'parallel'
+            ],
+            'javaProperties' => [
+                'query.batchSize',
+                'data.batchSize',
+                'query.batches.nbThreads',
+                'partition.id'
+            ]
+        ];
+
+        foreach ($expandables as $group => $expandables) {
+            $parsed = $this->parsed[$group];
+
+            foreach ($expandables as $expandk) {
+
+                if (\is_array($parsed[$expandk])) {
+                    $ret = [];
+
+                    foreach (\array_unique($parsed[$expandk]) as $val) {
+                        $newExpand = clone $this;
+                        $newExpand[$group][$expandk] = $val;
+                        $subExpand = $newExpand->expand();
+
+                        if (empty($subExpand))
+                            $ret[] = $newExpand;
+                        else
+                            $ret = \array_merge($ret, $subExpand);
+                    }
+                    return $ret;
+                }
+            }
+        }
+        return [];
+    }
+
     // ========================================================================
     public function parse(array $argv): array
     {

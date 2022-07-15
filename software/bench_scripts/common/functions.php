@@ -163,7 +163,19 @@ function parseArgvShift(array &$argv, string $endArg = ''): array
 
         if ($arg === $endArg)
             break;
-        if ($arg[0] === '+' || $arg[0] === '-') {
+        if (str_starts_with($arg, '+-')) {
+            $val = [
+                true,
+                false
+            ];
+            $name = \substr($arg, 2);
+        } elseif (str_starts_with($arg, '-+')) {
+            $val = [
+                false,
+                true
+            ];
+            $name = \substr($arg, 2);
+        } elseif ($arg[0] === '+' || $arg[0] === '-') {
             $sign = $arg[0];
             $arg = \substr($arg, 1);
             list ($name, $val) = parseArgKeyValue($argv, $arg);
@@ -190,18 +202,26 @@ function parseArgKeyValue(array &$argv, string $currentArg): array
         list ($name, $val) = \explode('=', $currentArg, 2);
         return [
             $name,
-            $val
+            \parseArgValue($val)
         ];
     } elseif ($currentArg[\strlen($currentArg) - 1] === ':') {
         return [
             \substr($currentArg, 0, - 1),
-            \array_shift($argv)
+            parseArgValue(\array_shift($argv))
         ];
     } else
         return [
             0,
-            $currentArg
+            parseArgValue($currentArg)
         ];
+}
+
+function parseArgValue(string $val)
+{
+    if (\preg_match('#^\s*\[(.*)\]\s*$#', $val, $matches))
+        return \array_map('trim', \preg_split('#\W+#', $matches[1]));
+
+    return $val;
 }
 
 function argPrefixed(array $args, string $prefix)
