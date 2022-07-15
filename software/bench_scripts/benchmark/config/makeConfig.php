@@ -177,6 +177,11 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
             'partition.output.pattern' => "\${dataset.baseDir}/$pattern"
         ]);
     }
+
+    $sortMeasure = //
+    ($javaProperties['query.batches.nbThreads'] > 1 || $cmdArg['parallel']) ? //
+    'threads.time' : 'stats.db.time';
+
     // <<< >>>
 
     $efrom = [
@@ -209,7 +214,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         'summary' => $benchSummary,
         'toNative.summary' => $benchToNativeSummary,
         'test.existing' => $test_existing,
-        'bench.sort.measure' => $cmdArg['sort-measure'] ?? ($cmdArg['parallel'] ? 'threads.time' : 'stats.db.time'),
+        'bench.sort.measure' => $sortMeasure,
         'bench.output.dir' => $outDir,
         'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
