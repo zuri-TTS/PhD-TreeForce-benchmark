@@ -26,9 +26,9 @@ final class OneTest extends AbstractTest
 
     private array $javaProperties;
 
-    public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition... $partitions)
     {
-        parent::__construct($ds, $partition, $cmdParser);
+        parent::__construct($ds, $cmdParser, ...$partitions);
 
         $parsed = $this->cmdParser->parsed();
         $args = &$parsed['args'];
@@ -49,7 +49,7 @@ final class OneTest extends AbstractTest
         ])) {
             $this->needSummary = true;
             $this->needNativeSummary = true;
-            $this->needPartition = $partition->isLogical();
+            $this->needPartition = $partitions[0]->isLogical();
         }
 
         if (\in_array($args['cmd'], [
@@ -74,7 +74,7 @@ final class OneTest extends AbstractTest
         if ($args['forget-results'])
             $args['plot'] = false;
 
-        $this->testConfig = \makeConfig($this->ds, $partition, $args, $parsed['javaProperties']);
+        $this->testConfig = \makeConfig($this->ds, $partitions, $args, $parsed['javaProperties']);
         $this->args = $args;
         $this->javaProperties = $javaProperties;
     }
@@ -92,9 +92,10 @@ final class OneTest extends AbstractTest
     public function execute()
     {
         if ($this->displayHeader) {
-            $title = "$this->collection/{$this->partition->getID()}";
+            $partition = count($this->partitions) == 1 ? ".{$this->partitions[0]->getID()}" : null;
+            $title = "{$this->ds}$partition";
             $header = \str_repeat('=', \strlen($title));
-            echo "\n$header\nTEST\n$title\n";
+            echo "\n$header\nTEST\n$title\nsummary: {$this->args['summary']}\n";
         }
 
         if (! empty($this->testConfig['test.existing'])) {
@@ -119,7 +120,7 @@ final class OneTest extends AbstractTest
         } catch (\Exception $e) {
             $this->errors[] = [
                 'dataset' => $this->ds,
-                'collection' => $this->collection,
+                'collections' => $this->getCollectionsName(),
                 'exception' => $e
             ];
             \fwrite(STDERR, "<$this->ds>Exception:\n {$e->getMessage()}\n");
@@ -131,19 +132,20 @@ final class OneTest extends AbstractTest
     {
         $args = $this->args;
         $testConfig = $this->testConfig;
+        $partition = $this->partitions[0];
 
         if ($this->needDatabase) {
-            $collExists = $this->collectionExists();
+            $collExists = $this->collectionsExists();
 
             if ($args['pre-clean-db'] || $args['clean-db']) {
-                $this->dropCollection($this->cleanDBGlob);
-                $collExists = $this->collectionExists();
+                $this->dropCollections($this->cleanDBGlob);
+                $collExists = $this->collectionsExists();
             }
             if ($args['generate-dataset']) {
 
                 if (! $collExists) {
-                    $this->loadCollection();
-                    $collExists = $this->collectionExists();
+                    $this->loadCollections();
+                    $collExists = $this->collectionsExists();
                 }
             }
 
@@ -151,14 +153,13 @@ final class OneTest extends AbstractTest
                 throw new \Exception("The collection treeforce.$this->collection must exists in the database");
 
             // Load the index
-            if ($this->args['cmd'] === 'querying' && $this->partition->isLogical()) {
+            if ($this->args['cmd'] === 'querying' && $partition->isLogical()) {
                 $partitionId = $this->javaProperties['partition.id'];
                 $this->loadIndex($partitionId);
             }
         }
 
         if ($this->needNativeSummary) {
-            $partition = $this->partition;
 
             if ($this->args['cmd'] === 'partition' && $partition->isLogical())
                 $partition = $partition->getPhysicalParent();
@@ -167,7 +168,7 @@ final class OneTest extends AbstractTest
             $this->checkSummary($this->testConfig['toNative.summary']);
         }
         if ($this->needSummary) {
-            $this->ensureSummary($args['summary'], $this->partition, (int) $this->javaProperties['summary.filter.stringValuePrefix']);
+            $this->ensureSummary($args['summary'], $partition, (int) $this->javaProperties['summary.filter.stringValuePrefix']);
 
             foreach ((array) $this->testConfig['summary'] as $summary)
                 $this->checkSummary($summary);
@@ -177,7 +178,7 @@ final class OneTest extends AbstractTest
             $lpartitions = $this->partitionsMustBeGenerated($lpartitions, $this->javaProperties['partition.id']);
 
             if (! empty($lpartitions)) {
-                $this->ensurePartition();
+                $this->ensurePartition($partition);
                 $this->checkPartition($lpartitions, $this->javaProperties['partition.id']);
             }
         }
@@ -206,7 +207,7 @@ final class OneTest extends AbstractTest
         }
     }
 
-    private function ensurePartition(): void
+    private function ensurePartition($partition): void
     {
         $summArgs = [
             $this->ds,
@@ -222,7 +223,7 @@ final class OneTest extends AbstractTest
         ];
         $doItParser = CmdArgs::default();
         $doItParser->parse($summArgs);
-        $doIt = new OneTest($this->ds, $this->partition, $doItParser);
+        $doIt = new OneTest($this->ds, $doItParser, $partition);
         $doIt->setDisplayHeader(false);
         $doIt->execute();
     }
@@ -250,7 +251,7 @@ final class OneTest extends AbstractTest
         $config = $this->testConfig;
 
         if ($args['post-clean-db'] || $args['clean-db'])
-            $this->dropCollection($this->cleanDBGlob);
+            $this->dropCollections($this->cleanDBGlob);
 
         if ($args['forget-results'] && \is_dir($config['bench.output.path']))
             \rrmdir($config['bench.output.path']);

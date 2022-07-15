@@ -8,9 +8,7 @@ abstract class AbstractTest
 
     protected \DataSet $ds;
 
-    protected string $collection;
-
-    protected \Data\IPartition $partition;
+    protected array $partitions;
 
     protected CmdArgs $cmdParser;
 
@@ -18,11 +16,10 @@ abstract class AbstractTest
 
     public abstract function execute();
 
-    public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition ...$partitions)
     {
         $this->ds = $ds;
-        $this->partition = $partition;
-        $this->collection = $partition->getCollectionName();
+        $this->partitions = $partitions;
 
         if (! empty($collection) && ! \in_array($collectionName, $ds->getCollections()))
             throw new \Exception("$ds does not have the collection $collectionName");
@@ -31,23 +28,22 @@ abstract class AbstractTest
         $this->xmlLoader = \XMLLoader::of($ds);
     }
 
-    public final function collectionExists(): bool
+    public final function getCollectionsName(): array
     {
-        if (empty($this->collection))
-            return true;
-
-        return \MongoImport::collectionExists($this->collection);
+        return \array_unique(\array_map(fn ($p) => $p->getCollectionName(), $this->partitions));
     }
 
-    public final function dropCollection(string $clean = "*.json"): void
+    public final function collectionsExists(): bool
     {
-        if (empty($this->collection))
-            return;
+        return \MongoImport::collectionsExists($this->getCollectionsName());
+    }
 
+    public final function dropCollections(string $clean = "*.json"): void
+    {
         if ($this->cmdParser['args']['write-all-partitions'])
             \MongoImport::dropDataset($this->ds);
         else
-            \MongoImport::dropCollection($this->collection);
+            \MongoImport::dropCollections($this->getCollectionsName());
 
         if (! empty($clean))
             $this->xmlLoader->clean($clean);
@@ -55,21 +51,18 @@ abstract class AbstractTest
 
     public final function loadIndex(string $indexName): void
     {
-        if (empty($this->collection))
-            return;
-        \MongoImport::createIndex($this->collection, $indexName);
+        foreach ($this->getCollectionsName() as $coll)
+            \MongoImport::createIndex($coll, $indexName);
     }
 
-    public final function loadCollection(): void
+    public final function loadCollections(): void
     {
-        if (empty($this->collection))
-            return;
         $this->xmlLoader->convert();
 
         if ($this->cmdParser['args']['write-all-partitions'])
             \MongoImport::importDataset($this->ds);
         else
-            \MongoImport::importCollection($this->ds, $this->collection);
+            \MongoImport::importCollections($this->ds, $this->getCollectionsName());
     }
 
     public final function reportErrors(?array $errors = null): void
@@ -83,7 +76,8 @@ abstract class AbstractTest
         echo "\n== Error reporting ==\n\n";
 
         foreach ($errors as $err) {
-            echo "= {$err['dataset']}/{$err['collection']} =\n{$err['exception']->getMessage()}\n{$err['exception']->getTraceAsString()}\n\n";
+            $collections = \implode(',', $err['collections']);
+            echo "= {$err['dataset']}/{$collections} =\n{$err['exception']->getMessage()}\n{$err['exception']->getTraceAsString()}\n\n";
         }
         \fwrite(STDERR, \ob_get_clean());
     }

@@ -6,16 +6,16 @@ final class PrintJavaConfig extends AbstractTest
 
     private array $testConfig;
 
-    public function __construct(\DataSet $ds, $partitions, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition ...$partitions)
     {
-        parent::__construct($ds, \Data\Partitions::noPartition(), $cmdParser);
+        parent::__construct($ds, $cmdParser, ...$partitions);
         $parsed = $this->cmdParser->parsed();
-        $this->testConfig = \makeConfig($this->ds, $partitions, $parsed['args'], $parsed['javaProperties']);
+        $this->testConfig = \makeConfig($this->ds, $partitions[0], $parsed['args'], $parsed['javaProperties']);
     }
 
     public function execute()
     {
-        echo "#<$this->collection/{$this->partition->getID()}>\n";
+        echo "#<$this->ds/{$this->partitions[0]->getID()}>\n";
         (new \Benchmark($this->testConfig))->printJavaConfig();
         echo "\n";
     }

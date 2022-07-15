@@ -19,8 +19,6 @@ while (! empty($argv)) {
         $testClass = '\Test\PrintJavaConfig';
     elseif ($cmd === 'summarize')
         $testClass = '\Test\DoSummarize';
-    elseif ($parallelTest)
-        $testClass = '\Test\ParallelTest';
     else
         $testClass = '\Test\OneTest';
 
@@ -30,11 +28,11 @@ while (! empty($argv)) {
         $dsPartitions = $dataSet->getPartitions();
         $partitions = [];
 
-        foreach ($dsPartitions as $partition) {
-            $logicalPartitioning = $partition->getLogicalPartitioning();
+        foreach ($dsPartitions as $subPartitions) {
+            $logicalPartitioning = $subPartitions->getLogicalPartitioning();
 
             if ($logicalPartitioning === null)
-                $partitions[] = $partition;
+                $partitions[] = $subPartitions;
             else
                 $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
         }
@@ -43,6 +41,10 @@ while (! empty($argv)) {
             $partitions = [
                 $partitions
             ];
+        else
+            $partitions = \array_map(fn ($p) => [
+                $p
+            ], $partitions);
 
         $first = \array_key_first($partitions);
         $last = \array_key_last($partitions);
@@ -54,14 +56,14 @@ while (! empty($argv)) {
         $cmdParser['args']['clean-db'] = false;
         $cmdParser['args']['pre-clean-db'] = $preCleanDB;
 
-        foreach ($partitions as $k => $partition) {
+        foreach ($partitions as $k => $subPartitions) {
 
             if ($k != $first)
                 $cmdParser['args']['pre-clean-db'] = false;
             if ($k == $last)
                 $cmdParser['args']['post-clean-db'] = $postCleanDB;
 
-            $test = new $testClass($dataSet, $partition, $cmdParser);
+            $test = new $testClass($dataSet, $cmdParser, ...$subPartitions);
             $test->execute();
             $test->reportErrors();
             $errors = \array_merge($errors, $test->getErrors());

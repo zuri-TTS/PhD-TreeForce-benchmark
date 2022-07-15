@@ -8,9 +8,9 @@ final class DoSummarize extends AbstractTest
 
     private int $strPrefixSize;
 
-    public function __construct(\DataSet $ds, \Data\IPartition $partition, CmdArgs $cmdParser)
+    public function __construct(\DataSet $ds, CmdArgs $cmdParser, Data\IPartition ...$partitions)
     {
-        parent::__construct($ds, $partition, $cmdParser);
+        parent::__construct($ds, $cmdParser, ...$partitions);
 
         $args = $cmdParser->parsed()['args'];
 
@@ -37,7 +37,7 @@ final class DoSummarize extends AbstractTest
         ];
         $doItParser = CmdArgs::default();
         $doItParser->parse($summArgs);
-        $doIt = new OneTest($ds, $partition, $doItParser);
+        $doIt = new OneTest($ds, $doItParser, $partition);
         $doIt->setDisplayHeader(false);
 
         $testConfig = $doIt->getTestConfig();
@@ -74,6 +74,6 @@ final class DoSummarize extends AbstractTest
 
     public function execute()
     {
-        self::summarize($this->ds, $this->partition, $this->summaryType, $this->strPrefixSize);
+        self::summarize($this->ds, $this->partitions[0], $this->summaryType, $this->strPrefixSize);
     }
 }

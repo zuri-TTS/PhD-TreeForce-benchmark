@@ -59,7 +59,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
     if ($cmdArg['parallel']) {
 
         if (! \is_array($partitions))
-            throw new \Exception("In parallel mode \$collections must be an array; have $partitions");
+            throw new \Exception("In parallel mode \$collections must be an array; have " . print_r($partitions, true));
 
         $cprefix = "";
         $javaCollection = [];
@@ -93,6 +93,8 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
         $benchToNativeSummary = '';
         $outDirPattern = $outputDirGenerator($dataSet, \Data\Partitions::noPartition(), $cmdArg, $javaProperties);
     } else {
+        if (\is_array($partitions) && count($partitions) == 1)
+            $partitions = \array_shift($partitions);
 
         if (! $partitions instanceof \Data\IPartition)
             throw new \Exception("In sequential mode \$collections must be a \Data\IPartition; have " . print_r($partitions, true));

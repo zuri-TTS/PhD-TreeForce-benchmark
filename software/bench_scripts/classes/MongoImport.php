@@ -73,6 +73,11 @@ final class MongoImport
         self::_dropCollection((array) $collection);
     }
 
+    public static function dropCollections(array $collections): void
+    {
+        self::_dropCollection($collections);
+    }
+
     private static function _dropCollections(string ...$collections): void
     {
         if (null !== self::$collections_cache)
@@ -134,6 +139,11 @@ final class MongoImport
         return \in_array($collection, self::getCollections());
     }
 
+    public static function collectionsExists(array $collection): bool
+    {
+        return empty(\array_diff($collection, self::getCollections()));
+    }
+
     public static function getCollections(bool $forceCheck = false): array
     {
         if (! $forceCheck && self::$collections_cache !== null)
@@ -189,9 +199,9 @@ final class MongoImport
         self::importCollections($dataSet, $collection);
     }
 
-    public static function importCollections(DataSet $dataSet, $collections): void
+    public static function importCollections(DataSet $dataSet, array $collections): void
     {
-        self::_importCollections($dataSet, (array) $collections);
+        self::_importCollections($dataSet, $collections);
     }
 
     private static function _importCollections(DataSet $dataSet, array $collections): int

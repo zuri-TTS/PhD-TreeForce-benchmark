@@ -59,6 +59,11 @@ final class Partitions
                 return '';
             }
 
+            function getPrefix(): string
+            {
+                return '';
+            }
+
             function getCollectionName(): string
             {
                 return '';
