@@ -9,17 +9,26 @@ $cmdParser = \Test\CmdArgs::default();
 
 while (! empty($argv)) {
     $current_argv = \parseArgvShift($argv, ';');
-    $parsed = $cmdParser->parse($current_argv);
-    $dataSets = $parsed['dataSets'];
-    $parallelTest = $parsed['args']['parallel'];
-    $cmd = $parsed['args']['cmd'];
+    $cmdParser->parse($current_argv);
 
-    if ($parsed['args']['print-java-config'])
+    $dataSets = $cmdParser['dataSets'];
+    $parallelTest = $cmdParser['args']['parallel'];
+    $cmd = $cmdParser['args']['cmd'];
+
+    if ($cmdParser['args']['print-java-config'])
         $testClass = '\Test\PrintJavaConfig';
     elseif ($cmd === 'summarize')
         $testClass = '\Test\DoSummarize';
     else
         $testClass = '\Test\OneTest';
+
+    $preCleanDB = $cmdParser['args']['pre-clean-db'] || $cmdParser['args']['clean-db'];
+    $postCleanDB = $cmdParser['args']['post-clean-db'] || $cmdParser['args']['clean-db'];
+
+    // Inhibit db clean until the first or last test
+    $cmdParser['args']['clean-db'] = false;
+    $cmdParser['args']['pre-clean-db'] = $preCleanDB;
+    $cmdExpansions = $cmdParser->expand();
 
     $errors = [];
 
@@ -45,27 +54,19 @@ while (! empty($argv)) {
                 $p
             ], $partitions);
 
-        $first = \array_key_first($partitions);
-        $last = \array_key_last($partitions);
-
-        // Inhibit db clean until the first or last test
-        $preCleanDB = $cmdParser['args']['pre-clean-db'] || $cmdParser['args']['clean-db'];
-        $postCleanDB = $cmdParser['args']['post-clean-db'] || $cmdParser['args']['clean-db'];
-
-        $cmdParser['args']['clean-db'] = false;
-        $cmdParser['args']['pre-clean-db'] = $preCleanDB;
+        $pLast = \array_key_last($partitions);
 
         foreach ($partitions as $k => $subPartitions) {
+            $cLast = \array_key_last($cmdExpansions);
 
-            if ($k != $first)
-                $cmdParser['args']['pre-clean-db'] = false;
-            if ($k == $last)
-                $cmdParser['args']['post-clean-db'] = $postCleanDB;
+            foreach ($cmdExpansions as $kk => $cmdFinalParser) {
 
-            $cmdExpansions = $cmdParser->expand();
+                if ($k != 0 || $kk != 0)
+                    $cmdFinalParser['args']['pre-clean-db'] = false;
+                if ($k == $pLast && $kk == $cLast)
+                    $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
 
-            foreach ($cmdExpansions as $cmdParser) {
-                $test = new $testClass($dataSet, $cmdParser, ...$subPartitions);
+                $test = new $testClass($dataSet, $cmdFinalParser, ...$subPartitions);
                 $test->execute();
                 $test->reportErrors();
                 $errors = \array_merge($errors, $test->getErrors());
