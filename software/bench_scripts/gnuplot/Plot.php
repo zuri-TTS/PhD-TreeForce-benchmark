@@ -17,8 +17,32 @@ final class Plot
 
     private array $graphics;
 
-    function __construct(string $workingDir, array $csvPaths)
+    function __construct(string $workingDir)
     {
+        if (is_dir($workingDir)) {
+            $dir = new RecursiveDirectoryIterator($workingDir, //
+            FilesystemIterator::KEY_AS_PATHNAME | //
+            FilesystemIterator::CURRENT_AS_FILEINFO | //
+            FilesystemIterator::FOLLOW_SYMLINKS); //
+
+            $ite = new RecursiveIteratorIterator($dir);
+            $ite->setMaxDepth(1);
+            $reg = new RegexIterator($ite, "#/[^@][^/]*\.csv$#");
+
+            foreach ($reg as $file) {
+                $csv = $file->getRealPath();
+
+                if (! str_starts_with(\basename(\dirname($csv)), "full_"))
+                    $csvPaths[] = $csv;
+            }
+        } elseif (is_file($workingDir) && preg_match('#\.csv$#', $workingDir)) {
+            $csvPaths = [
+                $workingDir
+            ];
+            $workingDir = \dirname($workingDir);
+        } else {
+            throw new \Exception("Can't handle '$workingDir'");
+        }
         $this->workingDir = \realpath($workingDir);
 
         foreach ($csvPaths as $csvPath) {
