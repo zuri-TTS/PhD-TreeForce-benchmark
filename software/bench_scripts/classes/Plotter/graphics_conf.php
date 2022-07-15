@@ -1,14 +1,12 @@
 <?php
 return [
     'logscale' => false,
-    'logscale.base' => -1,
+    'logscale.base' => - 1,
     'font.size' => 19,
 
     // Terminal (png)
     'w' => - 1,
     'h' => - 1,
-    'h.space' => 80,
-    'w.space' => 250,
 
     // Bar
     'bar.offset.factor' => 1,
@@ -25,8 +23,8 @@ return [
     'plot.w.full' => - 1,
     'plot.w.full.bar.nb' => - 1,
     'plot.h.full' => - 1,
-    'plot.w.space' => 300,
     'plot.h.space' => 100,
+
     'plot.rmargin' => 0,
     'plot.lmargin' => 0,
     'plot.bmargin' => 5,
@@ -47,5 +45,9 @@ return [
     'plot.ylabel.xoffset' => null,
     'plot.yrange.step' => 100,
 
+    'plots.x' => - 1,
+    'plots.y' => - 1,
+    'plots.w' => - 1,
+    'plots.h' => - 1,
     'plots.max.x' => null
 ];

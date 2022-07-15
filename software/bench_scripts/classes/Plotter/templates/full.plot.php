@@ -41,6 +41,9 @@ $nbQueries = \count($PLOTTER->getQueries());
 if ($nbQueries > 0 && ! ($graphics['plots.max.x'] > 0))
     $graphics['plots.max.x'] = $nbQueries;
 
+$nbXPlots = $graphics['plots.max.x'] + 1;
+$nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
+
 $getMeasure = function ($csvData, $what, $time) {
     return (int) (($csvData[$what] ?? [])[$time] ?? 0);
 };
@@ -51,7 +54,7 @@ foreach ($PLOTTER->getGroupsInfos() as $groupName => $infos)
 
 $nbBars = $nbMeasures * $nbMeasuresToPlot;
 
-$graphics->compute($nbBars, $nbMeasures);
+$graphics->compute($nbBars, $nbMeasures, $nbPlots);
 
 $logscaleBase = $graphics['logscale.base'];
 
@@ -82,15 +85,10 @@ $logscaleBase = $graphics['logscale.base'];
     $yrange = "$yMin:$yMax";
 }
 
-$nbXPlots = $graphics['plots.max.x'] + 1;
-$nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
-$plotXSize = 1.0 / ($nbXPlots);
 
 $multiColLayout = "$nbYPlots, $nbXPlots";
 $plotSize = (1.0 / $nbXPlots) . "," . (1.0 / $nbYPlots);
 
-$graphics['w'] *= $nbXPlots;
-$graphics['h'] *= $nbYPlots;
 $h = $graphics['h'];
 $w = $graphics['w'];
 

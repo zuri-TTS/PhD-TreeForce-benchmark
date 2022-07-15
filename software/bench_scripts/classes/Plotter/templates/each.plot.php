@@ -29,7 +29,7 @@ $nbMeasures = \count(\array_filter($data, fn ($d) => \PLOT::isTimeMeasure($d)));
 $nbBars = $nbMeasures * 2;
 
 
-$graphics->compute($nbBars, $nbMeasures, $yMax);
+$graphics->compute($nbBars, $nbMeasures, 1);
 echo $graphics->addFooter($blocs);
 
 $w = $graphics['w'];

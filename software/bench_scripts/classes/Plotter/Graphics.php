@@ -44,7 +44,7 @@ final class Graphics implements \ArrayAccess
         return $this->graphics;
     }
 
-    public function compute(int $nbBars, int $nbBarGroups)
+    public function compute(int $nbBars, int $nbBarGroups, int $nbPlots)
     {
         $g = &$this->graphics;
         $g = [
@@ -77,11 +77,20 @@ final class Graphics implements \ArrayAccess
         $g['plot.w.full'] = $g['plot.w'] + $g['plot.lmargin.pixels'] + $g['plot.rmargin.pixels'];
         $g['plot.h.full'] = $g['plot.h'] + $g['plot.bmargin.pixels'];
 
-        $g['w'] = $g['plot.w.full'];
-        $g['h'] = $g['plot.h.full'];
-
         $g['blocs.w'] = 0;
         $g['blocs.h'] = 0;
+
+        $g['plots.max.x'] = $g['plots.max.x'] ?? $nbPlots;
+        $g['plots.x'] = $nbXPlots = $g['plots.max.x'] + 1;
+        $g['plots.y'] = $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
+
+        $g['plots.w'] = $g['plot.w.full'] * $nbXPlots;
+        $g['plots.h'] = $g['plot.h.full'] * $nbYPlots;
+
+        $g['w'] = $g['plot.w.full'];
+        $g['h'] = $g['plot.h.full'];
+        $g['w'] = $g['plots.w'];
+        $g['h'] = $g['plots.h'];
     }
 
     private function graphics_addBSpace(int $space)
