@@ -95,7 +95,11 @@ final class OneTest extends AbstractTest
             $partition = count($this->partitions) == 1 ? ".{$this->partitions[0]->getID()}" : null;
             $title = "{$this->ds}$partition";
             $header = \str_repeat('=', \strlen($title));
-            echo "\n$header\nTEST\n$title\nsummary: {$this->args['summary']}\n";
+            echo "\n$header\nTEST\n$title\n";
+
+            foreach (\Test\CmdArgs::expandables() as $group => $expandables)
+                foreach ($expandables as $exp)
+                    echo "$exp: {$this->cmdParser[$group][$exp]}\n";
         }
         if (! empty($this->testConfig['test.existing'])) {
             echo "Similar test already exists:\n";
