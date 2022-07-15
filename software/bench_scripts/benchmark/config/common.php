@@ -45,7 +45,26 @@ return [
         system('sudo service mongodb start');
         sleep(1);
     },
-    'bench.output.base.path' => "$basePath/outputs",
+    'bench.output.base.path' => function (DataSet $dataSet, \Test\CmdArgs $cmdParser) use ($basePath) {
+
+        $args = $cmdParser['args'];
+        $partitioning = $dataSet->getPartitioning();
+        $hasPartitioning = ! ($partitioning instanceof \Data\NoPartitioning);
+        $j = $cmdParser['javaProperties'];
+
+        $pid = $hasPartitioning ? "-{$j['partition.id']}" : '';
+        $ds = $dataSet->group();
+
+        if ($hasPartitioning)
+            $ds .= ".{$partitioning->getID()}";
+
+        $parallel = $args['parallel'] ? '-parallel' : '';
+        $prefixSize = $j['summary.filter.stringValuePrefix'] > 0 ? "-prefix_{$j['summary.filter.stringValuePrefix']}" : '';
+        $filter = ! empty($j['querying.filter']) ? "-{$j['querying.filter']}" : '';
+        $batchesNbThread = $j['query.batches.nbThreads'] > 1 ? "-t{$j['query.batches.nbThreads']}-qb{$j['query.batchSize']}" : '';
+
+        return "$basePath/outputs/{$args['bench-measures-nb']}/$ds$pid$parallel$prefixSize$filter$batchesNbThread";
+    },
     'bench.output.dir.generator' => function (DataSet $dataSet, \Data\IPartition $partition, array $cmdArg, array $javaProperties): string {
         $group = $dataSet->group();
         $theRules = $dataSet->rules();

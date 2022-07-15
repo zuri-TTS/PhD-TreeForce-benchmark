@@ -1,7 +1,9 @@
 <?php
 
-function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaProperties) //
+function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
 {
+    $cmdArg = &$cmdParser['args'];
+    $javaProperties = $cmdParser['javaProperties'];
     $group = $dataSet->group();
     $rules = $dataSet->rules();
     $dataSetPath = $dataSet->path();
@@ -142,7 +144,14 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     $outDir = sprintf($outDirPattern, $common['bench.datetime']->format($common['datetime.format']));
 
-    $pp = $cmdArg['output'] ?? $common['bench.output.base.path'];
+    if (! empty($cmdArg['output'] ?? null))
+        $pp = $cmdArg['output'];
+    else
+        $pp = $common['bench.output.base.path']($dataSet, $cmdParser);
+
+    if (! \is_dir($pp))
+        \mkdir($pp, 0777, true);
+
     $bpath = \realpath($pp);
 
     if (false === $bpath)

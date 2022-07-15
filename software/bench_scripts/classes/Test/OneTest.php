@@ -26,7 +26,7 @@ final class OneTest extends AbstractTest
 
     private array $javaProperties;
 
-    public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition... $partitions)
+    public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition ...$partitions)
     {
         parent::__construct($ds, $cmdParser, ...$partitions);
 
@@ -74,7 +74,7 @@ final class OneTest extends AbstractTest
         if ($args['forget-results'])
             $args['plot'] = false;
 
-        $this->testConfig = \makeConfig($this->ds, $partitions, $args, $parsed['javaProperties']);
+        $this->testConfig = \makeConfig($this->ds, $partitions, $cmdParser);
         $this->args = $args;
         $this->javaProperties = $javaProperties;
     }
@@ -97,7 +97,6 @@ final class OneTest extends AbstractTest
             $header = \str_repeat('=', \strlen($title));
             echo "\n$header\nTEST\n$title\nsummary: {$this->args['summary']}\n";
         }
-
         if (! empty($this->testConfig['test.existing'])) {
             echo "Similar test already exists:\n";
 

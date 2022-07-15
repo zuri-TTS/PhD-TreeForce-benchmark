@@ -9,8 +9,7 @@ final class PrintJavaConfig extends AbstractTest
     public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition ...$partitions)
     {
         parent::__construct($ds, $cmdParser, ...$partitions);
-        $parsed = $this->cmdParser->parsed();
-        $this->testConfig = \makeConfig($this->ds, $partitions[0], $parsed['args'], $parsed['javaProperties']);
+        $this->testConfig = \makeConfig($this->ds, $partitions[0], $cmdParser);
     }
 
     public function execute()

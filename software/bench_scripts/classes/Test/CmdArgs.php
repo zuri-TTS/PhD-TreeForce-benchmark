@@ -49,22 +49,28 @@ final class CmdArgs implements \ArrayAccess
         return $ret;
     }
 
+    private const expandables = [
+        'args' => [
+            'summary',
+            'parallel'
+        ],
+        'javaProperties' => [
+            'query.batchSize',
+            'data.batchSize',
+            'query.batches.nbThreads',
+            'partition.id',
+            'querying.filter'
+        ]
+    ];
+
+    public static function expandables(): array
+    {
+        return self::expandables;
+    }
+
     public function expand(): array
     {
-        $expandables = [
-            'args' => [
-                'summary',
-                'parallel'
-            ],
-            'javaProperties' => [
-                'query.batchSize',
-                'data.batchSize',
-                'query.batches.nbThreads',
-                'partition.id'
-            ]
-        ];
-
-        foreach ($expandables as $group => $expandables) {
+        foreach (self::expandables as $group => $expandables) {
             $parsed = $this->parsed[$group];
 
             foreach ($expandables as $expandk) {
