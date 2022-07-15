@@ -16,13 +16,8 @@ script=software/bench_scripts/benchmark.php
 dataset="$1"
 shift
 
-output="${1:-output}"
+output="$1"
 shift
-
-if [ ! -d $output ] ; then
-	mkdir $output
-fi
-
 
 cmd="${1:-querying}"
 shift
