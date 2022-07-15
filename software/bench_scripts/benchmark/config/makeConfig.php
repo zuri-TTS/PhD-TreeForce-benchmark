@@ -184,16 +184,7 @@ function makeConfig(DataSet $dataSet, $partitions, array &$cmdArg, array $javaPr
 
     // <<< >>>
 
-    $efrom = [
-        '[',
-        ']'
-    ];
-    $eto = [
-        '\[',
-        '\]'
-    ];
-    $testRegex = $outDirPattern;
-    $testRegex = \str_replace($efrom, $eto, $testRegex);
+    $testRegex = \preg_quote($outDirPattern);
     $testRegex = \sprintf($testRegex, '[^\[\]]+');
     $testRegex = "#^$testRegex$#";
 
