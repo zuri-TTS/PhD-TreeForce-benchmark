@@ -1,7 +1,6 @@
 <?php
 return [
-    'logscale' => false,
-    'logscale.base' => - 1,
+    'logscale' => 10,
     'font.size' => 19,
 
     // Terminal (png)
@@ -9,14 +8,14 @@ return [
     'h' => - 1,
 
     // Plots layout
-    'layout.lmargin' => 100,
+    'layout.lmargin' => 300,
     'layout.rmargin' => 0,
 
     // Bar
-    'bar.offset.factor' => 1,
+    'bar.offset.factor' => 0,
     'bar.end.factor' => 1,
-    'bar.w' => 15,
-    'bar.gap.factor' => 1,
+    'bar.w' => 25,
+    'bar.gap.factor' => .25,
     'bar.gap.nb' => - 1,
 
     // Plot
@@ -39,13 +38,14 @@ return [
     'plot.y' => - 1,
 
     'plot.y.step' => 100,
-    'plot.y.step.nb' => - 1,
+    'plot.y.step.nb' => 10,
 
-    'plot.yrange.max' => null,
-    'plot.yrange.min' => null,
-    'plot.ylabel.yoffset' => null,
+    'plot.yrange.max' => 100,
+    'plot.yrange.min' => 1,
+    'plot.ylabel.yoffset' => 10,
     'plot.ylabel.xoffset' => null,
-    'plot.yrange.step' => 100,
+    'plot.yrange.step' => 10,
+    'plot.yrange.substep' => 100,
 
     'plots.x' => - 1,
     'plots.y' => - 1,

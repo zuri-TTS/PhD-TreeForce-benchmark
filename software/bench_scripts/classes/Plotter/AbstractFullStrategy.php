@@ -67,12 +67,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
         return $conf += $default + [
             'plot.yrange' => 'global',
-            'plot.yrange.display' => true,
+            'plot.yrange.display' => false,
             'plot.pattern.offset' => 0,
             'plot.legend' => true,
             'plot.legend.w' => 200,
             'plot.ytics.step' => 1,
-            'plot.ytics.nb' => null,
+            'plot.ytics.nb' => 1,
             'plot.xtic' => null, // function
             'plot.title' => null, // function
             'plot.format.y' => "%gs",

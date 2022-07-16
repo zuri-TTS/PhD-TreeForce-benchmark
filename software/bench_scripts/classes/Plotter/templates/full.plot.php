@@ -12,9 +12,8 @@ $graphics = new Plotter\Graphics($plotConfig);
 $plotLegend = $plotConfig['plot.legend'];
 $plotYTicsStep = $plotConfig['plot.ytics.step'];
 $nbYTics_max = (int) $plotConfig['plot.ytics.nb'];
-$plotYLabelYOffset = ($plotConfig['plot.ylabel.yoffset'] ?? null);
-$plotYLabelYOffsetSub = ($plotConfig['plot.ylabel.yoffset.sub'] ?? $plotYLabelYOffset);
-$plotYLabelXOffset = ($plotConfig['plot.ylabel.xoffset'] ?? null);
+$plotYLabelYOffset = ($graphics['plot.ylabel.yoffset'] ?? null);
+$plotYLabelXOffset = ($graphics['plot.ylabel.xoffset'] ?? null);
 $plotYLabel = false;
 $timeDiv = $plotConfig['measure.div'];
 $formatY = $plotConfig['plot.format.y'];
@@ -28,13 +27,13 @@ if ($plotYLabelYOffset < 0) {
     $plotYLabelYOffset = (float) $graphics['plot.yrange.step'] * $graphics['font.size'] / $graphics['plot.y.step'] / 2;
 }
 
-$plotYLabelYOffsetSub = $plotYLabelYOffset;
-
-$ystep = $plotConfig['plot.yrange.step'];
-$logscale = $plotConfig['logscale'];
+$ystep = $graphics['plot.yrange.step'];
+$logscale = $graphics['logscale'];
 
 list ($yMin, $yMax) = $plotterStrategy->plot_getYRange(...$csvFiles);
 $yMin = \max(1, $yMin - 1);
+$yMin = $graphics['plot.yrange.min'] ?? $yMin / $timeDiv;
+$yMax = $graphics['plot.yrange.max'] ?? $yMax / $timeDiv;
 
 $nbQueries = \count($PLOTTER->getQueries());
 
@@ -51,41 +50,57 @@ foreach ($PLOTTER->getGroupsInfos() as $groupName => $infos)
 
 $nbBars = $nbMeasures * $nbMeasuresToPlot;
 
+{ // YRange
+    $logscaleBase = $graphics->logscaleBase();
+    $autoYMax = ! isset($graphics['plot.yrange.max']);
+
+    if ($autoYMax) {
+
+        if ($logscale) {
+
+            $yLog = $logscaleBase ** floor(\log($yMax, $logscaleBase));
+            $yRangeMax = $yLog;
+            $step = $yLog;
+        } else {
+            $yRangeMax = $yMin;
+            $step = $graphics['plot.yrange.substep'] ?? 10;
+        }
+
+        while ($yRangeMax < $yMax)
+            $yRangeMax += $step;
+
+        $yMax = $yRangeMax;
+        unset($yRangeMax);
+    }
+    $yrange = "$yMin:$yMax";
+    $graphics['plot.yrange.min'] = $yMin;
+    $graphics['plot.yrange.max'] = $yMax;
+}
 $graphics->compute($nbBars, $nbMeasures, $nbPlots);
 
+if ($logscale) {
+    echo "set logscale y $logscaleBase\n";
+
+    $maxScale = log($yMax, $logscaleBase);
+    $minScale = log($yMin, $logscaleBase);
+    $rangeScale = $maxScale - $minScale;
+
+    $unit = $plotYLabelYOffset / $graphics['plot.h'] * log($yMax, $logscaleBase);
+    $plotYLabelYOffsetPattern = "10 ** ($unit + log10(%s))";
+    $plotYLabelYOffsetMaxPattern = "10 ** ($maxScale - $unit)";
+    $plotYLabelYOffsetMinPattern = "10 ** ($minScale + $unit)";
+
+    $yMaxTh = $yMinTh = 0;
+} else {
+    $unit = $graphics['plot.yrange.step'] / $graphics['plot.y.step'] * $plotYLabelYOffset;
+    $plotYLabelYOffsetPattern = "%s + $unit";
+    $plotYLabelYOffsetMaxPattern = "$yMax - $unit";
+    $plotYLabelYOffsetMinPattern = "$yMin + $unit";
+
+    $yMaxTh = $yMinTh = $unit;
+}
 $nbXPlots = $graphics['plots.x'];
 $nbYPlots = $graphics['plots.y'];
-
-$logscaleBase = $graphics['logscale.base'];
-
-{ // YRange
-    $yLog = $logscaleBase ** ceil(\log($yMax, $logscaleBase));
-    $yRangeMax = $yLog;
-
-    while ($yRangeMax < $yMax)
-        $yRangeMax += $yLog;
-
-    $yMax = $yRangeMax;
-    unset($yRangeMax);
-
-    $configYRangeMin = $plotConfig['plot.yrange.min'] ?? 0;
-
-    if ($configYRangeMin)
-        $yMin = $configYRangeMin;
-    else
-        $yMin /= $timeDiv;
-
-    $configYRangeMax = $plotConfig['plot.yrange.max'] ?? 0;
-
-    if ($configYRangeMax)
-        $yMax = $configYRangeMax;
-    else
-        $yMax /= $timeDiv;
-
-    $yrange = "$yMin:$yMax";
-}
-
-// $plotXSize = 1.0 / ($nbXPlots);
 
 $multiColLayout = "$nbYPlots, $nbXPlots";
 $plotSize = (1.0 / $nbXPlots) . "," . (1.0 / $nbYPlots);
@@ -96,12 +111,6 @@ $w = $graphics['w'];
 $boxwidth = 1;
 
 $plotYTics = "set format y \"$formatY\"\n";
-
-if ($logscale) {
-    echo "set logscale y $logscaleBase\n";
-    $plotYLabelYOffsetPattern = "($plotYLabelYOffset * 10 ** (log10(%s)-1))";
-    $plotYLabelYOffsetSubPattern = "($plotYLabelYOffsetSub * 10 ** (log10($yMax)-1))";
-}
 
 if ($plotConfig['multiplot.title'] === true) {
     $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
@@ -160,7 +169,7 @@ if ($plotLegend) {
     unset xtics
     unset ytics
     unset ylabel
-    set key inside center right
+    set key inside right center vertical samplen .5
     set xrange [0:1]
     set yrange [0:1]
     set origin $col,$lin
@@ -195,7 +204,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     else
         $title = "$fname\\n($nbAnswers answers)";
 
-    $title = $PLOT->gnuplotSpecialChars($title);
+    $title = $title;
 
     list ($lin, $col) = $graphics->plotPositionFactors($nbPlots);
     echo "set origin $col,$lin\n";
@@ -245,18 +254,17 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     foreach ($stacked as $stack) {
 
         foreach ($stack as $pos => $measure) {
-            $measure = $PLOT->gnuplotSpecialChars($measure);
+            $measure = $measure;
             $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes title '$measure' ls $ls fs pattern $pattern";
 
             if ($plotYLabel) {
+                $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "tm(\$$pos)");
+                $plotYLabelYOffsetMax = sprintf($plotYLabelYOffsetMaxPattern, "tm(\$$pos)");
+                $plotYLabelYOffsetMin = sprintf($plotYLabelYOffsetMinPattern, "tm(\$$pos)");
 
-                if ($logscale) {
-                    $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "tm(\$$pos)");
-                    $plotYLabelYOffsetSub = sprintf($plotYLabelYOffsetSubPattern, "tm(\$$pos)");
-                }
                 $tmp[] = "'' u " . //
                 "(\$0 * $spaceFactor + $stacked_i):" . //
-                "(tm(\$$pos) + $plotYLabelYOffset >= $yMax) ? $yMax - $plotYLabelYOffsetSub : ( (tm(\$$pos) > $yMin ? tm(\$$pos) : $yMin) + $plotYLabelYOffset):" . //
+                "($plotYLabelYOffset +  $yMaxTh >= $yMax) ? $plotYLabelYOffsetMax : (($plotYLabelYOffset - $yMinTh <= $yMin) ? $plotYLabelYOffsetMin : $plotYLabelYOffset):" . //
                 "(sprintf(\"%.2f\", tm(\$$pos)))" . //
                 " with labels boxed font \"$tinyFont\"";
             }

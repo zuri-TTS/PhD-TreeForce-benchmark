@@ -44,6 +44,12 @@ final class Graphics implements \ArrayAccess
         return $this->graphics;
     }
 
+    public function logscaleBase()
+    {
+        $g = &$this->graphics;
+        return is_int($g['logscale']) ? $g['logscale'] : 10;
+    }
+
     public function compute(int $nbBars, int $nbBarGroups, int $nbPlots)
     {
         $g = &$this->graphics;
@@ -52,13 +58,12 @@ final class Graphics implements \ArrayAccess
         ] + $g;
 
         if ($g['logscale']) {
-            $base = is_int($g['logscale']) ? $g['logscale'] : ($g['plot.yrange.step'] ?? 10);
-            $g['logscale.base'] = $base;
-            $g['plot.y.step.nb'] = \ceil(\log($g['plot.yrange.max'], $base)) - \ceil(\log($g['plot.yrange.min'], $base));
+            $base = $this->logscaleBase();
+            $g['plot.y.step.nb'] = \log($g['plot.yrange.max'], $base) - log($g['plot.yrange.min'], $base);
         } else {
             $g['plot.y.step.nb'] = ($g['plot.yrange.max'] - $g['plot.yrange.min']) / $g['plot.yrange.step'];
-            $g['logscale.base'] = 10;
         }
+        $g['plot.y.step.nb'] = \max(1, $g['plot.y.step.nb']);
         $onlyPlotH = $g['plot.y.step.nb'] * $g['plot.y.step'];
         $gaps = $g['bar.gap.nb'];
 
@@ -66,7 +71,7 @@ final class Graphics implements \ArrayAccess
 
         $g['plot.w'] = $g['plot.w.full.bar.nb'] * $g['bar.w'];
         $g['plot.w'] = max($g['plot.w'], $g['plot.w.min']);
-        $g['plot.h'] = $onlyPlotH; // + $g['plot.h.space'];
+        $g['plot.h'] = $onlyPlotH;
 
         $g['plot.w.full'] = $g['plot.w'] + $g['plot.lmargin'] + $g['plot.rmargin'];
         $g['plot.h.full'] = $g['plot.h'] + $g['plot.bmargin'] + $g['plot.tmargin'];
