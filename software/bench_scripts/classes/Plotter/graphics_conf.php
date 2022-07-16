@@ -8,6 +8,10 @@ return [
     'w' => - 1,
     'h' => - 1,
 
+    // Plots layout
+    'layout.lmargin' => 100,
+    'layout.rmargin' => 0,
+
     // Bar
     'bar.offset.factor' => 1,
     'bar.end.factor' => 1,
@@ -16,21 +20,19 @@ return [
     'bar.gap.nb' => - 1,
 
     // Plot
-    'plot.header.h' => 60,
     'plot.w.min' => 100,
     'plot.w' => - 1,
     'plot.h' => - 1,
-    'plot.w.full' => - 1,
+    'plot.w.factor' => - 1,
+    'plot.h.factor' => - 1,
     'plot.w.full.bar.nb' => - 1,
+    'plot.w.full' => - 1,
     'plot.h.full' => - 1,
-    'plot.h.space' => 100,
 
     'plot.rmargin' => 0,
     'plot.lmargin' => 0,
-    'plot.bmargin' => 5,
-    'plot.rmargin.pixels' => - 1,
-    'plot.lmargin.pixels' => - 1,
-    'plot.bmargin.pixels' => - 1,
+    'plot.bmargin' => 100,
+    'plot.tmargin' => 70,
 
     // Offset coordinates
     'plot.x' => - 1,
@@ -49,5 +51,5 @@ return [
     'plots.y' => - 1,
     'plots.w' => - 1,
     'plots.h' => - 1,
-    'plots.max.x' => null
+    'plots.x.max' => 5
 ];

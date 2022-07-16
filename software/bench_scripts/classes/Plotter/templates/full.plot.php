@@ -38,11 +38,8 @@ $yMin = \max(1, $yMin - 1);
 
 $nbQueries = \count($PLOTTER->getQueries());
 
-if ($nbQueries > 0 && ! ($graphics['plots.max.x'] > 0))
-    $graphics['plots.max.x'] = $nbQueries;
-
-$nbXPlots = $graphics['plots.max.x'] + 1;
-$nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
+if ($nbQueries > 0 && ! ($graphics['plots.x.max'] > 0))
+    $graphics['plots.x.max'] = $nbQueries;
 
 $getMeasure = function ($csvData, $what, $time) {
     return (int) (($csvData[$what] ?? [])[$time] ?? 0);
@@ -55,6 +52,9 @@ foreach ($PLOTTER->getGroupsInfos() as $groupName => $infos)
 $nbBars = $nbMeasures * $nbMeasuresToPlot;
 
 $graphics->compute($nbBars, $nbMeasures, $nbPlots);
+
+$nbXPlots = $graphics['plots.x'];
+$nbYPlots = $graphics['plots.y'];
 
 $logscaleBase = $graphics['logscale.base'];
 
@@ -85,6 +85,7 @@ $logscaleBase = $graphics['logscale.base'];
     $yrange = "$yMin:$yMax";
 }
 
+// $plotXSize = 1.0 / ($nbXPlots);
 
 $multiColLayout = "$nbYPlots, $nbXPlots";
 $plotSize = (1.0 / $nbXPlots) . "," . (1.0 / $nbYPlots);
@@ -94,36 +95,7 @@ $w = $graphics['w'];
 
 $boxwidth = 1;
 
-$key = $plotLegend ? <<<EOD
-set key off
-set key inside center center title "Times"
-
-EOD : null;
-
-$placeholderPlot = <<<EOD
-unset title
-unset key
-unset xtics
-unset ytics
-set border 0
-unset grid
-unset ylabel
-set key autotitle columnheader
-$key
-
-EOD;
-
 $plotYTics = "set format y \"$formatY\"\n";
-
-$normalPlot = <<<EOD
-set xtics rotate by 30 right
-set xtics scale 0
-set border 1
-set grid ytics
-set ytics scale .2 nomirror $ystep
-set key off
-
-EOD;
 
 if ($logscale) {
     echo "set logscale y $logscaleBase\n";
@@ -143,30 +115,76 @@ $xmin = - $boxwidth / 2;
 $xmin -= $boxwidth * $graphics['bar.offset.factor'];
 $xmax += $boxwidth * ($graphics['bar.end.factor'] + $graphics['bar.gap.nb']);
 
+$ls = 1;
+$nbPlots = 0;
+$gap = $graphics['bar.gap.factor'];
+
 echo <<<EOD
 if(!exists("terminal")) terminal="png"
 
 tm(x)=x/($timeDiv)
-
 set style fill pattern border -1
 set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
-set term terminal size $w, $h
-set multiplot layout $multiColLayout $multiplotTitle
-set rmargin ${graphics['plot.rmargin']}
-set lmargin ${graphics['plot.lmargin']}
-set bmargin ${graphics['plot.bmargin']}
-set yrange [$yrange]
-set xrange [$xmin:$xmax]
+set term terminal size $w, $h noenhance
+set multiplot
 
 set style textbox opaque noborder
 
+set lmargin 0
+set rmargin 0
+set bmargin 0
+set tmargin 0
+
 EOD;
 
-$ls = 1;
-$nbPlots = 0;
+$tinyFont = "Noto Sans,8";
 
-$gap = $graphics['bar.gap.factor'];
+if ($plotLegend) {
+    $tmp = [];
+    $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
+    $wfactor = $plotConfig['plot.legend.w'] / $graphics['w'];
+
+    foreach ($stacked as $stack) {
+
+        foreach ($stack as $pos => $measure) {
+            $legendTitle = "title '$measure'";
+            $tmp[] = "1/0 with boxes $legendTitle ls $ls fs pattern $pattern";
+            $pattern ++;
+        }
+    }
+    list ($lin, $col) = $graphics->plotPositionFactors(0, false);
+    $plot = \implode(',', $tmp);
+    echo <<<EOD
+    unset title
+    unset xtics
+    unset ytics
+    unset ylabel
+    set key inside center right
+    set xrange [0:1]
+    set yrange [0:1]
+    set origin $col,$lin
+    set border 0
+    set size $wfactor,{$graphics['plot.h.factor']}
+    plot $plot
+    
+    EOD;
+}
+
+echo <<<EOD
+set size {$graphics['plot.w.factor']},{$graphics['plot.h.factor']}
+set yrange [$yrange]
+set xrange [$xmin:$xmax]
+
+set xtics rotate by 30 right
+set xtics scale 0
+set border 1
+set grid ytics
+set ytics scale .2 nomirror $ystep
+set key autotitle columnheader
+set key off
+
+EOD;
 
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $csvData = $PLOTTER->getCsvData($csvPaths[0]);
@@ -179,26 +197,13 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
 
     $title = $PLOT->gnuplotSpecialChars($title);
 
+    list ($lin, $col) = $graphics->plotPositionFactors($nbPlots);
+    echo "set origin $col,$lin\n";
+
     if (($nbPlots % $nbXPlots) === 0) {
         $nbYTics = 0;
-        $tmp = [];
+        // $tmp = [];
         $ls = 1;
-        $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
-
-        foreach ($stacked as $stack) {
-
-            foreach ($stack as $pos => $measure) {
-                $legendTitle = $plotLegend ? "title '$measure'" : "";
-                $tmp[] = "1/0 with boxes $legendTitle ls $ls fs pattern $pattern";
-                $pattern ++;
-            }
-        }
-        echo $placeholderPlot;
-        echo 'plot ', \implode(',', $tmp), "\n";
-        echo $normalPlot;
-        $nbPlots ++;
-    } else {
-        $ls ++;
     }
 
     if ($plotConfig['plot.yrange'] === 'local') {
@@ -253,7 +258,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                 "(\$0 * $spaceFactor + $stacked_i):" . //
                 "(tm(\$$pos) + $plotYLabelYOffset >= $yMax) ? $yMax - $plotYLabelYOffsetSub : ( (tm(\$$pos) > $yMin ? tm(\$$pos) : $yMin) + $plotYLabelYOffset):" . //
                 "(sprintf(\"%.2f\", tm(\$$pos)))" . //
-                " with labels boxed font \",8\"";
+                " with labels boxed font \"$tinyFont\"";
             }
             $xtics = null;
             $pattern ++;
@@ -261,6 +266,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
         $stacked_i += $boxwidth;
     }
     $nbPlots ++;
+    $ls ++;
 
     echo "plot\\\n", implode(",\\\n", $tmp), "\n";
 }

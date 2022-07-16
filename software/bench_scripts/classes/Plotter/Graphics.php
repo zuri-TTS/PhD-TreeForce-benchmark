@@ -60,37 +60,66 @@ final class Graphics implements \ArrayAccess
             $g['logscale.base'] = 10;
         }
         $onlyPlotH = $g['plot.y.step.nb'] * $g['plot.y.step'];
-        $g['plot.lmargin.pixels'] = $g['plot.lmargin'] * $g['font.size'];
-        $g['plot.rmargin.pixels'] = $g['plot.rmargin'] * $g['font.size'];
-        $g['plot.bmargin.pixels'] = $g['plot.bmargin'] * $g['font.size'];
         $gaps = $g['bar.gap.nb'];
 
         $g['plot.w.full.bar.nb'] = $nbBars + $gaps + $g['bar.offset.factor'] + $g['bar.end.factor'];
 
         $g['plot.w'] = $g['plot.w.full.bar.nb'] * $g['bar.w'];
         $g['plot.w'] = max($g['plot.w'], $g['plot.w.min']);
-        $g['plot.h'] = $onlyPlotH + $g['plot.h.space'];
+        $g['plot.h'] = $onlyPlotH; // + $g['plot.h.space'];
 
-        $g['plot.x'] = $g['plot.lmargin.pixels'];
-        $g['plot.y'] = $g['plot.bmargin.pixels'];
+        $g['plot.w.full'] = $g['plot.w'] + $g['plot.lmargin'] + $g['plot.rmargin'];
+        $g['plot.h.full'] = $g['plot.h'] + $g['plot.bmargin'] + $g['plot.tmargin'];
 
-        $g['plot.w.full'] = $g['plot.w'] + $g['plot.lmargin.pixels'] + $g['plot.rmargin.pixels'];
-        $g['plot.h.full'] = $g['plot.h'] + $g['plot.bmargin.pixels'];
+        $g['plots.x.max'] = $g['plots.x.max'] ?? $nbPlots;
+        $g['plots.x'] = $nbXPlots = $g['plots.x.max'];
+        $g['plots.y'] = $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
+
+        $g['plots.w'] = (float) $g['plot.w.full'] * $nbXPlots;
+        $g['plots.h'] = (float) $g['plot.h.full'] * $nbYPlots;
+
+        // ===
 
         $g['blocs.w'] = 0;
         $g['blocs.h'] = 0;
 
-        $g['plots.max.x'] = $g['plots.max.x'] ?? $nbPlots;
-        $g['plots.x'] = $nbXPlots = $g['plots.max.x'] + 1;
-        $g['plots.y'] = $nbYPlots = \ceil((float) $nbPlots / $nbXPlots);
+        // All
+        $layout = $g['layout.rmargin'] + $g['layout.lmargin'];
 
-        $g['plots.w'] = $g['plot.w.full'] * $nbXPlots;
-        $g['plots.h'] = $g['plot.h.full'] * $nbYPlots;
-
-        $g['w'] = $g['plot.w.full'];
-        $g['h'] = $g['plot.h.full'];
-        $g['w'] = $g['plots.w'];
+        $g['w'] = $g['plots.w'] + $layout;
         $g['h'] = $g['plots.h'];
+
+        $g['plot.w.factor'] = $g['plot.w'] / $g['w'];
+        $g['plot.h.factor'] = $g['plot.h'] / $g['h'];
+    }
+
+    public function plotPositionFactors(int $index, bool $addLayout = true)
+    {
+        $g = $this->graphics;
+
+        $l = \floor((float) $index / $g['plots.x']) + 1;
+        $c = $index % $g['plots.x'] + 1;
+
+        $hfactor = $g['plot.h.factor'];
+        $wfactor = $g['plot.w.factor'];
+
+        $tmarginf = $g['plot.tmargin'] / $g['h'];
+        $bmarginf = $g['plot.bmargin'] / $g['h'];
+        $lmarginf = $g['plot.lmargin'] / $g['w'];
+        $rmarginf = $g['plot.rmargin'] / $g['w'];
+
+        if ($addLayout)
+            $laylmarg = $g['layout.lmargin'] / $g['w'];
+        else
+            $laylmarg = 0;
+
+        $line = 1 - ($l * ($hfactor + $tmarginf) + ($l - 1) * $bmarginf);
+        $col = $laylmarg + ($c - 1) * ($wfactor + $rmarginf) + $c * $lmarginf;
+
+        return [
+            $line,
+            $col
+        ];
     }
 
     private function graphics_addBSpace(int $space)
