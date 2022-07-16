@@ -37,10 +37,13 @@ final class FullCollsPlotter extends AbstractFullPlotter
         ];
         \include_script(getPHPScriptsBasePath() . '/plot.php', $argv);
 
-        $link = "all_time.png";
+        foreach (glob("full_group_query_*") as $generated) {
+            $here = \basename(\getcwd());
+            $link = "../{$here}_$generated";
 
-        if (! \is_file($link))
-            \symlink("full_group_query/$link", $link);
+            if (! \is_file($link))
+                \symlink("full_colls_query/$generated", $link);
+        }
     }
 
     // ========================================================================

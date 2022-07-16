@@ -153,7 +153,14 @@ final class FullPlotter extends AbstractFullPlotter
                 $outFileName = "$fileName.$extension";
                 $cmd = "gnuplot -e 'terminal=\"$extension\"' '$plotFileName' > '$outFileName'";
                 echo "plotting $outFileName\n";
-                system($cmd);
+
+                \system($cmd);
+
+                $here = \basename(\getcwd());
+                $link = "../{$here}_$outFileName";
+
+                if (! \is_file($link))
+                    \symlink("$here/$outFileName", $link);
             }
         }
     }
