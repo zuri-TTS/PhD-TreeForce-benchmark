@@ -79,7 +79,7 @@ final class CmdArgs implements \ArrayAccess
                 if (\is_array($parsed[$expandk])) {
                     $ret = [];
 
-                    foreach (\array_unique($parsed[$expandk]) as $val) {
+                    foreach ($parsed[$expandk] as $val) {
                         $newExpand = clone $this;
                         $newExpand[$group][$expandk] = $val;
                         $subExpand = $newExpand->expand();
