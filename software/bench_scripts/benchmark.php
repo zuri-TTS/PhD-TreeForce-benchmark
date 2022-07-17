@@ -12,7 +12,6 @@ while (! empty($argv)) {
     $cmdParser->parse($current_argv);
 
     $dataSets = $cmdParser['dataSets'];
-    $parallelTest = $cmdParser['args']['parallel'];
     $cmd = $cmdParser['args']['cmd'];
 
     if ($cmdParser['args']['print-java-config'])
@@ -39,27 +38,30 @@ while (! empty($argv)) {
         foreach ($dsPartitions as $subPartitions) {
             $logicalPartitioning = $subPartitions->getLogicalPartitioning();
 
+            // $subPartitions is one PhysicalPartition
             if ($logicalPartitioning === null)
                 $partitions[] = $subPartitions;
             else
                 $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
         }
 
-        if ($parallelTest)
-            $partitions = [
-                $partitions
-            ];
-        else
-            $partitions = \array_map(fn ($p) => [
-                $p
-            ], $partitions);
+        $cLast = \array_key_last($cmdExpansions);
 
-        $pLast = \array_key_last($partitions);
+        foreach ($cmdExpansions as $kk => $cmdFinalParser) {
+            $parallelTest = $cmdFinalParser['args']['parallel'];
 
-        foreach ($partitions as $k => $subPartitions) {
-            $cLast = \array_key_last($cmdExpansions);
+            if ($parallelTest)
+                $pp = [
+                    $partitions
+                ];
+            else
+                $pp = \array_map(fn ($p) => [
+                    $p
+                ], $partitions);
 
-            foreach ($cmdExpansions as $kk => $cmdFinalParser) {
+            $pLast = \array_key_last($pp);
+
+            foreach ($pp as $k => $subPartitions) {
 
                 if ($k != 0 || $kk != 0)
                     $cmdFinalParser['args']['pre-clean-db'] = false;
