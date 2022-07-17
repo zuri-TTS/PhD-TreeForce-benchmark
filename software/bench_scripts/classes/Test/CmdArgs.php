@@ -52,7 +52,8 @@ final class CmdArgs implements \ArrayAccess
     private const expandables = [
         'args' => [
             'summary',
-            'parallel'
+            'parallel',
+            'bench-measures-nb'
         ],
         'javaProperties' => [
             'query.batchSize',
