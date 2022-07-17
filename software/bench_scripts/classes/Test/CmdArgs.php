@@ -60,7 +60,8 @@ final class CmdArgs implements \ArrayAccess
             'data.batchSize',
             'query.batches.nbThreads',
             'partition.id',
-            'querying.filter'
+            'querying.filter',
+            'summary.filter.stringValuePrefix'
         ]
     ];
 
