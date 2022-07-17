@@ -50,11 +50,15 @@ while (! empty($argv)) {
         foreach ($cmdExpansions as $kk => $cmdFinalParser) {
             $parallelTest = $cmdFinalParser['args']['parallel'];
 
-            if ($parallelTest)
+            if ($parallelTest) {
+                if ($dataSet->getPartitioning() instanceof \Data\NoPartitioning) {
+                    echo "Parallel without partitioning is not a valid test: skip\n";
+                    continue;
+                }
                 $pp = [
                     $partitions
                 ];
-            else
+            } else
                 $pp = \array_map(fn ($p) => [
                     $p
                 ], $partitions);
