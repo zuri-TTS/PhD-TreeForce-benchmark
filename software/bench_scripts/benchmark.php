@@ -67,8 +67,6 @@ while (! empty($argv)) {
 
             foreach ($pp as $k => $subPartitions) {
 
-                if ($k != 0 || $kk != 0)
-                    $cmdFinalParser['args']['pre-clean-db'] = false;
                 if ($k == $pLast && $kk == $cLast)
                     $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
 
@@ -76,6 +74,11 @@ while (! empty($argv)) {
                 $test->execute();
                 $test->reportErrors();
                 $errors = \array_merge($errors, $test->getErrors());
+
+                if (!isset($skipped))
+                    $skipped = $cmdFinalParser['skipped'] ?? false;
+                if (! $skipped)
+                    $cmdFinalParser['args']['pre-clean-db'] = false;
             }
         }
 

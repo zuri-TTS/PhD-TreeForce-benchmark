@@ -107,6 +107,8 @@ final class OneTest extends AbstractTest
             foreach ($this->testConfig['test.existing'] as $test)
                 echo $test, "\n";
 
+            $this->cmdParser['skipped'] = true;
+            $this->postCleanDb();
             return;
         }
 
@@ -248,13 +250,20 @@ final class OneTest extends AbstractTest
             throw new \Exception("Summary '$summaryPath' does not exists");
     }
 
+    private function postCleanDb()
+    {
+        $args = $this->args;
+
+        if ($args['post-clean-db'] || $args['clean-db'])
+            $this->dropCollections($this->cleanDBGlob);
+    }
+
     private function postProcess()
     {
         $args = $this->args;
         $config = $this->testConfig;
 
-        if ($args['post-clean-db'] || $args['clean-db'])
-            $this->dropCollections($this->cleanDBGlob);
+        $this->postCleanDb();
 
         if ($args['forget-results'] && \is_dir($config['bench.output.path']))
             \rrmdir($config['bench.output.path']);
