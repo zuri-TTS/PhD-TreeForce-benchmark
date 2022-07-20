@@ -26,12 +26,24 @@ while (! empty($argv)) {
 
     // Inhibit db clean until the first or last test
     $cmdParser['args']['clean-db'] = false;
-    $cmdParser['args']['pre-clean-db'] = $preCleanDB;
+    $cmdParser['args']['pre-clean-db'] = false;
+
     $cmdExpansions = $cmdParser->expand();
+    $cmdExpansions_nb = \count($cmdExpansions);
 
     $errors = [];
+    $cmdGroupExpansions = [
+        0 => [], // normal
+        1 => [] // parallel
+    ];
+
+    foreach ($cmdExpansions as $e) {
+        $parallelTest = (int) $e['args']['parallel'];
+        $cmdGroupExpansions[$parallelTest][] = $e;
+    }
 
     foreach ($dataSets as $dataSet) {
+        $cmdExpansions_i = 0;
         $dsPartitions = $dataSet->getPartitions();
         $partitions = [];
 
@@ -45,44 +57,62 @@ while (! empty($argv)) {
                 $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
         }
 
-        $cLast = \array_key_last($cmdExpansions);
+        // parallel tests
+        if (! empty($cmdGroupExpansions[1])) {
 
-        foreach ($cmdExpansions as $kk => $cmdFinalParser) {
-            $parallelTest = $cmdFinalParser['args']['parallel'];
+            foreach ($cmdGroupExpansions[1] as $cmdFinalParser) {
+                ++ $cmdExpansions_i;
 
-            if ($parallelTest) {
-                if ($dataSet->getPartitioning() instanceof \Data\NoPartitioning) {
-                    echo "Parallel without partitioning is not a valid test: skip\n";
-                    continue;
-                }
-                $pp = [
-                    $partitions
-                ];
-            } else
-                $pp = \array_map(fn ($p) => [
-                    $p
-                ], $partitions);
+                if ($dataSet->getPartitioning() instanceof \Data\NoPartitioning)
+                    echo "Invalid test: skipped!";
 
-            $pLast = \array_key_last($pp);
+                $cmdFinalParser['args']['pre-clean-db'] = $preCleanDB;
 
-            foreach ($pp as $k => $subPartitions) {
-
-                if ($k == $pLast && $kk == $cLast)
+                if ($cmdExpansions_i == $cmdExpansions_nb)
                     $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
 
-                $test = new $testClass($dataSet, $cmdFinalParser, ...$subPartitions);
+                $test = new $testClass($dataSet, $cmdFinalParser, ...$partitions);
                 $test->execute();
                 $test->reportErrors();
                 $errors = \array_merge($errors, $test->getErrors());
 
-                if (!isset($skipped))
+                if (! isset($skipped) || $skipped)
                     $skipped = $cmdFinalParser['skipped'] ?? false;
                 if (! $skipped)
-                    $cmdFinalParser['args']['pre-clean-db'] = false;
+                    $preCleanDB = false;
             }
         }
 
-        if (! empty($errors))
-            $test->reportErrors($errors);
+        if (! empty($cmdGroupExpansions[0])) {
+            $cmdExpansions_i_offset = $cmdExpansions_i;
+            $partition_nb = \count($partitions);
+            $partition_i = 0;
+
+            // Non parallel tests
+            foreach ($partitions as $partition) {
+                $partition_i ++;
+                $cmdExpansions_i = $cmdExpansions_i_offset;
+
+                foreach ($cmdGroupExpansions[0] as $cmdFinalParser) {
+                    $cmdExpansions_i ++;
+                    $cmdFinalParser['args']['pre-clean-db'] = $preCleanDB;
+
+                    if ($cmdExpansions_i == $cmdExpansions_nb && $partition_i == $partition_nb)
+                        $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
+
+                    $test = new $testClass($dataSet, $cmdFinalParser, $partition);
+                    $test->execute();
+                    $test->reportErrors();
+                    $errors = \array_merge($errors, $test->getErrors());
+
+                    if (! isset($skipped))
+                        $skipped = $cmdFinalParser['skipped'] ?? false;
+                    if (! $skipped)
+                        $preCleanDB = false;
+                }
+            }
+        }
     }
+    if (! empty($errors))
+        $test->reportErrors($errors);
 }
