@@ -94,7 +94,7 @@ final class CmdArgs implements \ArrayAccess
                 }
             }
         }
-        return [];
+        return [$this];
     }
 
     // ========================================================================
