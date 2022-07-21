@@ -183,8 +183,8 @@ final class OneTest extends AbstractTest
             $lpartitions = $this->partitionsMustBeGenerated($lpartitions, $this->javaProperties['partition.id']);
 
             if (! empty($lpartitions)) {
-                $this->ensurePartition($partition);
-                $this->checkPartition($lpartitions, $this->javaProperties['partition.id']);
+                $this->ensurePartitions($lpartitions);
+                $this->checkPartitions($lpartitions, $this->javaProperties['partition.id']);
             }
         }
     }
@@ -202,7 +202,7 @@ final class OneTest extends AbstractTest
         return $ret;
     }
 
-    private function checkPartition(array $lpartitions, string $partitionID): void
+    private function checkPartitions(array $lpartitions, string $partitionID): void
     {
         foreach ($lpartitions as $lpart) {
             $path = $lpart->filePath($this->ds, $partitionID);
@@ -212,8 +212,16 @@ final class OneTest extends AbstractTest
         }
     }
 
-    private function ensurePartition($partition): void
+    private function ensurePartitions(array $partitions): void
     {
+        foreach ($partitions as $partition)
+            $this->ensurePartition($partition);
+    }
+
+    private function ensurePartition(\Data\LogicalPartition $partition): void
+    {
+        echo "\nGet partition: {$partition->getID()}\n";
+
         $summArgs = [
             $this->ds,
             'cmd' => 'partition',
