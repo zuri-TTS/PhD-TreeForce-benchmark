@@ -72,6 +72,18 @@ final class CmdArgs implements \ArrayAccess
 
     public function expand(): array
     {
+        $ret = $this->_expand();
+
+        if (empty($ret))
+            return [
+                $this
+            ];
+
+        return $ret;
+    }
+
+    private function _expand(): array
+    {
         foreach (self::expandables as $group => $expandables) {
             $parsed = $this->parsed[$group];
 
@@ -83,7 +95,7 @@ final class CmdArgs implements \ArrayAccess
                     foreach ($parsed[$expandk] as $val) {
                         $newExpand = clone $this;
                         $newExpand[$group][$expandk] = $val;
-                        $subExpand = $newExpand->expand();
+                        $subExpand = $newExpand->_expand();
 
                         if (empty($subExpand))
                             $ret[] = $newExpand;
@@ -94,7 +106,7 @@ final class CmdArgs implements \ArrayAccess
                 }
             }
         }
-        return [$this];
+        return [];
     }
 
     // ========================================================================
