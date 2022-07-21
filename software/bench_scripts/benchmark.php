@@ -63,9 +63,10 @@ while (! empty($argv)) {
             foreach ($cmdGroupExpansions[1] as $cmdFinalParser) {
                 ++ $cmdExpansions_i;
 
-                if ($dataSet->getPartitioning() instanceof \Data\NoPartitioning)
+                if ($dataSet->getPartitioning() instanceof \Data\NoPartitioning) {
                     echo "Invalid test: skipped!";
-
+                    continue;
+                }
                 $cmdFinalParser['args']['pre-clean-db'] = $preCleanDB;
 
                 if ($cmdExpansions_i == $cmdExpansions_nb)
