@@ -25,7 +25,7 @@ shift
 summaries="$@"
 
 if [ -z "$summaries" ] ; then
-	default="''"
+	default=""
 	summaries="${SUMMARIES:-$default}"
 fi
 summaries=$(printf '%q' "[$summaries]")
