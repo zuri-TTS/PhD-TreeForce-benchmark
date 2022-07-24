@@ -58,6 +58,7 @@ while (! empty($argv)) {
             else
                 $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
         }
+        $skipped = null;
 
         // parallel tests
         if (! empty($cmdGroupExpansions[1])) {
@@ -80,10 +81,12 @@ while (! empty($argv)) {
                 $test->reportErrors();
                 $errors = \array_merge($errors, $test->getErrors());
 
-                if (! isset($skipped) || $skipped)
+                if (! isset($skipped) || $skipped) {
                     $skipped = $cmdFinalParser['skipped'] ?? false;
-                if (! $skipped)
-                    $ppreCleanDB = false;
+
+                    if (! $skipped)
+                        $ppreCleanDB = false;
+                }
             }
         }
 
@@ -110,10 +113,12 @@ while (! empty($argv)) {
                     $test->reportErrors();
                     $errors = \array_merge($errors, $test->getErrors());
 
-                    if (! isset($skipped))
+                    if (! isset($skipped) || $skipped) {
                         $skipped = $cmdFinalParser['skipped'] ?? false;
-                    if (! $skipped)
-                        $ppreCleanDB = false;
+
+                        if (! $skipped)
+                            $ppreCleanDB = false;
+                    }
                 }
             }
         }
