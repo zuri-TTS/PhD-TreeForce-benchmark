@@ -97,11 +97,11 @@ while (! empty($argv)) {
 
             // Non parallel tests
             foreach ($partitions as $partition) {
-                $cmdFinalParser = clone $cmdFinalParser;
                 $partition_i ++;
                 $cmdExpansions_i = $cmdExpansions_i_offset;
 
                 foreach ($cmdGroupExpansions[0] as $cmdFinalParser) {
+                    $cmdFinalParser = clone $cmdFinalParser;
                     $cmdExpansions_i ++;
                     $cmdFinalParser['args']['pre-clean-db'] = $ppreCleanDB;
 
