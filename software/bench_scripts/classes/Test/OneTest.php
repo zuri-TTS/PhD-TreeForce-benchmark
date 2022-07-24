@@ -22,17 +22,14 @@ final class OneTest extends AbstractTest
 
     private string $cleanDBGlob;
 
-    private array $args;
-
     private array $javaProperties;
 
     public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition ...$partitions)
     {
         parent::__construct($ds, $cmdParser, ...$partitions);
 
-        $parsed = $this->cmdParser->parsed();
-        $args = &$parsed['args'];
-        $javaProperties = $parsed['javaProperties'];
+        $args = &$cmdParser['args'];
+        $javaProperties = $cmdParser['javaProperties'];
 
         $this->doonce = $args['doonce'];
         $this->cleanDBGlob = $args['clean-db-json'] ? '*.json' : '';
@@ -75,7 +72,6 @@ final class OneTest extends AbstractTest
             $args['plot'] = false;
 
         $this->testConfig = \makeConfig($this->ds, $partitions, $cmdParser);
-        $this->args = $args;
         $this->javaProperties = $javaProperties;
     }
 
@@ -135,7 +131,7 @@ final class OneTest extends AbstractTest
     // =======================================================================
     private function preProcess()
     {
-        $args = $this->args;
+        $args = $this->cmdParser['args'];
         $testConfig = $this->testConfig;
         $partition = $this->partitions[0];
 
@@ -158,25 +154,25 @@ final class OneTest extends AbstractTest
                 throw new \Exception("The collection treeforce.$this->collection must exists in the database");
 
             // Load the index
-            if ($this->args['cmd'] === 'querying' && $partition->isLogical()) {
+            if ($args['cmd'] === 'querying' && $partition->isLogical()) {
                 $partitionId = $this->javaProperties['partition.id'];
                 $this->loadIndex($partitionId);
             }
         }
+        { // Summaries check
+            if ($args['cmd'] === 'partition' && $partition->isLogical())
+                $partitions = \ensureArray($partition->getPhysicalParent());
+            else
+                $partitions = \ensureArray($this->partitions);
 
-        if ($this->needNativeSummary) {
-
-            if ($this->args['cmd'] === 'partition' && $partition->isLogical())
-                $partition = $partition->getPhysicalParent();
-
-            $this->ensureSummary((string) $args['toNative_summary'], $partition, 0);
-            $this->checkSummary($this->testConfig['toNative.summary']);
-        }
-        if ($this->needSummary) {
-            $this->ensureSummary($args['summary'], $partition, (int) $this->javaProperties['summary.filter.stringValuePrefix']);
-
-            foreach ((array) $this->testConfig['summary'] as $summary)
-                $this->checkSummary($summary);
+            if ($this->needNativeSummary) {
+                $this->ensurePartitionsSummary($args['toNative_summary'], $partitions, 0);
+                $this->checkSummaries((array)$this->testConfig['toNative.summary']);
+            }
+            if ($this->needSummary) {
+                $this->ensurePartitionsSummary($args['summary'], $partitions, (int) $this->javaProperties['summary.filter.stringValuePrefix']);
+                $this->checkSummaries((array)$this->testConfig['summary']);
+            }
         }
         if ($this->needPartition) {
             $lpartitions = \ensureArray($this->testConfig['partition']);
@@ -241,12 +237,24 @@ final class OneTest extends AbstractTest
         $doIt->execute();
     }
 
+    private function ensurePartitionsSummary(string $summaryType, array $partitions, int $strValuePrefix): void
+    {
+        foreach ($partitions as $p)
+            $this->ensureSummary($summaryType, $p, $strValuePrefix);
+    }
+
     private function ensureSummary(string $summary, \Data\IPartition $partition, int $strValuePrefix): void
     {
         if (empty($summary))
             return;
 
         DoSummarize::summarize($this->ds, $partition, $summary, $strValuePrefix);
+    }
+
+    private function checkSummaries(array $paths): void
+    {
+        foreach ($paths as $p)
+            $this->checkSummary($p);
     }
 
     private function checkSummary(string $path): void
@@ -260,7 +268,7 @@ final class OneTest extends AbstractTest
 
     private function postCleanDb()
     {
-        $args = $this->args;
+        $args = $this->cmdParser['args'];
 
         if ($args['post-clean-db'] || $args['clean-db'])
             $this->dropCollections($this->cleanDBGlob);
@@ -268,7 +276,7 @@ final class OneTest extends AbstractTest
 
     private function postProcess()
     {
-        $args = $this->args;
+        $args = $this->cmdParser['args'];
         $config = $this->testConfig;
 
         $this->postCleanDb();

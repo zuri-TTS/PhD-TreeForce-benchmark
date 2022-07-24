@@ -85,6 +85,7 @@ function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
                 $benchSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['summary'], $filterStrPrefix);
             }
             $javaToNativeSummary[] = $fsummary('${dataset.baseDir}', $cprefix, '${toNative.summary.type}');
+            $benchToNativeSummary[] = $fsummary($dataSetPath, $cprefix, $cmdArg['toNative_summary']);
 
             if ($partition->isLogical()) {
                 $javaPartition[] = $fpartition($partition);
@@ -92,7 +93,6 @@ function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
             } else
                 $javaPartition[] = '';
         }
-        $benchToNativeSummary = '';
         $outDirPattern = $outputDirGenerator($dataSet, \Data\Partitions::noPartition(), $cmdArg, $javaProperties);
     } else {
         if (\is_array($partitions) && count($partitions) == 1)

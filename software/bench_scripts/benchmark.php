@@ -75,7 +75,7 @@ while (! empty($argv)) {
                 if ($cmdExpansions_i == $cmdExpansions_nb)
                     $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
 
-                $test = new $testClass($dataSet, $cmdFinalParser, ...$partitions);
+                $test = new $testClass($dataSet, clone $cmdFinalParser, ...$partitions);
                 $test->execute();
                 $test->reportErrors();
                 $errors = \array_merge($errors, $test->getErrors());
@@ -105,7 +105,7 @@ while (! empty($argv)) {
                     if ($cmdExpansions_i == $cmdExpansions_nb && $partition_i == $partition_nb)
                         $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
 
-                    $test = new $testClass($dataSet, $cmdFinalParser, $partition);
+                    $test = new $testClass($dataSet, clone $cmdFinalParser, $partition);
                     $test->execute();
                     $test->reportErrors();
                     $errors = \array_merge($errors, $test->getErrors());
