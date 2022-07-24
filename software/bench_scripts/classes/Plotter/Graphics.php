@@ -89,10 +89,11 @@ final class Graphics implements \ArrayAccess
         $g['blocs.h'] = 0;
 
         // All
-        $layout = $g['layout.rmargin'] + $g['layout.lmargin'];
+        $layoutH = $g['layout.rmargin'] + $g['layout.lmargin'];
+        $layoutW = $g['layout.bmargin'] + $g['layout.tmargin'];
 
-        $g['w'] = $g['plots.w'] + $layout;
-        $g['h'] = $g['plots.h'];
+        $g['w'] = $g['plots.w'] + $layoutH;
+        $g['h'] = $g['plots.h'] + $layoutW;
 
         $g['plot.w.factor'] = $g['plot.w'] / $g['w'];
         $g['plot.h.factor'] = $g['plot.h'] / $g['h'];
@@ -113,10 +114,13 @@ final class Graphics implements \ArrayAccess
         $lmarginf = $g['plot.lmargin'] / $g['w'];
         $rmarginf = $g['plot.rmargin'] / $g['w'];
 
-        if ($addLayout)
+        if ($addLayout) {
             $laylmarg = $g['layout.lmargin'] / $g['w'];
-        else
+            $laybmarg = $g['layout.bmargin'] / $g['h'];
+        } else {
             $laylmarg = 0;
+            $laybmarg = 0;
+        }
 
         $line = 1 - ($l * ($hfactor + $tmarginf) + ($l - 1) * $bmarginf);
         $col = $laylmarg + ($c - 1) * ($wfactor + $rmarginf) + $c * $lmarginf;

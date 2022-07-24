@@ -153,7 +153,7 @@ $tinyFont = "Noto Sans,8";
 if ($plotLegend) {
     $tmp = [];
     $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
-    $wfactor = $plotConfig['plot.legend.w'] / $graphics['w'];
+    $wfactor = ($plotConfig['plot.legend.w'] ?? $graphics['layout.lmargin']) / $graphics['w'];
 
     foreach ($stacked as $stack) {
 

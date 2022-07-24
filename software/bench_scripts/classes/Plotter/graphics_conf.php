@@ -10,6 +10,8 @@ return [
     // Plots layout
     'layout.lmargin' => 300,
     'layout.rmargin' => 0,
+    'layout.tmargin' => 0,
+    'layout.bmargin' => 0,
 
     // Bar
     'bar.offset.factor' => 0,
