@@ -27,6 +27,7 @@ while (! empty($argv)) {
     // Inhibit db clean until the first or last test
     $cmdParser['args']['clean-db'] = false;
     $cmdParser['args']['pre-clean-db'] = false;
+    $cmdParser['args']['post-clean-db'] = false;
 
     $cmdExpansions = $cmdParser->expand();
     $cmdExpansions_nb = \count($cmdExpansions);
@@ -37,12 +38,13 @@ while (! empty($argv)) {
         1 => [] // parallel
     ];
 
-    foreach ($cmdExpansions as $e) {
+    foreach ($cmdExpansions as &$e) {
         $parallelTest = (int) $e['args']['parallel'];
-        $cmdGroupExpansions[$parallelTest][] = $e;
+        $cmdGroupExpansions[$parallelTest][] = &$e;
     }
 
     foreach ($dataSets as $dataSet) {
+        $ppreCleanDB = $preCleanDB;
         $cmdExpansions_i = 0;
         $dsPartitions = $dataSet->getPartitions();
         $partitions = [];
@@ -61,13 +63,14 @@ while (! empty($argv)) {
         if (! empty($cmdGroupExpansions[1])) {
 
             foreach ($cmdGroupExpansions[1] as $cmdFinalParser) {
+                $cmdFinalParser = clone $cmdFinalParser;
                 ++ $cmdExpansions_i;
 
                 if ($dataSet->getPartitioning() instanceof \Data\NoPartitioning) {
                     echo "Invalid test: skipped!";
                     continue;
                 }
-                $cmdFinalParser['args']['pre-clean-db'] = $preCleanDB;
+                $cmdFinalParser['args']['pre-clean-db'] = $ppreCleanDB;
 
                 if ($cmdExpansions_i == $cmdExpansions_nb)
                     $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
@@ -80,7 +83,7 @@ while (! empty($argv)) {
                 if (! isset($skipped) || $skipped)
                     $skipped = $cmdFinalParser['skipped'] ?? false;
                 if (! $skipped)
-                    $preCleanDB = false;
+                    $ppreCleanDB = false;
             }
         }
 
@@ -91,12 +94,13 @@ while (! empty($argv)) {
 
             // Non parallel tests
             foreach ($partitions as $partition) {
+                $cmdFinalParser = clone $cmdFinalParser;
                 $partition_i ++;
                 $cmdExpansions_i = $cmdExpansions_i_offset;
 
                 foreach ($cmdGroupExpansions[0] as $cmdFinalParser) {
                     $cmdExpansions_i ++;
-                    $cmdFinalParser['args']['pre-clean-db'] = $preCleanDB;
+                    $cmdFinalParser['args']['pre-clean-db'] = $ppreCleanDB;
 
                     if ($cmdExpansions_i == $cmdExpansions_nb && $partition_i == $partition_nb)
                         $cmdFinalParser['args']['post-clean-db'] = $postCleanDB;
@@ -109,7 +113,7 @@ while (! empty($argv)) {
                     if (! isset($skipped))
                         $skipped = $cmdFinalParser['skipped'] ?? false;
                     if (! $skipped)
-                        $preCleanDB = false;
+                        $ppreCleanDB = false;
                 }
             }
         }
