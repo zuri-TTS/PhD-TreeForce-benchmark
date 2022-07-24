@@ -293,7 +293,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             }
         }
         $summary = $elements['summary'];
-        $score += self::summaryScore[$summary] * 1;
+        $score += self::summaryScore[$summary] * 2;
+        $score += (int)isset($elements['filter_prefix']);
 
         return $score;
     }
