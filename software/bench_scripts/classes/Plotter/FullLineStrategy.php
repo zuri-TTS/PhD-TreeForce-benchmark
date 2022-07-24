@@ -61,7 +61,7 @@ final class FullLineStrategy extends AbstractFullStrategy
         sort($groups);
         $scoreKeys = \Help\Arrays::subSelect($scoreKeys, $groups);
         $groups = \array_map(null, ...$scoreKeys);
-        $ret = \Help\Arrays::subSelect($ret, $groups[0]);
+        $ret = \Help\Arrays::subSelect($ret, (array)$groups[0]);
         return $ret;
     }
 }

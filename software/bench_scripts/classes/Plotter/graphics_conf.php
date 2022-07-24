@@ -53,5 +53,5 @@ return [
     'plots.y' => - 1,
     'plots.w' => - 1,
     'plots.h' => - 1,
-    'plots.x.max' => 5
+    'plots.x.max' => null
 ];

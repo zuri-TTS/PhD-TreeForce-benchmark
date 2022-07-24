@@ -70,7 +70,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'plot.yrange.display' => false,
             'plot.pattern.offset' => 0,
             'plot.legend' => true,
-            'plot.legend.w' => 200,
+            'plot.legend.w' => null,
             'plot.ytics.step' => 1,
             'plot.ytics.nb' => 1,
             'plot.xtic' => null, // function
@@ -294,7 +294,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         }
         $summary = $elements['summary'];
         $score += self::summaryScore[$summary] * 2;
-        $score += (int)isset($elements['filter_prefix']);
+        $score += (int) isset($elements['filter_prefix']);
 
         return $score;
     }

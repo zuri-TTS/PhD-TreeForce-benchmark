@@ -64,7 +64,7 @@ $nbBars = $nbMeasures * $nbMeasuresToPlot;
             $step = $yLog;
         } else {
             $yRangeMax = $yMin;
-            $step = $graphics['plot.yrange.substep'] ?? 10;
+            $step = $graphics['plot.yrange.substep'] ?? $graphics['plot.yrange.step'] ?? 10;
         }
 
         while ($yRangeMax < $yMax)
@@ -165,12 +165,13 @@ if ($plotLegend) {
     }
     list ($lin, $col) = $graphics->plotPositionFactors(0, false);
     $plot = \implode(',', $tmp);
+
     echo <<<EOD
     unset title
     unset xtics
     unset ytics
     unset ylabel
-    set key inside right center vertical samplen .5
+    set key inside left center horizontal samplen .5
     set xrange [0:1]
     set yrange [0:1]
     set origin $col,$lin
