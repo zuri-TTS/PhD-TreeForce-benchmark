@@ -14,6 +14,7 @@ $plotYTicsStep = $plotConfig['plot.ytics.step'];
 $nbYTics_max = (int) $plotConfig['plot.ytics.nb'];
 $plotYLabelYOffset = ($graphics['plot.ylabel.yoffset'] ?? null);
 $plotYLabelXOffset = ($graphics['plot.ylabel.xoffset'] ?? null);
+$dataFormat = $plotConfig['plot.ylabel.format'] ?? "%.1f";
 $plotYLabel = false;
 $timeDiv = $plotConfig['measure.div'];
 $formatY = $plotConfig['plot.format.y'];
@@ -265,7 +266,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                 $tmp[] = "'' u " . //
                 "(\$0 * $spaceFactor + $stacked_i):" . //
                 "($plotYLabelYOffset +  $yMaxTh >= $yMax) ? $plotYLabelYOffsetMax : (($plotYLabelYOffset - $yMinTh <= $yMin) ? $plotYLabelYOffsetMin : $plotYLabelYOffset):" . //
-                "(sprintf(\"%.2f\", tm(\$$pos)))" . //
+                "(sprintf(\"$dataFormat\", tm(\$$pos)))" . //
                 " with labels boxed font \"$tinyFont\"";
             }
             $xtics = null;

@@ -31,7 +31,8 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
             'plot.yrange.max' => 100,
             'plot.yrange.step' => 50,
             'plot.y.step' => 50,
-            'plot.format.y' => "%g%%",
+            'plot.format.y' => "%.0f%%",
+            'plot.ylabel.format' => "%.0f%%",
             'plot.measures' => [
                 'total/noempty' => 'temps'
             ],
