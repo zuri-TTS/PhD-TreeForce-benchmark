@@ -199,11 +199,17 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'total'
         ], - 1);
 
-        $dirName = \basename(\dirname($csvPath));
         $makeXTics = $plotConfig['plot.xtic'] ?? [
             $this,
             'makeXTic'
         ];
+        $dirName = \basename(\dirname($csvPath));
+        $elements = \Help\Plotter::extractDirNameElements($dirName);
+
+        if (! empty($elements['partitioning']) && empty($elements['summary'])) {
+            $dataSet = \DataSets::all($elements['full_group'])[0];
+            $nbReformulations /= count($dataSet->getPartitions());
+        }
         $xtic = $makeXTics($dirName, $nbReformulations, $nbAnswers);
         $ret[] = $xtic;
 
@@ -320,9 +326,9 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return "$group$partition$pid$summary$parallel($nbReformulations,$nbAnswers)";
     }
 
-    public static function makeXTic_clean(string $testName = "test", bool $showNbAnswers = false)
+    public static function makeXTic_clean(string $testName = "test", bool $showNbAnswers = false, bool $showRules = false)
     {
-        return function ($dirName, $nbReformulations, $nbAnswers) use ($testName, $showNbAnswers) {
+        return function ($dirName, $nbReformulations, $nbAnswers) use ($testName, $showNbAnswers, $showRules) {
             $elements = \Help\Plotter::extractDirNameElements($dirName);
             $group = $elements['group'];
             $summary = $elements['summary'];
@@ -331,6 +337,16 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $parallel = $elements['parallel'];
             $pid = $elements['partition_id'];
             $filterPrefix = $elements['filter_prefix'];
+
+            if ($showRules) {
+                $rules = $elements['rules'];
+
+                if (\preg_match("#^\((.+)\)#U", $rules, $matches))
+                    $rules = $matches[1];
+
+                $rules = "/$rules";
+            } else
+                $rules = '';
 
             if ($summary == 'key-type')
                 $summary = 'label';
@@ -367,7 +383,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             if (! empty($partition))
                 $partition = ".$partition";
 
-            return "$partitioning$partition$pid$summary$filterPrefix$parallel($nbReformulations$nbAnswers)";
+            return "$partitioning$partition$pid$rules$summary$filterPrefix$parallel($nbReformulations$nbAnswers)";
         };
     }
 }
