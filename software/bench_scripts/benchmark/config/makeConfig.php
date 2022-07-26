@@ -162,12 +162,9 @@ function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
     $outputPath = $bpath . "/$outDir";
     $javaProperties['output.path'] = $outputPath;
 
-    // Inhibit summary.filter.types for summary without type infos
-    if (\in_array($cmdArg['summary'], [
-        '',
-        'label'
-    ]))
-        $javaProperties['summary.filter.types'] === 'n';
+    // Inhibit summary.filter.types when no summary present
+    if (empty($cmdArg['summary']))
+        $javaProperties['summary.filter.types'] = 'n';
 
     // Default value for 'leaf.checkTerminal
     if (null === $javaProperties['leaf.checkTerminal'])
