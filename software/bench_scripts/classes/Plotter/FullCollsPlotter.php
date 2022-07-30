@@ -107,8 +107,6 @@ final class FullCollsPlotter extends AbstractFullPlotter
     {
         $nbColls = \count($colls);
 
-        $nbRefs = 0;
-        $nbAnswers = 0;
         $staticParts = [
             'bench'
         ];
@@ -138,8 +136,22 @@ final class FullCollsPlotter extends AbstractFullPlotter
                 }
             }
         }
+        $avg = self::avg;
 
-        foreach (self::avg as $meas) {
+        $nbReformulations = \Help\Arrays::follow($ret, [
+            'queries',
+            'total'
+        ], - 1);
+        {
+            $dirName = \basename(\dirname(\Help\Arrays::first($colls)));
+            $elements = \Help\Plotter::extractDirNameElements($dirName);
+
+            if (- 1 !== $nbReformulations && ! empty($elements['partitioning']) && empty($elements['summary'])) {
+                $avg[] = 'queries';
+                $ret['queries']['total.true'] = $nbReformulations;
+            }
+        }
+        foreach ($avg as $meas) {
 
             foreach ($ret[$meas] as &$val)
                 $val /= $nbColls;

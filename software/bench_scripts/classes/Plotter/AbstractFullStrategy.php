@@ -190,9 +190,13 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $plotConfig = $this->plot_getConfig();
         $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
 
-        $nbReformulations = \Help\Arrays::follow($data, [
+        $nbReformulations =& \Help\Arrays::follow($data, [
             'queries',
             'total'
+        ], - 1);
+        $nbReformulationsTrue = \Help\Arrays::follow($data, [
+            'queries',
+            'total.true'
         ], - 1);
         $nbAnswers = \Help\Arrays::follow($data, [
             'answers',
@@ -204,11 +208,14 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'makeXTic'
         ];
         $dirName = \basename(\dirname($csvPath));
-        $elements = \Help\Plotter::extractDirNameElements($dirName);
 
-        if (! empty($elements['partitioning']) && empty($elements['summary'])) {
-            $dataSet = \DataSets::all($elements['full_group'])[0];
-            $nbReformulations /= count($dataSet->getPartitions());
+        if (- 1 === $nbReformulationsTrue) {
+            $elements = \Help\Plotter::extractDirNameElements($dirName);
+
+            if (! empty($elements['partitioning']) && empty($elements['summary'])) {
+                $dataSet = \DataSets::all("{$elements['group']}.{$elements['partitioning']}")[0];
+                $nbReformulations /= count($dataSet->getPartitions());
+            }
         }
         $xtic = $makeXTics($dirName, $nbReformulations, $nbAnswers);
         $ret[] = $xtic;
