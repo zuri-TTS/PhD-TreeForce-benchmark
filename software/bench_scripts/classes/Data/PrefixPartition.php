@@ -12,6 +12,8 @@ final class PrefixPartition extends PhysicalPartition
 
     private string $cname;
 
+    private bool $regexCheck = true;
+
     public function __construct(\DataSet $ds, string $collectionName, string $id, string $prefix, ?IPartitioning $logical = null)
     {
         parent::__construct($id, '', $logical);
@@ -23,6 +25,11 @@ final class PrefixPartition extends PhysicalPartition
             $k,
             "q_($k)_\d+"
         ], $this->prefix);
+    }
+
+    public function setRegexCheck(bool $check)
+    {
+        $this->regexCheck = $check;
     }
 
     public function getPrefix(): string
@@ -39,26 +46,30 @@ final class PrefixPartition extends PhysicalPartition
     {
         $noPrefix = (object) null;
 
-        $f = \array_ufollow($data, $this->prefix_regex, $noPrefix, function ($item_regex, $array) {
-            list ($prefix, $regex) = $item_regex;
+        if ($this->regexCheck)
+            $f = \array_ufollow($data, $this->prefix_regex, $noPrefix, function ($item_regex, $array) {
+                list ($prefix, $regex) = $item_regex;
 
-            if (\array_key_exists($prefix, $array))
-                return $prefix;
+                if (\array_key_exists($prefix, $array))
+                    return $prefix;
 
-            $keys = [];
+                $keys = [];
 
-            foreach (\array_keys($array) as $k) {
-                if (\preg_match("#^$regex$#", $k))
-                    $keys[] = $k;
-            }
+                foreach (\array_keys($array) as $k) {
+                    if (\preg_match("#^$regex$#", $k))
+                        $keys[] = $k;
+                }
 
-            if (count($keys) === 0)
-                return false;
-            if (count($keys) > 1)
-                throw new \Exception("Error, more than one key to follow: " . \print_r($keys, true));
+                if (count($keys) === 0)
+                    return false;
+                if (count($keys) > 1)
+                    throw new \Exception("Error, more than one key to follow: " . \print_r($keys, true));
 
-            return $keys[0];
-        });
+                return $keys[0];
+            });
+        else
+            $f = \Help\Arrays::follow($data, $this->prefix, $noPrefix);
+
         return $f !== $noPrefix;
     }
 }

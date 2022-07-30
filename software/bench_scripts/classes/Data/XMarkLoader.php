@@ -41,6 +41,14 @@ final class XMarkLoader implements ILoader
             'people' => 'site.people',
             'open_auctions' => 'site.open_auctions',
             'closed_auctions' => 'site.closed_auctions'
+        ],
+        'Pcolls' => [
+            'site.regions',
+            'site.categories',
+            'site.catgraph',
+            'site.people',
+            'site.open_auctions',
+            'site.closed_auctions'
         ]
     ];
 

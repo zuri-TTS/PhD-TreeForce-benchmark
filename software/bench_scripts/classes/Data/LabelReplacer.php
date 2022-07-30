@@ -45,7 +45,7 @@ final class LabelReplacer
         return $this->getReplacement($data);
     }
 
-    private static function _getRelabellings($ruleFile): array
+    public static function getRelabellings($ruleFile): array
     {
         $lines = file($ruleFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $ret = [];
@@ -86,7 +86,7 @@ final class LabelReplacer
         } else if (! \is_file($rulesFilePath)) {
             return null;
         } else
-            $rel = self::_getRelabellings($rulesFilePath);
+            $rel = self::getRelabellings($rulesFilePath);
 
         if (empty($rel))
             return fn ($d) => $d;
