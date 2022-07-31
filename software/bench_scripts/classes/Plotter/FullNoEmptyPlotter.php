@@ -34,19 +34,16 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
             'plot.format.y' => "%.0f%%",
             'plot.ylabel.format' => "%.0f%%",
             'plot.measures' => [
-                'total/noempty' => 'temps'
-            ],
-            'toPlot' => [
-                'queries' => 'noempty/total'
+                'total/noempty' => ''
             ],
             'measure.div' => 1,
             'toPlot' => [
-                'queries' => 'noempty/total'
+                'queries' => 'noempty/deleted'
             ],
             'plot.measures' => [
                 [
                     'queries' => 'ratio'
-                ],
+                ]
             ]
         ];
         ;
@@ -54,7 +51,7 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
 
     public function plot(array $csvPaths): void
     {
-        $cutData = self::groupCsvFiles($csvPaths);
+        $cutData = $this->groupCsvFiles($csvPaths);
         $this->writeCsv($cutData);
 
         $argv = [
@@ -66,7 +63,37 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
-    private static function groupCsvFiles(array $csvFiles): array
+    private $refGroup = null;
+
+    private function makeRefGroup(string $dirPath, array $delements, array $queries): void
+    {
+        if ( //
+        ! empty($delements['summary']) || //
+        ! empty($delements['partitioning']) || //
+        $delements['parallel'])
+            return;
+
+        $query = $queries[0];
+        $infosPath = "{$dirPath}/{$query}_config.txt";
+
+        if (empty($infosPath))
+            return;
+
+        $infos = \Help\Plotter::readJavaProperties(\fopen($infosPath, 'r'));
+
+        if (! empty($infos['querying.filter']))
+            return;
+
+        foreach ($queries as $query)
+            $refGroup[$query] = "$dirPath/$query.csv";
+
+        if (null !== $this->refGroup)
+            throw new \Exception("A reference group is already present: " . json_encode($this->refGroup));
+
+        $this->refGroup = $refGroup;
+    }
+
+    private function groupCsvFiles(array $csvFiles): array
     {
         $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
         $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
@@ -81,11 +108,13 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
             'filter_prefix'
         ];
         $gdirs = [];
+        $refGroup = null;
 
         foreach ($dirs as $dpath) {
             $d = \basename($dpath);
             $delements = \Help\Plotter::extractDirNameElements($d);
             $sdelements = \Help\Arrays::subSelect($delements, $selection);
+            $this->makeRefGroup($dpath, $delements, $queries);
 
             foreach ($queries as $query) {
                 $fname = "$dpath/$query";
@@ -105,18 +134,35 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
                 }
             }
         }
+
+        if (empty($this->refGroup))
+            throw new \Exception("Error, no reference group found");
+
         return $ret;
     }
 
     // ========================================================================
-    private function prepareMeasures(array $csvFiles): array
+    private function prepareMeasures(string $query, array $csvFiles): array
     {
         $normal = \CSVReader::read($csvFiles['']);
         $noempty = \CSVReader::read($csvFiles['noempty']);
+        $ref = \CSVReader::read($this->refGroup[$query]);
+
+        $noEmptyQueries = $noempty['queries']['total'];
+
+        $totalQueries = $normal['queries']['total'];
+        $emptyQueries = $totalQueries - $noEmptyQueries;
+
+        $refTotalQueries = $ref['queries']['total'];
+        $refEmptyQueries = $refTotalQueries - $noEmptyQueries;
+
+        $nbDeletedEmptyQueries = $refEmptyQueries - $emptyQueries;
+
         $ret['queries'] = [
-            'total' => $t = $normal['queries']['total'],
-            'noempty' => $n = $noempty['queries']['total'],
-            'noempty/total' => (float) ($n / $t) * 100
+            'total' => $totalQueries,
+            'noempty' => $noEmptyQueries,
+            'noempty/total' => ((float) $noEmptyQueries / $totalQueries) * 100,
+            'noempty/deleted' => ((float) $nbDeletedEmptyQueries / $refEmptyQueries) * 100
         ];
         $ret['answers'] = [
             'total' => $normal['answers']['total'],
@@ -139,7 +185,7 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
                     \error("Warning! $nbFiles csv files possible for query $query:\n", implode("\n", $csvFiles), "\n");
                     continue;
                 }
-                $prepareMeasures = $this->prepareMeasures($csvFiles);
+                $prepareMeasures = $this->prepareMeasures($query, $csvFiles);
                 $basePath = $group;
 
                 if (! \is_dir($basePath))
