@@ -198,7 +198,7 @@ set key off
 EOD;
 
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
-    $nbAnswers = - 1;
+    $nbAnswers = [];
 
     foreach ($csvPaths as $csvPath) {
 
@@ -206,8 +206,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
             continue;
 
         $csvData = $PLOTTER->getCsvData($csvPath);
-        $nbAnswers = $csvData['answers']['total'];
-        break;
+        $nbAnswers[] = $csvData['answers']['total'];
     }
     if (null !== ($f = $plotConfig['plot.title']))
         $title = $f($fname, $nbAnswers);
