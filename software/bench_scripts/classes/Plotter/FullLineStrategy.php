@@ -11,7 +11,13 @@ final class FullLineStrategy extends AbstractFullStrategy
 
     private const plotConfig = [
         'xlabel' => 'reformulations',
-        'ylabel' => 'answering time'
+        'ylabel' => 'answering time',
+        "plot.points" => false,
+        "plot.lines" => false,
+        "plot.fit.linear" => true,
+        "plot.points.style" => "lt %lt lc %lc ps 1.75 lw 2",
+        "plot.lines.style" => "lc %lc",
+        "plot.fit.linear.style" => "dt 5 lw 1 lc %lc"
     ];
 
     public function __construct()
@@ -25,15 +31,27 @@ final class FullLineStrategy extends AbstractFullStrategy
         return 'line';
     }
 
-    public function getPlotConfig(): array
-    {
-        return self::plotConfig;
-    }
-
     private const SELECT_ELEMENTS = [
         'full_group',
         'summary'
     ];
+
+    public function plot_getConfig(array $default = []): array
+    {
+        return parent::plot_getConfig($default) + self::plotConfig;
+    }
+
+    public function sortDataLines(array &$data): void
+    {
+        uasort($data, function ($a, $b) {
+            $ret = $a[1] - $b[1];
+
+            if ($ret === 0)
+                return $a[2] - $b[2];
+
+            return $ret;
+        });
+    }
 
     function groupCSVFiles(array $csvFiles): array
     {
@@ -61,7 +79,7 @@ final class FullLineStrategy extends AbstractFullStrategy
         sort($groups);
         $scoreKeys = \Help\Arrays::subSelect($scoreKeys, $groups);
         $groups = \array_map(null, ...$scoreKeys);
-        $ret = \Help\Arrays::subSelect($ret, (array)$groups[0]);
+        $ret = \Help\Arrays::subSelect($ret, (array) $groups[0]);
         return $ret;
     }
 }

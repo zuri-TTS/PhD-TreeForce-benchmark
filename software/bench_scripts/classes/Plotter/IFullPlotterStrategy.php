@@ -10,6 +10,8 @@ interface IFullPlotterStrategy
 
     function getDataLine(string $csvPath = ''): array;
 
+    function sortDataLines(array &$data): void;
+
     function getDataHeader(): array;
 
     function plot_getStackedMeasures(): array;

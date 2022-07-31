@@ -185,6 +185,9 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $ret;
     }
 
+    public function sortDataLines(array &$data): void
+    {}
+
     public function getDataLine(string $csvPath = ''): array
     {
         $plotConfig = $this->plot_getConfig();

@@ -171,14 +171,18 @@ final class FullPlotter extends AbstractFullPlotter
         $header = $this->strategy->getDataHeader();
         $header = \array_map('Help\Plotter::encodeDataValue', $header);
         echo implode(' ', $header), "\n";
+        $data = [];
 
         foreach ($csvFiles as $csvPath) {
             $dirName = \basename(\dirname($csvPath));
             $dataLine = $this->strategy->getDataLine($csvPath);
-            $this->csvData[$csvPath] = $dataLine;
+            $data[] = $this->csvData[$csvPath] = $dataLine;
             $dataLine = \array_map('Help\Plotter::encodeDataValue', $dataLine);
-            echo implode(' ', $dataLine), "\n";
         }
+        $this->strategy->sortDataLines($data);
+
+        foreach ($data as $dataLine)
+            echo implode(' ', $dataLine), "\n";
     }
 
     private function writeDat(array $cutData)
