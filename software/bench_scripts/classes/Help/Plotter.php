@@ -108,7 +108,7 @@ final class Plotter
         \preg_match("#\[filter-prefix-(\d+)\]#U", $dirName, $matches);
         $ret['filter_prefix'] = $matches[1] ?? null;
 
-        list ($ret['partitioning'], $ret['partition']) = explode('.', $ret['full_partition']) + [
+        list ($ret['partitioning'], $ret['partition']) = explode('.', $ret['full_partition'], 2) + [
             null,
             null
         ];

@@ -379,10 +379,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 case "":
                     $partitioning = $testName;
                     break;
+                case "LPcolls":
                 case "Lcolls":
                     $partitioning = "logical";
                     break;
                 case "colls":
+                case "Pcolls":
                     $partitioning = "physical";
                     break;
                 default:

@@ -208,12 +208,11 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
         $csvData = $PLOTTER->getCsvData($csvPath);
         $nbAnswers[] = $csvData['answers']['total'];
     }
+
     if (null !== ($f = $plotConfig['plot.title']))
         $title = $f($fname, $nbAnswers);
     else
-        $title = "$fname\\n($nbAnswers answers)";
-
-    $title = $title;
+        $title = "$fname\\n({$nbAnswers[0]} answers)";
 
     list ($lin, $col) = $graphics->plotPositionFactors($nbPlots);
     echo "set origin $col,$lin\n";
