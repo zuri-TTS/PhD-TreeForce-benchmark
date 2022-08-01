@@ -89,7 +89,9 @@ final class PrefixPartitioning extends AbstractPartitioning
                 }
             }
             $prefixes = $newPrefixes;
-        }
+        } else
+            $prefixes = \array_combine($prefixes, $prefixes);
+
         $cname = \MongoImport::getCollectionName($ds);
 
         foreach ($prefixes as $name => $prefix) {
