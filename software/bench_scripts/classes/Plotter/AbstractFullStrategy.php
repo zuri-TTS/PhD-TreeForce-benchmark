@@ -193,7 +193,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $plotConfig = $this->plot_getConfig();
         $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
 
-        $nbReformulations =& \Help\Arrays::follow($data, [
+        $nbReformulations = &\Help\Arrays::follow($data, [
             'queries',
             'total'
         ], - 1);
@@ -363,13 +363,16 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
             if (! empty($partitioning)) {
 
-                if (! empty($pid))
+                if (! empty($pid) && $pid !== 'pid')
                     $pid = "($pid)";
+                else
+                    $pid = '';
             } else
                 $pid = '';
 
             if ($parallel)
                 $parallel = "[parallel]";
+
             if (! empty($summary))
                 $summary = "($summary)";
             if (! empty($filterPrefix))
@@ -395,7 +398,15 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             if (! empty($partition))
                 $partition = ".$partition";
 
-            return "$partitioning$partition$pid$rules$summary$filterPrefix$parallel($nbReformulations$nbAnswers)";
+            {
+                if ($parallel)
+                    $parall1 = '\\|\\| ';
+                else
+                    $parall1 = "";
+
+                $parallel = "";
+            }
+            return "\"$parall1$partitioning$partition$pid$rules$summary$filterPrefix$parallel($nbReformulations$nbAnswers)\"";
         };
     }
 }
