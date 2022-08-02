@@ -338,7 +338,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     public static function makeXTic_clean(string $testName = "test", bool $showNbAnswers = false, bool $showRules = false)
     {
-        return function ($dirName, $nbReformulations, $nbAnswers) use ($testName, $showNbAnswers, $showRules) {
+        return function ($dirName, $nbReformulations = null, $nbAnswers = null) use ($testName, $showNbAnswers, $showRules) {
             $elements = \Help\Plotter::extractDirNameElements($dirName);
             $group = $elements['group'];
             $summary = $elements['summary'];
@@ -373,10 +373,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             if ($parallel)
                 $parallel = "[parallel]";
 
-            if (! empty($summary))
+            if (empty($summary) && empty($testName))
+                $summary = 'depth';
+            if (! empty($summary) && ! empty($testName))
                 $summary = "($summary)";
             if (! empty($filterPrefix))
-                $filterPrefix = "[vprefix]";
+                $filterPrefix = "[$]";
 
             switch ($partitioning) {
                 case "":
@@ -384,14 +386,14 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                     break;
                 case "LPcolls":
                 case "Lcolls":
-                    $partitioning = "logical";
+                    $partitioning = "logic ";
                     break;
                 case "colls":
                 case "Pcolls":
-                    $partitioning = "physical";
+                    $partitioning = "physic ";
                     break;
                 default:
-                    $partitioning = "Error:$partitioning";
+                    $partitioning = "(Error:$partitioning)";
             }
             $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
 
@@ -406,7 +408,13 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
                 $parallel = "";
             }
-            return "\"$parall1$partitioning$partition$pid$rules$summary$filterPrefix$parallel($nbReformulations$nbAnswers)\"";
+
+            if (! empty($nbAnswers) && ! empty($nbReformulations))
+                $infos = "($nbReformulations$nbAnswers)";
+            else
+                $infos = '';
+
+            return "\"$parall1$partitioning$partition$pid$rules$summary$filterPrefix$parallel$infos\"";
         };
     }
 }
