@@ -22,7 +22,7 @@ $fit = "";
 
 foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     $csvData = $PLOTTER->getCsvData(\Help\Arrays::first($csvPaths));
-    $title = $PLOT->gnuplotSpecialChars($group);
+    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_clean('', !true)(\basename(\dirname(\Help\Arrays::first($csvPaths))));
 
     $notitle = false;
     $styleReplacement = [
@@ -31,7 +31,7 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     ];
 
     if ($plotConfig['plot.points']) {
-        $title = $notitle ? "notitle" : "title \"$group\"";
+        $title = $notitle ? "notitle" : "title $titleRef";
         $style = $plotConfig['plot.points.style'];
         $style = \str_format($style, $styleReplacement);
 
@@ -40,7 +40,7 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     }
 
     if ($plotConfig['plot.lines']) {
-        $title = $notitle ? "notitle" : "title \"$group\"";
+        $title = $notitle ? "notitle" : "title $titleRef";
         $style = $plotConfig['plot.lines.style'];
         $style = \str_format($style, $styleReplacement);
 
@@ -49,7 +49,7 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     }
 
     if ($plotConfig['plot.fit.linear']) {
-        $title = $notitle ? "notitle" : "title \"$group\"";
+        $title = $notitle ? "notitle" : "title $titleRef";
         $style = $plotConfig['plot.fit.linear.style'];
         $style = \str_format($style, $styleReplacement);
 
