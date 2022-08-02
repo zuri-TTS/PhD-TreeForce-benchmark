@@ -19,6 +19,34 @@ $plotYLabel = false;
 $timeDiv = $plotConfig['measure.div'];
 $formatY = $plotConfig['plot.format.y'];
 
+// Prepare data format
+{
+    $formatRanges = [];
+
+    foreach ((array) $dataFormat as $format) {
+        if (\is_string($format))
+            $formatRanges[] = [
+                PHP_INT_MAX,
+                $format
+            ];
+        elseif (\is_array($format) && \count($format) == 2)
+            $formatRanges[] = $format;
+        else
+            throw new \Exception("Error: bad format" . \json_encode($format));
+    }
+    \usort($formatRanges, fn ($a, $b) => (float) $a[0] - (float) $b[0]);
+
+    $dataFormat = '';
+
+    $formatRange = \array_pop($formatRanges);
+    $dataFormat = "(sprintf(\"$formatRange[1]\", tm(\$%pos)))";
+    unset($formatRanges['']);
+
+    foreach (\array_reverse($formatRanges) as $formatRange) {
+        $dataFormat = "(tm(\$%pos) < $formatRange[0] ? (sprintf(\"$formatRange[1]\", tm(\$%pos))) : $dataFormat)";
+    }
+}
+
 if (isset($plotYLabelXOffset) || isset($plotYLabelYOffset)) {
     $plotYLabel = true;
     $plotYLabelXOffset = $plotYLabelXOffset ?? 0;
@@ -262,6 +290,9 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     foreach ($stacked as $stack) {
 
         foreach ($stack as $pos => $measure) {
+            $printf = \str_format($dataFormat, [
+                "pos" => $pos
+            ]);
             $measure = $measure;
             $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes title '$measure' ls $ls fs pattern $pattern";
 
@@ -273,7 +304,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                 $tmp[] = "'' u " . //
                 "(\$0 * $spaceFactor + $stacked_i):" . //
                 "($plotYLabelYOffset +  $yMaxTh >= $yMax) ? $plotYLabelYOffsetMax : (($plotYLabelYOffset - $yMinTh <= $yMin) ? $plotYLabelYOffsetMin : $plotYLabelYOffset):" . //
-                "(sprintf(\"$dataFormat\", tm(\$$pos)))" . //
+                "$printf" . //
                 " with labels boxed font \"$tinyFont\"";
             }
             $xtics = null;
