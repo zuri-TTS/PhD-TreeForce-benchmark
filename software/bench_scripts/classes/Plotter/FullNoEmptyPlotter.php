@@ -52,6 +52,7 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
     public function plot(array $csvPaths): void
     {
         $cutData = $this->groupCsvFiles($csvPaths);
+        $this->cleanCurrentDir();
         $this->writeCsv($cutData);
 
         $argv = [
@@ -186,6 +187,10 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
                     continue;
                 }
                 $prepareMeasures = $this->prepareMeasures($query, $csvFiles);
+
+                if ($prepareMeasures['queries']['noempty/deleted'] == 0)
+                    continue;
+
                 $basePath = $group;
 
                 if (! \is_dir($basePath))
