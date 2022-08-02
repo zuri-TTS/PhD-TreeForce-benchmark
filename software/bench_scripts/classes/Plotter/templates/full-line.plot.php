@@ -1,13 +1,16 @@
 set terminal pngcairo size 1000,500
 set key outside below horizontal maxcols 2
-
-set xrange [0:400]
-set yrange [0:400]
-
 <?php
-$plotConfig = $PLOTTER->getStrategy()->plot_getConfig();
+$plotConfig = $PLOTTER->plot_getConfig();
+
+$xRangeMax = $plotConfig['plot.xrange.max'] ?? null;
+$yRangeMax = $plotConfig['plot.yrange.max'] ?? null;
+
+if ($yRangeMax !== null)
+    echo "set yrange [0:$yRangeMax]\n";
 
 echo <<<EOD
+set xrange [0:$xRangeMax]
 set xlabel "{$plotConfig['xlabel']}"
 set ylabel "{$plotConfig['ylabel']}"
 set format y "%gs"
