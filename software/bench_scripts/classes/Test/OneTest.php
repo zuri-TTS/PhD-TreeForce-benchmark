@@ -104,6 +104,7 @@ final class OneTest extends AbstractTest
                 echo $test, "\n";
 
             $this->cmdParser['skipped'] = true;
+            $this->preCleanDb();
             $this->postCleanDb();
             return;
         }
@@ -136,12 +137,9 @@ final class OneTest extends AbstractTest
         $partition = $this->partitions[0];
 
         if ($this->needDatabase) {
+            $this->preCleanDb();
             $collExists = $this->collectionsExists();
 
-            if ($args['pre-clean-db'] || $args['clean-db']) {
-                $this->dropCollections($this->cleanDBGlob);
-                $collExists = $this->collectionsExists();
-            }
             if ($args['generate-dataset']) {
 
                 if (! $collExists) {
@@ -167,11 +165,11 @@ final class OneTest extends AbstractTest
 
             if ($this->needNativeSummary) {
                 $this->ensurePartitionsSummary($args['toNative_summary'], $partitions, 0);
-                $this->checkSummaries((array)$this->testConfig['toNative.summary']);
+                $this->checkSummaries((array) $this->testConfig['toNative.summary']);
             }
             if ($this->needSummary) {
                 $this->ensurePartitionsSummary($args['summary'], $partitions, (int) $this->javaProperties['summary.filter.stringValuePrefix']);
-                $this->checkSummaries((array)$this->testConfig['summary']);
+                $this->checkSummaries((array) $this->testConfig['summary']);
             }
         }
         if ($this->needPartition) {
@@ -264,6 +262,14 @@ final class OneTest extends AbstractTest
 
         if (! \is_file($path))
             throw new \Exception("Summary '$summaryPath' does not exists");
+    }
+
+    private function preCleanDb()
+    {
+        $args = $this->cmdParser['args'];
+
+        if ($args['pre-clean-db'] || $args['clean-db'])
+            $this->dropCollections($this->cleanDBGlob);
     }
 
     private function postCleanDb()
