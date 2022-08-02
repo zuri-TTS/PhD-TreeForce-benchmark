@@ -221,6 +221,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             }
         }
         $xtic = $makeXTics($dirName, $nbReformulations, $nbAnswers);
+
         $ret[] = $xtic;
 
         $globalRange = &$this->getRange();
@@ -409,7 +410,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 $parallel = "";
             }
 
-            if (! empty($nbAnswers) && ! empty($nbReformulations))
+            if (! empty($nbAnswers) || ! empty($nbReformulations))
                 $infos = "($nbReformulations$nbAnswers)";
             else
                 $infos = '';
