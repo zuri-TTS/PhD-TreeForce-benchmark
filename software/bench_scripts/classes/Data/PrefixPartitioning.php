@@ -75,16 +75,19 @@ final class PrefixPartitioning extends AbstractPartitioning
                     if (null == $replacements)
                         $first[] = $part;
                     else {
+                        $added = false;
 
                         foreach ($replacements as $r) {
                             $newPrefix = \implode('.', \array_merge($first, [
                                 $r
                             ], $parts));
 
-                            if (! \in_array($newPrefix, $newPrefixes))
+                            if (! \in_array($newPrefix, $newPrefixes)) {
                                 $prefixes[] = $newPrefix;
+                                $added = true;
+                            }
                         }
-                        break;
+                        $first[] = $part;
                     }
                 }
             }
