@@ -160,6 +160,8 @@ final class XMLLoader
             $this->readStats($this->groupLoader->getXMLReader());
 
             foreach ($this->filesData as &$f) {
+                // reset randomizer
+                $f['randomize'] = $this->groupLoader->getLabelReplacerForDataSet($f['dataset']) ?? fn ($data) => $data;
                 $total = $f['nbDocuments'][0];
 
                 for ($i = 1, $c = \count($f['fp']); $i < $c; $i ++) {

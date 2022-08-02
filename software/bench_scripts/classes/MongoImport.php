@@ -204,7 +204,7 @@ final class MongoImport
         self::_importCollections($dataSet, $collections);
     }
 
-    private static function _importCollections(DataSet $dataSet, array $collections): int
+    private static function _importCollections(DataSet $dataSet, array $collections): void
     {
         $dsColls = $dataSet->getCollections();
         $collections = \array_unique($collections);
@@ -221,7 +221,7 @@ final class MongoImport
         echo "\nImporting $dataSet\n";
 
         $partitions = $dataSet->getPartitions();
-        $nbFails = 0;
+        $nbFails = [];
         $loading = \array_combine($collections, \array_fill(0, \count($collections), false));
 
         foreach ($partitions as $partition) {
@@ -231,18 +231,25 @@ final class MongoImport
             elseif (! $loading[$collectionName] && self::collectionExists($collectionName))
                 echo "$collectionName: already exists\n";
             else {
-                $nbFails += self::importPartition($dataSet, $partition);
+                $fails = self::importPartition($dataSet, $partition);
+
+                if ($fails != 0)
+                    $nbFails[$collectionName] = $fails;
+
                 $loading[$collectionName] = true;
             }
         }
 
-        if (0 === $nbFails)
+        if (empty($nbFails))
             echo "Success";
-        else
-            echo "Failed ($nbFails documents)";
+        else {
+            foreach ($nbFails as $coll => $nb)
+                $displayFail[] = "$coll:$nb";
 
+            $displayFail = \implode(',', $displayFail);
+            throw new \Exception("MongoDb: import failed for $dataSet ($displayFail)");
+        }
         echo "\n";
-        return $nbFails;
     }
 
     private static function importPartition(DataSet $dataSet, \Data\PhysicalPartition $partition): int
