@@ -5,7 +5,9 @@ final class FullAggregationStrategy extends AbstractFullStrategy
 {
 
     private const toPlot = [
-        'threads.time|stats.db.time' => 'r'
+        'threads.time|stats.db.time' => 'r',
+        'rewriting.total' => 'r',
+        'rewritings.generation' => 'r'
     ];
 
     private const stackedMeasuresToPlot = [
