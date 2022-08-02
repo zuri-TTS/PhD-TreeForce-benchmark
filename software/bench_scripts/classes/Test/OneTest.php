@@ -210,6 +210,9 @@ final class OneTest extends AbstractTest
     {
         foreach ($partitions as $partition)
             $this->ensurePartition($partition);
+
+        // TODO: do not repeat \makeConfig twice : make a class MakeConfig
+        $this->testConfig = \makeConfig($this->ds, $this->partitions, $this->cmdParser);
     }
 
     private function ensurePartition(\Data\LogicalPartition $partition): void
