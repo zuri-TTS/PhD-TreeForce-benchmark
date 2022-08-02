@@ -22,7 +22,8 @@ $fit = "";
 
 foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     $csvData = $PLOTTER->getCsvData(\Help\Arrays::first($csvPaths));
-    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_clean('', !true)(\basename(\dirname(\Help\Arrays::first($csvPaths))));
+    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_clean('', ! true)(\basename(\dirname(\Help\Arrays::first($csvPaths))));
+    $titleRef = "\"$titleRef\"";
 
     $notitle = false;
     $styleReplacement = [

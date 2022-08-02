@@ -415,7 +415,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             else
                 $infos = '';
 
-            return "\"$parall1$partitioning$partition$pid$rules$summary$filterPrefix$parallel$infos\"";
+            return "$parall1$partitioning$partition$pid$rules$summary$filterPrefix$parallel$infos";
         };
     }
 }

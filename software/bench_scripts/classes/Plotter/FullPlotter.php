@@ -176,8 +176,9 @@ final class FullPlotter extends AbstractFullPlotter
         foreach ($csvFiles as $csvPath) {
             $dirName = \basename(\dirname($csvPath));
             $dataLine = $this->strategy->getDataLine($csvPath);
-            $data[] = $this->csvData[$csvPath] = $dataLine;
+            $this->csvData[$csvPath] = $dataLine;
             $dataLine = \array_map('Help\Plotter::encodeDataValue', $dataLine);
+            $data[] = $dataLine;
         }
         $this->strategy->sortDataLines($data);
 
