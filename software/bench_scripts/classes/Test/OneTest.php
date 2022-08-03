@@ -54,6 +54,8 @@ final class OneTest extends AbstractTest
             'config'
         ]))
             $this->needDatabase = false;
+        elseif (($args['cmd'] == 'querying' && $javaProperties['querying.mode'] == 'summary_stats'))
+            $this->needDatabase = false;
         else
             $this->needDatabase = true;
 
