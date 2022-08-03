@@ -50,22 +50,22 @@ final class Plotter
         if (isset($elements['full_partition']))
             $coll = $elements['full_partition'];
         else {
-            $pid = $elements['partitioning'];
+            $pid = $elements['partitioning'] ?? '';
             $coll = empty($pid) ? '' : ".$pid";
-            $pid = $elements['partition'];
+            $pid = $elements['partition'] ?? '';
             $coll .= empty($pid) ? '' : ".$pid";
         }
         $outDir = "[$group$coll][$theRules][$qualifiers]";
         $outDir .= '%s';
 
-        if ($elements['parallel'])
+        if ($elements['parallel'] ?? false)
             $outDir .= '[parall]';
 
         if ($summary = $elements['summary'] ?? null)
             $outDir .= "[summary-{$summary}]";
         if ($elements['filter_types'] ?? false)
             $outDir .= '[filter-types]';
-        if ($i = $elements['filter_prefix'])
+        if ($i = $elements['filter_prefix'] ?? 0)
             $outDir .= "[filter-prefix-$i]";
         if (! empty($coll) && ($pid = $elements['partition_id'] ?? null) && $pid !== '_id')
             $outDir .= "[pid-$pid]";
