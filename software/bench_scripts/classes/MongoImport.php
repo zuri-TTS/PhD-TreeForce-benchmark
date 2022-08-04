@@ -62,9 +62,6 @@ final class MongoImport
 
     public static function dropDataSet(DataSet $dataSet): void
     {
-        DataSets::checkNotExists([
-            $dataSet
-        ]);
         self::_dropCollections(...$dataSet->getCollections());
     }
 
