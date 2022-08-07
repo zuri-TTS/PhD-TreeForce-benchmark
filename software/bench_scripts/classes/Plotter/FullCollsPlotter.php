@@ -98,11 +98,6 @@ final class FullCollsPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
-    private const avg = [
-        'rewriting.total',
-        'rewriting.rules.apply'
-    ];
-
     private function prepareMeasures(array $colls): array
     {
         $nbColls = \count($colls);
@@ -112,11 +107,20 @@ final class FullCollsPlotter extends AbstractFullPlotter
         ];
         $ret = null;
         $ret['collections']['nb'] = $nbColls;
+        $partitionsData = [];
 
         foreach ($colls as $csvPath) {
             $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
 
+            $elements = \Help\Plotter::extractDirNameElements(\basename(\dirname($csvPath)));
+            $partitionDataGroup = "{$elements['group']}[{$elements['qualifiers']}]/{$elements['partition']}";
+
             foreach ($data as $k => $items) {
+
+                if (\Benchmark::isMeasure($items))
+                    $partitionsData["$partitionDataGroup/measures"][$k] = \Benchmark::encodeMeasure($items);
+                else
+                    $partitionsData["$partitionDataGroup/$k"] = $items;
 
                 // Do not sum static items
                 if (\in_array($k, $staticParts)) {
@@ -136,26 +140,7 @@ final class FullCollsPlotter extends AbstractFullPlotter
                 }
             }
         }
-        $avg = self::avg;
-
-        $nbReformulations = \Help\Arrays::follow($ret, [
-            'queries',
-            'total'
-        ], - 1);
-        {
-            $dirName = \basename(\dirname(\Help\Arrays::first($colls)));
-            $elements = \Help\Plotter::extractDirNameElements($dirName);
-
-            if (- 1 !== $nbReformulations && ! empty($elements['partitioning']) && empty($elements['summary'])) {
-                $avg[] = 'queries';
-                $ret['queries']['total.true'] = $nbReformulations;
-            }
-        }
-        foreach ($avg as $meas) {
-
-            foreach ($ret[$meas] as &$val)
-                $val /= $nbColls;
-        }
+        $ret += $partitionsData;
         return $ret;
     }
 

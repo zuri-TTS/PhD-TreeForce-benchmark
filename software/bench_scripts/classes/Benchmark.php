@@ -130,18 +130,33 @@ final class Benchmark
         return $ret;
     }
 
-    function appExtractMeasures($measures): array
+    public function appExtractMeasures($measures): array
     {
-        foreach ($measures as &$meas) {
-            $time = $meas;
-            $meas = [];
+        foreach ($measures as &$meas)
+            $meas = self::extractMeasure($meas);
 
-            foreach ($this::$timeMeasure as $tm) {
-                \preg_match("/$tm(-?\d+)/", $time, $capture, PREG_OFFSET_CAPTURE);
-                $meas[$tm] = (int) $capture[1][0];
-            }
-        }
         return $measures;
+    }
+
+    public static function encodeMeasure(array $meas): string
+    {
+        return "r{$meas['r']}u{$meas['u']}s{$meas['s']}c{$meas['c']}";
+    }
+
+    public static function extractMeasure(string $measures): array
+    {
+        $meas = [];
+
+        foreach (self::$timeMeasure as $tm) {
+            \preg_match("/$tm(-?\d+)/", $measures, $capture, PREG_OFFSET_CAPTURE);
+            $meas[$tm] = (int) $capture[1][0];
+        }
+        return $meas;
+    }
+
+    public static function isMeasure(array $data): bool
+    {
+        return count($data) === 4 && \Help\Arrays::keysExists($data, ...self::$timeMeasure);
     }
 
     private static function avg(array $vals): int
@@ -358,7 +373,7 @@ final class Benchmark
             ] + $this->parseJavaOutput();
         }
         $sortMeasure = $this->config['bench.sort.measure'];
-        \usort($measures, function ($a, $b) use($sortMeasure) {
+        \usort($measures, function ($a, $b) use ($sortMeasure) {
             return $a['measures'][$sortMeasure]['r'] - $b['measures'][$sortMeasure]['r'];
         });
         return $measures;

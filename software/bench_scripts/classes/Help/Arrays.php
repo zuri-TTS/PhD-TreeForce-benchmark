@@ -46,6 +46,23 @@ final class Arrays
         return $ret;
     }
 
+    public static function keysExists(array $a, string ...$keys)
+    {
+        foreach ($keys as $k)
+            if (! \array_key_exists($k, $a))
+                return false;
+        return true;
+    }
+
+    public static function columns(array $a, string ...$columns)
+    {
+        $ret = $a;
+
+        foreach ($columns as $c)
+            $ret = \array_column($ret, $c);
+        return $ret;
+    }
+
     public static function &follow(array &$array, array $path, $default = null)
     {
         $p = &$array;

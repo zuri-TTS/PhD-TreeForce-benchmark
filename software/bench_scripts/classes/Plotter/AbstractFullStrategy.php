@@ -193,17 +193,9 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $plotConfig = $this->plot_getConfig();
         $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
 
-        $nbReformulations = &\Help\Arrays::follow($data, [
-            'queries',
-            'total'
-        ], - 1);
         $nbReformulationsTrue = \Help\Arrays::follow($data, [
             'queries',
             'total.true'
-        ], - 1);
-        $nbAnswers = \Help\Arrays::follow($data, [
-            'answers',
-            'total'
         ], - 1);
 
         $makeXTics = $plotConfig['plot.xtic'] ?? [
@@ -211,16 +203,44 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'makeXTic'
         ];
         $dirName = \basename(\dirname($csvPath));
+        $partitionsData = [];
 
         if (- 1 === $nbReformulationsTrue) {
             $elements = \Help\Plotter::extractDirNameElements($dirName);
 
-            if (! empty($elements['partitioning']) && empty($elements['summary'])) {
-                $dataSet = \DataSets::all("{$elements['group']}.{$elements['partitioning']}")[0];
-                $nbReformulations /= count($dataSet->getPartitions());
+            if (! empty($elements['partitioning'])) {
+                // Count nb of partitions
+                $partitionsName = [];
+
+                foreach (\array_keys($data) as $group) {
+
+                    if (! \str_starts_with($group, "{$elements['group']}"))
+                        continue;
+
+                    preg_match("#(.+)/.*$#", $group, $matches);
+                    $partitionsName[$matches[1]] = null;
+                }
+
+                foreach ($partitionsName as $pname => $v)
+                    $partitionsData[$pname] = [
+                        'queries' => $data["$pname/queries"],
+                        'answers' => $data["$pname/answers"]
+                    ];
+
+                $nbPartitions = count($partitionsName);
             }
         }
-        $xtic = $makeXTics($dirName, $nbReformulations, $nbAnswers);
+
+        $testData[$dirName] = [
+            'queries' => $data["queries"],
+            'answers' => $data["answers"]
+        ];
+
+        if (empty($partitionsData))
+            $partitionsData = $testData;
+
+        $query = \basename($csvPath, '.csv');
+        $xtic = $makeXTics($testData, $query, $partitionsData);
 
         $ret[] = $xtic;
 
@@ -316,30 +336,35 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $score;
     }
 
-    private function makeXTic(string $dirName, int $nbReformulations, int $nbAnswers)
+    public static function makeXTic_clean(string $testName = "", bool $showNbAnswers = false, bool $showRules = false)
     {
-        $elements = \Help\Plotter::extractDirNameElements($dirName);
-        $group = $elements['group'];
-        $summary = $elements['summary'];
-        $partition = $elements['full_partition'];
-        $parallel = $elements['parallel'];
-        $pid = $elements['partition_id'];
+        return function ($testData, $query, $partitionsData) use ($testName, $showNbAnswers, $showRules) {
 
-        if (! empty($pid))
-            $pid = "($pid)";
-        if ($parallel)
-            $parallel = "[parallel]";
-        if (! empty($summary))
-            $summary = "($summary)";
-        if (! empty($partition))
-            $partition = ".$partition";
+            foreach ($testData as $dirName => $data)
+                break;
 
-        return "$group$partition$pid$summary$parallel($nbReformulations,$nbAnswers)";
-    }
+            $nbReformulations = $data['queries']['total'];
+            $nbAnswers = $data['answers']['total'];
+            $nbPartitions = \count($partitionsData);
 
-    public static function makeXTic_clean(string $testName = "test", bool $showNbAnswers = false, bool $showRules = false)
-    {
-        return function ($dirName, $nbReformulations = null, $nbAnswers = null) use ($testName, $showNbAnswers, $showRules) {
+            {
+                $patitionsNbQueries = \Help\Arrays::columns($partitionsData, 'queries', 'total');
+                $uniqueNbQueries = \array_unique($patitionsNbQueries);
+                \sort($uniqueNbQueries);
+
+                $allPartitionsSameQueries = \count($uniqueNbQueries) == 1;
+
+                if ($allPartitionsSameQueries)
+                    $nbReformulations /= $nbPartitions;
+
+                $nbPartitionsHavingQueries = 0;
+
+                foreach ($patitionsNbQueries as $nbq) {
+
+                    if ($nbq != 0)
+                        $nbPartitionsHavingQueries ++;
+                }
+            }
             $elements = \Help\Plotter::extractDirNameElements($dirName);
             $group = $elements['group'];
             $summary = $elements['summary'];
@@ -397,9 +422,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                     $partitioning = "(Error:$partitioning)";
             }
             $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
+            $dnbartition = "";
 
             if (! empty($partition))
                 $partition = ".$partition";
+            elseif ($nbPartitions > 1)
+                $dnbartition = "[p$nbPartitions]";
 
             {
                 if ($parallel)
@@ -410,12 +438,15 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 $parallel = "";
             }
 
+            if (! empty($nbReformulations) && ! $allPartitionsSameQueries && $nbPartitionsHavingQueries > 1)
+                $nbReformulations = "$nbReformulations\[$nbPartitionsHavingQueries\]";
+
             if (! empty($nbAnswers) || ! empty($nbReformulations))
                 $infos = "($nbReformulations$nbAnswers)";
             else
                 $infos = '';
 
-            return "$parall1$partitioning$partition$pid$rules$summary$filterPrefix$parallel$infos";
+            return "$parall1$dnbartition$partitioning$partition$pid$summary$rules$filterPrefix$parallel$infos";
         };
     }
 }
