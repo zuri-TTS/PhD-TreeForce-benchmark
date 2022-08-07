@@ -38,7 +38,8 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
             ],
             'measure.div' => 1,
             'toPlot' => [
-                'queries' => 'noempty/deleted'
+                'queries' => 'noempty/deleted',
+                'queries.ref' => 'empty'
             ],
             'plot.measures' => [
                 [
@@ -64,6 +65,23 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
+    private const delements_selection = [
+        'group',
+        'rules',
+        'partitioning',
+        'qualifiers',
+        'summary',
+        'parallel',
+        'filter_prefix'
+    ];
+
+    private const ref_delements_selection = [
+        'group',
+        'rules',
+        'partitioning',
+        'qualifiers'
+    ];
+
     private $refGroup = null;
 
     private function makeRefGroup(string $dirPath, array $delements, array $queries): void
@@ -85,13 +103,15 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
         if (! empty($infos['querying.filter']))
             return;
 
+        $keyGroup = \Help\Plotter::encodeDirNameElements(\Help\Arrays::subSelect($delements, self::ref_delements_selection));
+
+        if (isset($this->refGroup[$keyGroup]))
+            throw new \Exception("A reference group is already present: " . json_encode($this->refGroup[$keyGroup]));
+
         foreach ($queries as $query)
             $refGroup[$query] = "$dirPath/$query.csv";
 
-        if (null !== $this->refGroup)
-            throw new \Exception("A reference group is already present: " . json_encode($this->refGroup));
-
-        $this->refGroup = $refGroup;
+        $this->refGroup[$keyGroup] = $refGroup;
     }
 
     private function groupCsvFiles(array $csvFiles): array
@@ -100,22 +120,16 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
         $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
         \natcasesort($queries);
 
-        $selection = [
-            'group',
-            'partitioning',
-            'qualifiers',
-            'summary',
-            'parallel',
-            'filter_prefix'
-        ];
         $gdirs = [];
         $refGroup = null;
 
         foreach ($dirs as $dpath) {
             $d = \basename($dpath);
             $delements = \Help\Plotter::extractDirNameElements($d);
-            $sdelements = \Help\Arrays::subSelect($delements, $selection);
-            $this->makeRefGroup($dpath, $delements, $queries);
+            $sdelements = \Help\Arrays::subSelect($delements, self::delements_selection);
+
+            $keyGroup = \Help\Plotter::encodeDirNameElements($sdelements);
+            $this->makeRefGroup($dpath, $sdelements, $queries);
 
             foreach ($queries as $query) {
                 $fname = "$dpath/$query";
@@ -125,13 +139,11 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
                 if (is_file($infosPath)) {
                     $infos = \Help\Plotter::readJavaProperties(\fopen($infosPath, 'r'));
                     $filter = $infos['querying.filter'];
-                    $group = \Help\Plotter::encodeDirNameElements($delements);
-                    $group = \sprintf($group, '{}[]');
 
-                    if (isset($ret[$query][$group][$filter]))
-                        error("More than one file for $query/$group/$filter:\n", $ret[$query][$group][$filter], "\n", "$fname.csv");
+                    if (isset($ret[$query][$keyGroup][$filter]))
+                        error("More than one file for $query/$keyGroup/$filter:\n", $ret[$query][$keyGroup][$filter], "\n", "$fname.csv");
                     else
-                        $ret[$query][$group][$filter] = "$fname.csv";
+                        $ret[$query][$keyGroup][$filter] = "$fname.csv";
                 }
             }
         }
@@ -143,11 +155,13 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
-    private function prepareMeasures(string $query, array $csvFiles): array
+    private function prepareMeasures(array $delements, string $query, array $csvFiles): array
     {
         $normal = \CSVReader::read($csvFiles['']);
         $noempty = \CSVReader::read($csvFiles['noempty']);
-        $ref = \CSVReader::read($this->refGroup[$query]);
+
+        $keyGroup = \Help\Plotter::encodeDirNameElements(\Help\Arrays::subSelect($delements, self::ref_delements_selection));
+        $ref = \CSVReader::read($this->refGroup[$keyGroup][$query]);
 
         $noEmptyQueries = $noempty['queries']['total'];
 
@@ -159,15 +173,26 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
 
         $nbDeletedEmptyQueries = $refEmptyQueries - $emptyQueries;
 
-        $ret['queries'] = [
-            'total' => $totalQueries,
-            'noempty' => $noEmptyQueries,
-            'noempty/total' => ((float) $noEmptyQueries / $totalQueries) * 100,
-            'noempty/deleted' => ((float) $nbDeletedEmptyQueries / $refEmptyQueries) * 100
-        ];
-        $ret['answers'] = [
-            'total' => $normal['answers']['total'],
-            'noempty' => $noempty['answers']['total']
+        if ($refEmptyQueries == 0)
+            $noemptyDeleted = 100;
+        else
+            $noemptyDeleted = ((float) $nbDeletedEmptyQueries / $refEmptyQueries) * 100;
+
+        $ret = [
+            'queries' => [
+                'total' => $totalQueries,
+                'noempty' => $noEmptyQueries,
+                'noempty/total' => ((float) $noEmptyQueries / $totalQueries) * 100,
+                'noempty/deleted' => $noemptyDeleted,
+                'empty.deleted' => $nbDeletedEmptyQueries
+            ],
+            'queries.ref' => [
+                'empty' => $refEmptyQueries
+            ],
+            'answers' => [
+                'total' => $normal['answers']['total'],
+                'noempty' => $noempty['answers']['total']
+            ]
         ];
         return $ret;
     }
@@ -176,7 +201,7 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
     {
         foreach ($cutData as $query => $groups) {
 
-            foreach ($groups as $group => $csvFiles) {
+            foreach ($groups as $keyGroup => $csvFiles) {
                 $nbFiles = count($csvFiles);
 
                 if ($nbFiles == 1)
@@ -186,12 +211,10 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
                     \error("Warning! $nbFiles csv files possible for query $query:\n", implode("\n", $csvFiles), "\n");
                     continue;
                 }
-                $prepareMeasures = $this->prepareMeasures($query, $csvFiles);
+                $delements = \Help\Plotter::extractDirNameElements($keyGroup);
+                $prepareMeasures = $this->prepareMeasures($delements, $query, $csvFiles);
 
-                if ($prepareMeasures['queries']['noempty/deleted'] == 0)
-                    continue;
-
-                $basePath = $group;
+                $basePath = $keyGroup;
 
                 if (! \is_dir($basePath))
                     \mkdir($basePath);
@@ -200,5 +223,33 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
                 \CSVReader::write($csvFile, $prepareMeasures);
             }
         }
+    }
+
+    public static function makeXTic_clean(bool $showNbEmptyQueries = true, bool $showNbAnswers = false, bool $showRules = false)
+    {
+        return function ($testData, $query, $partitionsData) use ($showNbEmptyQueries, $showNbAnswers, $showRules) {
+            foreach ($testData as $dirName => $data)
+                break;
+
+            $firstPart = \Plotter\AbstractFullStrategy::makeXTic_clean('', false, true)($testData, $query, $partitionsData);
+            $csvData = \CSVReader::read("../$dirName/$query.csv");
+
+            if ($showNbEmptyQueries) {
+                $nbDeletedEmpty = $csvData['queries']['empty.deleted'];
+                $refNbEmpty = $csvData['queries.ref']['empty'];
+
+                if ($refNbEmpty != 0) {
+
+                    if ($nbDeletedEmpty != $refNbEmpty)
+                        $displayInfos = ": $nbDeletedEmpty/$refNbEmpty";
+                    else
+                        $displayInfos = ": $nbDeletedEmpty";
+                } else
+                    $displayInfos = "";
+
+                return "$firstPart$displayInfos";
+            } else
+                return $firstPart;
+        };
     }
 }
