@@ -179,8 +179,9 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     {
         $ret[] = 'test';
 
-        foreach ($this->toPlot() as $what => $time)
-            $ret[] = "$what.$time";
+        foreach ($this->toPlot() as $what => $times)
+            foreach (\explode(',', $times) as $time)
+                $ret[] = "$what.$time";
 
         return $ret;
     }
@@ -226,8 +227,6 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                         'queries' => $data["$pname/queries"],
                         'answers' => $data["$pname/answers"]
                     ];
-
-                $nbPartitions = count($partitionsName);
             }
         }
 
@@ -252,26 +251,39 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $yMin = &$range[0];
         $yMax = &$range[1];
 
-        foreach ($this->toPlot() as $what => $time) {
+        foreach ($this->toPlot() as $what => $times) {
 
-            foreach (explode('|', $what) as $what) {
-                $v = (int) \Help\Arrays::follow($data, [
-                    $what,
-                    $time
-                ], 0);
+            foreach (explode(',', $times) as $time) {
 
-                if ($v !== 0) {
-                    $ret[] = $v;
-                    break;
+                foreach (explode('|', $what) as $what) {
+
+                    $v = \Help\Arrays::follow($data, [
+                        $what,
+                        $time
+                    ], 0);
+
+                    if (\is_numeric($v)) {
+                        $v = (int) $v;
+
+                        if ($v !== 0) {
+                            $ret[] = $v;
+                            break;
+                        }
+                    } elseif ($v !== '') {
+                        $ret[] = $v;
+                        break;
+                    }
+                }
+                if (\is_numeric($v)) {
+                    $gyMax = \max($gyMax, $v);
+                    $gyMin = \min($gyMin, $v);
+                    $yMax = \max($yMax, $v);
+                    $yMin = \min($yMin, $v);
+
+                    if ($v === 0)
+                        $ret[] = 0;
                 }
             }
-            $gyMax = \max($gyMax, $v);
-            $gyMin = \min($gyMin, $v);
-            $yMax = \max($yMax, $v);
-            $yMin = \min($yMin, $v);
-
-            if ($v === 0)
-                $ret[] = 0;
         }
         return $ret;
     }
