@@ -238,6 +238,47 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         if (empty($partitionsData))
             $partitionsData = $testData;
 
+        $nbPartitionsHavingQueries = 0;
+        $nbPartitionsHavingAnswers = 0;
+
+        \ksort($partitionsData);
+
+        // Extract partitions data
+        foreach ($partitionsData as $p) {
+
+            if ($p['queries']['total'] > 0)
+                $nbPartitionsHavingQueries ++;
+            if ($p['answers']['total'] > 0)
+                $nbPartitionsHavingAnswers ++;
+
+            foreach ($p as $k => $v) {
+
+                foreach ($v as $kk => $vv) {
+                    @$data["partitions/$k"][$kk] .= "$vv,";
+
+                    if (\is_numeric($vv) && $vv != 0)
+                        @$data["partitions/$k.clean"][$kk] .= "$vv,";
+                }
+            }
+        }
+        unset($v);
+
+        $data['partitions'] = [
+            'total' => \count($partitionsData),
+            'used' => $nbPartitionsHavingQueries,
+            'hasAnswer' => $nbPartitionsHavingAnswers
+        ];
+
+        // Trim generated 'partitions/$k'
+        foreach ($data as $k => $items) {
+            if (! \str_starts_with($k, 'partitions/'))
+                continue;
+
+            foreach ($items as $kk => $v) {
+                $data[$k][$kk] = \rtrim($v, ',');
+            }
+        }
+
         $query = \basename($csvPath, '.csv');
         $xtic = $makeXTics($testData, $query, $partitionsData);
 
