@@ -389,6 +389,88 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $score;
     }
 
+    public static function makeXTic($testData, $query, $partitionsData)
+    {
+        return self::makeXTic_clean('', false, true)($testData, $query, $partitionsData);
+    }
+
+    public static function makeXTic_fromDirName(string $dirName, string $testName = "", int $nbPartitions = 1, bool $showRules = false)
+    {
+        $elements = \Help\Plotter::extractDirNameElements($dirName);
+        $group = $elements['group'];
+        $summary = $elements['summary'];
+        $partitioning = $elements['partitioning'];
+        $partition = $elements['partition'];
+        $parallel = $elements['parallel'];
+        $pid = $elements['partition_id'];
+        $filterPrefix = $elements['filter_prefix'];
+
+        if ($showRules) {
+            $rules = $elements['rules'];
+
+            if (\preg_match("#^\((.+)\)#U", $rules, $matches))
+                $rules = $matches[1];
+
+            $rules = "/$rules";
+        } else
+            $rules = '';
+
+        if ($summary == 'key-type')
+            $summary = 'label';
+
+        if (! empty($partitioning)) {
+
+            if (! empty($pid) && $pid !== 'pid')
+                $pid = "($pid)";
+            else
+                $pid = '';
+        } else
+            $pid = '';
+
+        // if ($parallel)
+        // $parallel = "[parallel]";
+
+        if (empty($summary) && empty($testName))
+            $summary = 'depth';
+        if (! empty($summary) && ! empty($testName))
+            $summary = "($summary)";
+        if (! empty($filterPrefix))
+            $filterPrefix = "$";
+
+        switch ($partitioning) {
+            case "":
+                $partitioning = $testName;
+                break;
+            case "LPcolls":
+            case "Lcolls":
+                $partitioning = "logic ";
+                break;
+            case "colls":
+            case "Pcolls":
+                $partitioning = "physic ";
+                break;
+            default:
+                $partitioning = "(Error:$partitioning)";
+        }
+        $dnbartition = "";
+
+        if (! empty($partition))
+            $partition = ".$partition";
+        elseif ($nbPartitions > 1)
+            $dnbartition = "[p$nbPartitions]";
+
+        {
+            if ($parallel)
+                $parall1 = '\\|\\| ';
+            else
+                $parall1 = "";
+
+            $parallel = "";
+        }
+
+        return "$parall1$dnbartition$partitioning$partition$pid$summary$rules$filterPrefix$parallel";
+    }
+
     public static function makeXTic_clean(string $testName = "", bool $showNbAnswers = false, bool $showRules = false)
     {
         return function ($testData, $query, $partitionsData) use ($testName, $showNbAnswers, $showRules) {
@@ -418,78 +500,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                         $nbPartitionsHavingQueries ++;
                 }
             }
-            $elements = \Help\Plotter::extractDirNameElements($dirName);
-            $group = $elements['group'];
-            $summary = $elements['summary'];
-            $partitioning = $elements['partitioning'];
-            $partition = $elements['partition'];
-            $parallel = $elements['parallel'];
-            $pid = $elements['partition_id'];
-            $filterPrefix = $elements['filter_prefix'];
-
-            if ($showRules) {
-                $rules = $elements['rules'];
-
-                if (\preg_match("#^\((.+)\)#U", $rules, $matches))
-                    $rules = $matches[1];
-
-                $rules = "/$rules";
-            } else
-                $rules = '';
-
-            if ($summary == 'key-type')
-                $summary = 'label';
-
-            if (! empty($partitioning)) {
-
-                if (! empty($pid) && $pid !== 'pid')
-                    $pid = "($pid)";
-                else
-                    $pid = '';
-            } else
-                $pid = '';
-
-            if ($parallel)
-                $parallel = "[parallel]";
-
-            if (empty($summary) && empty($testName))
-                $summary = 'depth';
-            if (! empty($summary) && ! empty($testName))
-                $summary = "($summary)";
-            if (! empty($filterPrefix))
-                $filterPrefix = "[$]";
-
-            switch ($partitioning) {
-                case "":
-                    $partitioning = $testName;
-                    break;
-                case "LPcolls":
-                case "Lcolls":
-                    $partitioning = "logic ";
-                    break;
-                case "colls":
-                case "Pcolls":
-                    $partitioning = "physic ";
-                    break;
-                default:
-                    $partitioning = "(Error:$partitioning)";
-            }
+            $xtic = self::makeXTic_fromDirName($dirName, $testName, $nbPartitions, $showRules);
             $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
-            $dnbartition = "";
-
-            if (! empty($partition))
-                $partition = ".$partition";
-            elseif ($nbPartitions > 1)
-                $dnbartition = "[p$nbPartitions]";
-
-            {
-                if ($parallel)
-                    $parall1 = '\\|\\| ';
-                else
-                    $parall1 = "";
-
-                $parallel = "";
-            }
 
             if (! empty($nbReformulations) && ! $allPartitionsSameQueries && $nbPartitionsHavingQueries > 1)
                 $nbReformulations = "$nbReformulations\[$nbPartitionsHavingQueries\]";
@@ -499,7 +511,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             else
                 $infos = '';
 
-            return "$parall1$dnbartition$partitioning$partition$pid$summary$rules$filterPrefix$parallel$infos";
+            return "$xtic$infos";
         };
     }
 }
