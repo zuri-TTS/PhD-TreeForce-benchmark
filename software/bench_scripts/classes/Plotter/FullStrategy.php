@@ -5,21 +5,24 @@ final class FullStrategy extends AbstractFullStrategy
 {
 
     private const toPlot = [
+        'summary.create' => 'r',
         'rewriting.rules.apply' => 'r',
         'rewriting.total' => 'r',
         'rewritings.generation' => 'r',
-        'threads.time|stats.db.time' => 'r'
+        'threads.time|stats.db.time' => 'r',
+        'partitions' => 'total,used,hasAnswer',
+        'partitions/queries.clean' => 'total',
     ];
 
     private const stackedMeasuresToPlot = [
         [
-            3 => 'rewriting.total'
+            4 => 'rewriting.total'
         ],
         [
-            4 => 'rewritings.generation'
+            5 => 'rewritings.generation'
         ],
         [
-            5 => 'time'
+            6 => 'time'
         ]
     ];
 

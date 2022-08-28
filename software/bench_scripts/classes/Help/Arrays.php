@@ -18,6 +18,45 @@ final class Arrays
         return $a[\array_key_first($a)];
     }
 
+    public static function renameColumn(array $a, ...$pairs): array
+    {
+        while (! empty($pairs))
+            $replacements[\array_shift($pairs)] = \array_shift($pairs);
+
+        $ret = [];
+
+        foreach ($a as $line => $items)
+
+            foreach ($items as $k => $v) {
+                $repl = $replacements[$k] ?? $k;
+                $ret[$line][$repl] = $v;
+            }
+
+        return $ret;
+    }
+
+    public static function dropColumn(array $a, ...$column): array
+    {
+        $ret = $a;
+
+        foreach ($column as $column)
+            foreach ($ret as &$v)
+                unset($v[$column]);
+
+        return $ret;
+    }
+
+    public static function usearchValues(array $a, callable $pred)
+    {
+        $ret = [];
+
+        foreach ($a as &$v)
+            if ($pred($v, $k))
+                return $ret[$k] = $v;
+
+        return $ret;
+    }
+
     public static function last(array $a, $default = null)
     {
         if (empty($a))

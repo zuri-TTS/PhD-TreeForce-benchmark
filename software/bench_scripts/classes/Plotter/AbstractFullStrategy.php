@@ -64,7 +64,6 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 }
             }
         }
-
         return $conf += $default + [
             'plot.yrange' => 'global',
             'plot.yrange.display' => false,
@@ -186,18 +185,42 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $ret;
     }
 
+    private static function morePartitionsData(array $data): array
+    {
+        $nbReformulations = $data['queries']['total'];
+        $nbAnswers = $data['answers']['total'];
+        $nbPartitions = $data['partitions']['total'] ?? 1;
+
+        if (isset($data['partitions'])) {
+            $partitionsData = $data['partitions'];
+            $patitionsNbQueries = \explode(',', $partitionsData['each.queries.total']);
+            $uniqueNbQueries = \array_unique($patitionsNbQueries);
+            $allPartitionsSameQueries = \count($uniqueNbQueries) == 1;
+            $nbPartitionsHavingQueries = $data['partitions.used']['total'];
+
+            $data['partitions.infos']['all.sameQueries'] = $allPartitionsSameQueries;
+
+            if ($allPartitionsSameQueries)
+                $nbReformulations /= $nbPartitions;
+
+            $data['partitions.infos']['all.queries.nb'] = $nbReformulations;
+        } else {
+            $data['partitions.infos'] = [
+                'all.sameQueries' => 1,
+                'all.queries.nb' => $nbReformulations
+            ];
+        }
+        return $data;
+    }
+
     public function sortDataLines(array &$data): void
     {}
 
     public function getDataLine(string $csvPath = ''): array
     {
+        $ret = [];
         $plotConfig = $this->plot_getConfig();
         $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
-
-        $nbReformulationsTrue = \Help\Arrays::follow($data, [
-            'queries',
-            'total.true'
-        ], - 1);
 
         $makeXTics = $plotConfig['plot.xtic'] ?? [
             $this,
@@ -206,81 +229,11 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $dirName = \basename(\dirname($csvPath));
         $partitionsData = [];
 
-        if (- 1 === $nbReformulationsTrue) {
-            $elements = \Help\Plotter::extractDirNameElements($dirName);
-
-            if (! empty($elements['partitioning'])) {
-                // Count nb of partitions
-                $partitionsName = [];
-
-                foreach (\array_keys($data) as $group) {
-
-                    if (! \str_starts_with($group, "{$elements['group']}"))
-                        continue;
-
-                    preg_match("#(.+)/.*$#", $group, $matches);
-                    $partitionsName[$matches[1]] = null;
-                }
-
-                foreach ($partitionsName as $pname => $v)
-                    $partitionsData[$pname] = [
-                        'queries' => $data["$pname/queries"],
-                        'answers' => $data["$pname/answers"]
-                    ];
-            }
-        }
-
-        $testData[$dirName] = [
-            'queries' => $data["queries"],
-            'answers' => $data["answers"]
-        ];
-
-        if (empty($partitionsData))
-            $partitionsData = $testData;
-
-        $nbPartitionsHavingQueries = 0;
-        $nbPartitionsHavingAnswers = 0;
-
-        \ksort($partitionsData);
-
-        // Extract partitions data
-        foreach ($partitionsData as $p) {
-
-            if ($p['queries']['total'] > 0)
-                $nbPartitionsHavingQueries ++;
-            if ($p['answers']['total'] > 0)
-                $nbPartitionsHavingAnswers ++;
-
-            foreach ($p as $k => $v) {
-
-                foreach ($v as $kk => $vv) {
-                    @$data["partitions/$k"][$kk] .= "$vv,";
-
-                    if (\is_numeric($vv) && $vv != 0)
-                        @$data["partitions/$k.clean"][$kk] .= "$vv,";
-                }
-            }
-        }
-        unset($v);
-
-        $data['partitions'] = [
-            'total' => \count($partitionsData),
-            'used' => $nbPartitionsHavingQueries,
-            'hasAnswer' => $nbPartitionsHavingAnswers
-        ];
-
-        // Trim generated 'partitions/$k'
-        foreach ($data as $k => $items) {
-            if (! \str_starts_with($k, 'partitions/'))
-                continue;
-
-            foreach ($items as $kk => $v) {
-                $data[$k][$kk] = \rtrim($v, ',');
-            }
-        }
+        $data = self::morePartitionsData($data);
+        $testData[$dirName] = $data;
 
         $query = \basename($csvPath, '.csv');
-        $xtic = $makeXTics($testData, $query, $partitionsData);
+        $xtic = $makeXTics($testData, $query, $partitionsData ?? []);
 
         $ret[] = $xtic;
 
@@ -297,11 +250,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             foreach (explode(',', $times) as $time) {
 
                 foreach (explode('|', $what) as $what) {
-
-                    $v = \Help\Arrays::follow($data, [
-                        $what,
-                        $time
-                    ], 0);
+                    $v = \Benchmark::getOneMeasure($data, $what, $time);
 
                     if (\is_numeric($v)) {
                         $v = (int) $v;
@@ -310,7 +259,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                             $ret[] = $v;
                             break;
                         }
-                    } elseif ($v !== '') {
+                    } elseif ($v !== null) {
                         $ret[] = $v;
                         break;
                     }
@@ -323,7 +272,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
                     if ($v === 0)
                         $ret[] = 0;
-                }
+                } elseif (! isset($v))
+                    $ret[] = - 1;
             }
         }
         return $ret;
@@ -473,33 +423,17 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     public static function makeXTic_clean(string $testName = "", bool $showNbAnswers = false, bool $showRules = false)
     {
-        return function ($testData, $query, $partitionsData) use ($testName, $showNbAnswers, $showRules) {
+        return function ($testData, $query) use ($testName, $showNbAnswers, $showRules) {
 
             foreach ($testData as $dirName => $data)
                 break;
 
-            $nbReformulations = $data['queries']['total'];
             $nbAnswers = $data['answers']['total'];
-            $nbPartitions = \count($partitionsData);
+            $nbPartitions = $data['partitions']['total'] ?? 1;
+            $nbPartitionsHavingQueries = $data['partitions.used']['total'] ?? 1;
+            $allPartitionsSameQueries = $data['partitions.infos']['all.sameQueries'];
+            $nbReformulations = $data['partitions.infos']['all.queries.nb'] ?? $data['queries']['total'];
 
-            {
-                $patitionsNbQueries = \Help\Arrays::columns($partitionsData, 'queries', 'total');
-                $uniqueNbQueries = \array_unique($patitionsNbQueries);
-                \sort($uniqueNbQueries);
-
-                $allPartitionsSameQueries = \count($uniqueNbQueries) == 1;
-
-                if ($allPartitionsSameQueries)
-                    $nbReformulations /= $nbPartitions;
-
-                $nbPartitionsHavingQueries = 0;
-
-                foreach ($patitionsNbQueries as $nbq) {
-
-                    if ($nbq != 0)
-                        $nbPartitionsHavingQueries ++;
-                }
-            }
             $xtic = self::makeXTic_fromDirName($dirName, $testName, $nbPartitions, $showRules);
             $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
 

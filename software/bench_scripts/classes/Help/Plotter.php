@@ -18,7 +18,7 @@ final class Plotter
         return $v;
     }
 
-    public function readJavaProperties($stream)
+    public static function readJavaProperties($stream)
     {
         if (is_string($stream)) {
             $s = $stream;
@@ -40,16 +40,17 @@ final class Plotter
         return $ret;
     }
 
-    public function encodeDirNameElements(array $elements)
+    public static function encodeDirNameElements(array $elements, string $replacement = null)
     {
         $fullPattern = $elements['full_pattern'] ?? null;
         $group = $elements['group'];
         $theRules = $elements['rules'];
         $qualifiers = $elements['qualifiers'] ?? null;
 
-        if (isset($elements['full_partition']))
-            $coll = $elements['full_partition'];
-        else {
+        // if (isset($elements['full_partition']))
+        // $coll = $elements['full_partition']; //TODO correct
+        // else
+        {
             $pid = $elements['partitioning'] ?? '';
             $coll = empty($pid) ? '' : ".$pid";
             $pid = $elements['partition'] ?? '';
@@ -72,10 +73,12 @@ final class Plotter
         if ($summary = $elements['toNative'] ?? null)
             $outDir .= "[toNative-{$elements['toNative']}]";
 
+        if (null !== $replacement)
+            $outDir = \sprintf($outDir, $replacement);
         return $outDir;
     }
 
-    public function extractDirNameElements(string $dirName)
+    public static function extractDirNameElements(string $dirName)
     {
         $ret = [
             'group' => null,

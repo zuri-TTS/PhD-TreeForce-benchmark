@@ -130,10 +130,11 @@ final class Benchmark
         return $ret;
     }
 
+    // ========================================================================
     public function appExtractMeasures($measures): array
     {
         foreach ($measures as &$meas)
-            $meas = self::extractMeasure($meas);
+            $meas = self::decodeMeasure($meas);
 
         return $measures;
     }
@@ -143,22 +144,97 @@ final class Benchmark
         return "r{$meas['r']}u{$meas['u']}s{$meas['s']}c{$meas['c']}";
     }
 
-    public static function extractMeasure(string $measures): array
+    public static function decodeMeasure(string $measures, array $measureTypes = []): array
     {
+        if (empty($measureTypes))
+            $measureTypes = self::$timeMeasure;
+
         $meas = [];
 
-        foreach (self::$timeMeasure as $tm) {
+        foreach ($measureTypes as $tm) {
             \preg_match("/$tm(-?\d+)/", $measures, $capture, PREG_OFFSET_CAPTURE);
             $meas[$tm] = (int) $capture[1][0];
         }
         return $meas;
     }
 
-    public static function isMeasure(array $data): bool
+    public static function normalizeDataMeasures(array $data): array
     {
-        return count($data) === 4 && \Help\Arrays::keysExists($data, ...self::$timeMeasure);
+        $ret = [];
+        foreach ($data as $k => $v) {
+
+            if (self::isArrayMeasure($v))
+                $ret['measures'][$k] = $v;
+            else
+                $ret[$k] = $v;
+        }
+        return $ret;
     }
 
+    public static function toStringDataMeasures(array $data): array
+    {
+        $ret = [];
+        foreach ($data as $k => $items) {
+
+            foreach ($items as $ki => $v) {
+                if (self::isArrayMeasure($v))
+                    $v = self::encodeMeasure($v);
+
+                $ret[$k][$ki] = $v;
+            }
+        }
+        return $ret;
+    }
+
+    public static function getOneMeasure(array $data, string $measureName, string $measureType = 'r')
+    {
+        if (\array_key_exists('measures', $data)) {
+            $val = $data['measures'][$measureName] ?? null;
+        }
+        if (! isset($val) && \array_key_exists($measureName, $data)) {
+            $val = $data[$measureName];
+        }
+        if (isset($val)) {
+
+            if (self::isStringMeasure($val))
+                return self::decodeMeasure($val, (array) $measureType)[$measureType];
+            elseif (\is_array($val))
+                return $val[$measureType] ?? null;
+        }
+        return null;
+    }
+
+    public static function sumArrayMeasures(array $a, array $b): array
+    {
+        $ret = [];
+
+        foreach (self::$timeMeasure as $tm) {
+            $ret[$tm] = (int) $a[$tm] + (int) $b[$tm];
+        }
+        return $ret;
+    }
+
+    public static function sumStringMeasures(string $a, string $b): string
+    {
+        return self::encodeMeasure(self::sumArrayMeasures(self::decodeMeasure($a), self::decodeMeasure($b)));
+    }
+
+    public static function isMeasure($data): bool
+    {
+        return self::isStringMeasure($data) || self::isArrayMeasure($data);
+    }
+
+    public static function isStringMeasure($data): bool
+    {
+        return \is_string($data) && \count(self::decodeMeasure($data)) === 4;
+    }
+
+    public static function isArrayMeasure($data): bool
+    {
+        return \is_array($data) && count($data) === 4 && \Help\Arrays::keysExists($data, ...self::$timeMeasure);
+    }
+
+    // ========================================================================
     private static function avg(array $vals): int
     {
         $c = count($vals);
