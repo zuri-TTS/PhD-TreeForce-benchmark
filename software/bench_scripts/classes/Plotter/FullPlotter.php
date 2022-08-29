@@ -94,10 +94,6 @@ final class FullPlotter extends AbstractFullPlotter
         $plotGroups = $plotConfig['plot.groups'] ?? null;
         $this->plotConfig = $plotConfig;
 
-        $csvGroups = $this->strategy->groupCSVFiles($csvPaths);
-        $this->writeDat($csvGroups);
-        $this->writeCsv($csvGroups);
-
         if (empty($plotGroups))
             $plotGroups = [
                 null
@@ -112,7 +108,24 @@ final class FullPlotter extends AbstractFullPlotter
 
             $groupQueries = $group['queries'] ?? $queries;
             $groupConfig = $group['config'] ?? [];
+
+            $processedGroups = [];
+            $this->queries = $groupQueries;
+            $this->plotConfig = \array_merge($plotConfig, $groupConfig);
             $this->csvGroups = [];
+
+            // Write files csv & dat
+            {
+                $g = $this->plotConfig['@group'] ?? '';
+
+                if (! isset($processedGroups[$g])) {
+                    $this->plotConfig['@group'] = $g;
+                    $processedGroups[$g] = true;
+                    $csvGroups = $this->strategy->groupCSVFiles($csvPaths);
+                    $this->writeDat($csvGroups);
+                    $this->writeCsv($csvGroups);
+                }
+            }
 
             foreach ($csvGroups as $csvGroup => $files) {
                 $files = \array_filter($files, fn ($p) => in_array(\basename($p, '.csv'), $groupQueries));
@@ -126,9 +139,6 @@ final class FullPlotter extends AbstractFullPlotter
 
             if (empty($this->csvGroups))
                 continue;
-
-            $this->queries = $groupQueries;
-            $this->plotConfig = \array_merge($plotConfig, $groupConfig);
 
             $contents = \get_include_contents($this->template, [
                 'PLOT' => $this->plot,
@@ -209,7 +219,8 @@ final class FullPlotter extends AbstractFullPlotter
 
     private function writeCsv(array $cutData)
     {
-        $file = "table.csv";
+        $group = $this->plotConfig['@group'];
+        $file = "table$group.csv";
         echo "Writing $file\n";
         $fp = \fopen($file, "w");
 
