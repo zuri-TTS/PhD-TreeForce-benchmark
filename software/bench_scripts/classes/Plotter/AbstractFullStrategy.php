@@ -185,6 +185,18 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $ret;
     }
 
+    private static function moreData(array $data, string $dirName): array
+    {
+        $delements = \Help\Plotter::extractDirNameElements($dirName);
+        $rules = $delements['rules'];
+
+        if (\preg_match("#^\((\d+\))#U", $rules, $matches))
+            $rulesNbQueries = (int) $matches[1];
+
+        $data['rules']['queries.nb.intended'] = $rulesNbQueries ?? - 1;
+        return self::morePartitionsData($data);
+    }
+
     private static function morePartitionsData(array $data): array
     {
         $nbReformulations = $data['queries']['total'];
@@ -229,7 +241,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $dirName = \basename(\dirname($csvPath));
         $partitionsData = [];
 
-        $data = self::morePartitionsData($data);
+        $data = self::moreData($data, $dirName);
+
         $testData[$dirName] = $data;
 
         $query = \basename($csvPath, '.csv');
