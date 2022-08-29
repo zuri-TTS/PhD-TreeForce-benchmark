@@ -42,15 +42,22 @@ $fit = "";
     $hasMultipleDataset = \count($names) > 1;
 }
 
+$selection = [
+    'group',
+    'parallel',
+    'summary'
+];
+
 foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     $csvData = $PLOTTER->getCsvData(\Help\Arrays::first($csvPaths));
     $dirName = \basename(\dirname(\Help\Arrays::first($csvPaths)));
+    $delements = \Help\Plotter::extractDirNameElements($dirName);
+    $sdelements = \Help\Arrays::subSelect($delements, $selection);
 
-    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName($dirName);
+    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName(\Help\Plotter::encodeDirNameElements($sdelements, ''));
 
     if ($hasMultipleDataset) {
-        $elements = \Help\Plotter::extractDirNameElements($dirName);
-        $titleRef = "{$elements['group']} $titleRef";
+        $titleRef = "{$delements['group']} $titleRef";
     }
 
     $titleRef = "\"$titleRef\"";
