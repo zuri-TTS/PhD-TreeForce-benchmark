@@ -44,7 +44,7 @@ final class Plotter
     {
         $fullPattern = $elements['full_pattern'] ?? null;
         $group = $elements['group'];
-        $theRules = $elements['rules'];
+        $theRules = $elements['rules'] ?? null;
         $qualifiers = $elements['qualifiers'] ?? null;
 
         // if (isset($elements['full_partition']))
@@ -97,7 +97,7 @@ final class Plotter
             'time' => null
         ];
 
-        \preg_match("#^\[((.+)(?:\.(.+))?)\]\[(.+)\]\[(.+)\]#U", $dirName, $matches);
+        \preg_match("#^\[((.+)(?:\.(.+))?)\]\[(.*)\]\[(.*)\]#U", $dirName, $matches);
         $ret['full_group'] = $matches[1] ?? null;
         $ret['group'] = $matches[2] ?? null;
         $ret['full_partition'] = $matches[3] ?? null;
