@@ -255,10 +255,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                     if (\is_numeric($v)) {
                         $v = (int) $v;
 
-                        if ($v !== 0) {
-                            $ret[] = $v;
-                            break;
-                        }
+                        $ret[] = $v;
+                        break;
                     } elseif ($v !== null) {
                         $ret[] = $v;
                         break;
@@ -272,8 +270,9 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
                     if ($v === 0)
                         $ret[] = 0;
-                } elseif (! isset($v))
-                    $ret[] = - 1;
+                } elseif (! isset($v)) {
+                    $ret[] = - 10000;
+                }
             }
         }
         return $ret;
