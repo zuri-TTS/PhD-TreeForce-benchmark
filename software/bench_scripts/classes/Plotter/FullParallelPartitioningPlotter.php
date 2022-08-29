@@ -42,9 +42,17 @@ final class FullParallelPartitioningPlotter extends AbstractFullPlotter
             if (\preg_match("#(.+)/(.+)$#", $k, $matches)) {
                 $partitioning = $matches[1];
                 $valGroup = $matches[2];
-                $partition = \preg_split('#[/\.]#', $partitioning, 2)[1];
+
+                // Physic
+                if (preg_match("#/(.+)$#U", $partitioning, $matches))
+                    $partition = $matches[1];
+                // Logic (Mongo::getcollectioname() . prefix)
+                else
+                    $partition = \explode('].', $partitioning, 2)[1];
+
                 $newElements['partition'] = $partition;
-                $newData[\Help\Plotter::encodeDirNameElements($newElements, '') . "/$valGroup"] = $items;
+                $newKey = \Help\Plotter::encodeDirNameElements($newElements, '') . "/$valGroup";
+                $newData[$newKey] = $items;
             } else
                 $newData[$k] = $items;
         }
