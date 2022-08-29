@@ -90,27 +90,19 @@ final class FullLineStrategy extends AbstractFullStrategy
         $selection = [
             'group',
             'qualifiers',
-            // 'rules',
             'partitioning',
-            'partition',
             'parallel'
         ];
 
         foreach ($csvFiles as $csvFile) {
             $dirName = \basename(\dirname($csvFile));
-            $elements = \Help\Plotter::extractDirNameElements($dirName);
-            $groupElements = \Help\Arrays::subSelect($elements, $selection);
+            $delements = \Help\Plotter::extractDirNameElements($dirName);
+            $elements = \Help\Arrays::subSelect($delements, $selection);
 
-            $group = $elements['full_group'];
+            $k = \Help\Plotter::encodeDirNameElements($elements, '');
 
-            $k = \Help\Plotter::encodeDirNameElements($groupElements, '');
-            $ret[$k][] = $csvFile;
-            $groups[$k] = $this->sortScore($elements);
+            $ret["$k$g"][] = $csvFile;
         }
-        $scoreKeys = \Help\Arrays::flipKeys($groups);
-        sort($groups);
-        $scoreKeys = \Help\Arrays::subSelect($scoreKeys, $groups);
-        $groups = \array_map(null, ...$scoreKeys);
         return $ret;
     }
 }
