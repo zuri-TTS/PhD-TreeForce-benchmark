@@ -23,9 +23,30 @@ $interpolate = [];
 $i = 1;
 $fit = "";
 
+// Search if multiple dataset are used
+{
+    $groups = \array_keys($PLOTTER->getCsvGroups());
+    $names = [];
+
+    foreach ($groups as $g) {
+        $elements = \Help\Plotter::extractDirNameElements($g);
+        $names[] = $elements['group'];
+    }
+    $names = \array_unique($names);
+    $hasMultipleDataset = \count($names) > 1;
+}
+
 foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     $csvData = $PLOTTER->getCsvData(\Help\Arrays::first($csvPaths));
-    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName(\basename(\dirname(\Help\Arrays::first($csvPaths))));
+    $dirName = \basename(\dirname(\Help\Arrays::first($csvPaths)));
+
+    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName($dirName);
+
+    if ($hasMultipleDataset) {
+        $elements = \Help\Plotter::extractDirNameElements($dirName);
+        $titleRef = "{$elements['group']} $titleRef";
+    }
+
     $titleRef = "\"$titleRef\"";
 
     $notitle = false;
