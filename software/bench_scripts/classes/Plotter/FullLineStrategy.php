@@ -4,9 +4,23 @@ namespace Plotter;
 final class FullLineStrategy extends AbstractFullStrategy
 {
 
-    private const toPlot = [
+    private const toPlot_reformulations = [
         'partitions.infos' => 'all.queries.nb',
         'stats.db.time|threads.time' => 'r'
+    ];
+
+    private const toPlot_rules = [
+        'rules' => 'queries.nb.intended',
+        'stats.db.time|threads.time' => 'r'
+    ];
+
+    private const stackedMeasuresToPlot = [
+        [
+            2 => 'reformulations'
+        ],
+        [
+            3 => 'time'
+        ]
     ];
 
     private const plotConfig = [
@@ -23,7 +37,7 @@ final class FullLineStrategy extends AbstractFullStrategy
     public function __construct()
     {
         parent::__construct();
-        $this->setToPlot(self::toPlot);
+        $this->setStackedMeasuresToPlot(self::stackedMeasuresToPlot);
     }
 
     public function getID(): string
@@ -53,8 +67,24 @@ final class FullLineStrategy extends AbstractFullStrategy
         });
     }
 
-    function groupCSVFiles(array $csvFiles): array
+    public function groupCSVFiles(array $csvFiles): array
     {
+        $g = $this->getPlotter()->plot_getConfig()['@group'];
+
+        switch ($g) {
+            case '':
+            case 'reformulations':
+                $this->setToPlot(self::toPlot_reformulations);
+                break;
+
+            case 'rules':
+                $this->setToPlot(self::toPlot_rules);
+                break;
+
+            default:
+                throw new \Exception("Can't handle @group: '$g'");
+        }
+
         $ret = [];
         $groups = [];
         $selection = [

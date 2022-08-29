@@ -3,6 +3,12 @@ set key outside below horizontal maxcols 2
 <?php
 $plotConfig = $PLOTTER->plot_getConfig();
 
+// Define what to plot
+{
+    $xPointPos = 2;
+    $yPointPos = 3;
+}
+
 $xRangeMax = $plotConfig['plot.xrange.max'] ?? null;
 $yRangeMax = $plotConfig['plot.yrange.max'] ?? null;
 
@@ -60,7 +66,7 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
         $style = $plotConfig['plot.points.style'];
         $style = \str_format($style, $styleReplacement);
 
-        $points[] = "'$group.dat' u 2:($3/1000) with points $title $style";
+        $points[] = "'$group.dat' u $xPointPos:(\${$yPointPos}/1000) with points $title $style";
         $notitle = true;
     }
 
@@ -69,7 +75,7 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
         $style = $plotConfig['plot.lines.style'];
         $style = \str_format($style, $styleReplacement);
 
-        $lines[] = "'$group.dat' u 2:($3/1000) with lines $title $style";
+        $lines[] = "'$group.dat' u $xPointPos:(\${$yPointPos}/1000) with lines $title $style";
         $notitle = true;
     }
 
@@ -79,7 +85,7 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
         $style = \str_format($style, $styleReplacement);
 
         echo "f$i(x) = a$i + b$i*x\n";
-        echo "fit f$i(x) '$group.dat' u 2:($3/1000) via a$i,b$i\n";
+        echo "fit f$i(x) '$group.dat' u $xPointPos:(\${$yPointPos}/1000) via a$i,b$i\n";
 
         $interpolate[] = "f$i(x) $title $style";
     }
