@@ -193,7 +193,13 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         if (\preg_match("#^\((\d+\))#U", $rules, $matches))
             $rulesNbQueries = (int) $matches[1];
 
-        $data['rules']['queries.nb.intended'] = $rulesNbQueries ?? - 1;
+        $intended = $rulesNbQueries ?? - 1;
+        $cleaned = $intended >= 0 ? $intended - $data['queries']['total'] : - 1;
+
+        $data['rules'] = [
+            'queries.nb.intended' => $intended,
+            'queries.nb.cleaned' => $cleaned
+        ];
         return self::morePartitionsData($data);
     }
 

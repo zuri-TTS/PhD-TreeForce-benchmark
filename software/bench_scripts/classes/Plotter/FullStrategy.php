@@ -10,8 +10,11 @@ final class FullStrategy extends AbstractFullStrategy
         'rewriting.total' => 'r',
         'rewritings.generation' => 'r',
         'threads.time|stats.db.time' => 'r',
-        'partitions' => 'total,used,hasAnswer',
-        'partitions/queries.clean' => 'total',
+        'partitions' => 'total',
+        'partitions.used' => 'total',
+        'partitions.hasAnswer' => 'total',
+        'queries' => 'total',
+//         'rules' => 'queries.cleaned.total',
     ];
 
     private const stackedMeasuresToPlot = [
