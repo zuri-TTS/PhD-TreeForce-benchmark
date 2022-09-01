@@ -69,7 +69,8 @@ final class FullLineStrategy extends AbstractFullStrategy
 
     public function groupCSVFiles(array $csvFiles): array
     {
-        $g = $this->getPlotter()->plot_getConfig()['@group'];
+        $config = $this->getPlotter()->plot_getConfig();
+        $g = $config['@group'];
 
         switch ($g) {
             case '':
@@ -103,6 +104,10 @@ final class FullLineStrategy extends AbstractFullStrategy
 
             $ret["$k$g"][] = $csvFile;
         }
-        return $ret;
+        if (\count($ret) == 1)
+            return $ret;
+
+        $fsort = $config['csv.groups.sort'] ?? fn ($a) => $a;
+        return $fsort($ret);
     }
 }
