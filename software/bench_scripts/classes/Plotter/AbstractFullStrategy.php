@@ -286,9 +286,6 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                     $gyMin = \min($gyMin, $v);
                     $yMax = \max($yMax, $v);
                     $yMin = \min($yMin, $v);
-
-                    if ($v === 0)
-                        $ret[] = 0;
                 } elseif (! isset($v)) {
                     $ret[] = - 10000;
                 }
