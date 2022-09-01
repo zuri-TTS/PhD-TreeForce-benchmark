@@ -100,6 +100,7 @@ final class FullPlotter extends AbstractFullPlotter
             ];
 
         $nbGroups = \count($plotGroups);
+        $processedGroups = [];
 
         foreach ($plotGroups as $groupName => $group) {
 
@@ -109,7 +110,6 @@ final class FullPlotter extends AbstractFullPlotter
             $groupQueries = $group['queries'] ?? $queries;
             $groupConfig = $group['config'] ?? [];
 
-            $processedGroups = [];
             $this->queries = $groupQueries;
             $this->plotConfig = \array_merge($plotConfig, $groupConfig);
             $this->csvGroups = [];
@@ -120,11 +120,12 @@ final class FullPlotter extends AbstractFullPlotter
 
                 if (! isset($processedGroups[$g])) {
                     $this->plotConfig['@group'] = $g;
-                    $processedGroups[$g] = true;
                     $csvGroups = $this->strategy->groupCSVFiles($csvPaths);
+                    $processedGroups[$g] = $csvGroups;
                     $this->writeDat($csvGroups);
                     $this->writeCsv($csvGroups);
-                }
+                } else
+                    $csvGroups = $processedGroups[$g];
             }
 
             foreach ($csvGroups as $csvGroup => $files) {
