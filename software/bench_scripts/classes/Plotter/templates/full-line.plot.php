@@ -32,14 +32,17 @@ $fit = "";
 // Search if multiple dataset are used
 {
     $groups = \array_keys($PLOTTER->getCsvGroups());
-    $names = [];
+    $names = $parts = [];
 
     foreach ($groups as $g) {
         $elements = \Help\Plotter::extractDirNameElements($g);
         $names[] = $elements['group'];
+        $parts[] = $elements['partitioning'];
     }
     $names = \array_unique($names);
+    $parts = \array_unique($parts);
     $hasMultipleDataset = \count($names) > 1;
+    $hasMultiplePartitioning = \count($parts) > 1;
 }
 
 $selection = [
@@ -56,8 +59,12 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
 
     $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName(\Help\Plotter::encodeDirNameElements($sdelements, ''));
 
+    if ($hasMultiplePartitioning) {
+        $titleRef = "{$delements['partitioning']} $titleRef";
+    }
     if ($hasMultipleDataset) {
-        $titleRef = "{$delements['group']} $titleRef";
+        $delim = $hasMultiplePartitioning ? '.' : ' ';
+        $titleRef = "{$delements['group']}$delim$titleRef";
     }
 
     $titleRef = "\"$titleRef\"";
