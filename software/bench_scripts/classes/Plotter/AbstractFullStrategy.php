@@ -296,6 +296,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     private const summaryScore = [
         '' => 0,
+        'depth' => 0,
         'key-type' => 1,
         'label' => 1,
         'path' => 2

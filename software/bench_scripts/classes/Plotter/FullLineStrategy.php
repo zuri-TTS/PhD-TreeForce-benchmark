@@ -14,12 +14,49 @@ final class FullLineStrategy extends AbstractFullStrategy
         'stats.db.time|threads.time' => 'r'
     ];
 
-    private const stackedMeasuresToPlot = [
+    private const toPlot_partitionsUsed = [
+        'partitions.used' => 'total',
+        'stats.db.time|threads.time' => 'r'
+    ];
+
+    private const toPlot_partitionsUsed_perRules = [
+        'rules' => 'queries.nb.intended',
+        'partitions.used' => 'total'
+    ];
+
+    private const stackedMeasuresToPlot_reformulations = [
         [
-            2 => 'reformulations'
+            2 => '#reformulations'
         ],
         [
             3 => 'time'
+        ]
+    ];
+
+    private const stackedMeasuresToPlot_rules = [
+        [
+            2 => '#intended reformulations'
+        ],
+        [
+            3 => 'time'
+        ]
+    ];
+
+    private const stackedMeasuresToPlot_partitionsUsed = [
+        [
+            2 => '#partitions'
+        ],
+        [
+            3 => 'time'
+        ]
+    ];
+
+    private const stackedMeasuresToPlot_partitionsUsed_perRules = [
+        [
+            2 => '#intended reformulations'
+        ],
+        [
+            3 => '#partitions'
         ]
     ];
 
@@ -37,7 +74,6 @@ final class FullLineStrategy extends AbstractFullStrategy
     public function __construct()
     {
         parent::__construct();
-        $this->setStackedMeasuresToPlot(self::stackedMeasuresToPlot);
     }
 
     public function getID(): string
@@ -76,10 +112,22 @@ final class FullLineStrategy extends AbstractFullStrategy
             case '':
             case 'reformulations':
                 $this->setToPlot(self::toPlot_reformulations);
+                $this->setStackedMeasuresToPlot(self::stackedMeasuresToPlot_reformulations);
                 break;
 
             case 'rules':
                 $this->setToPlot(self::toPlot_rules);
+                $this->setStackedMeasuresToPlot(self::stackedMeasuresToPlot_rules);
+                break;
+
+            case 'partitions.used':
+                $this->setToPlot(self::toPlot_partitionsUsed);
+                $this->setStackedMeasuresToPlot(self::stackedMeasuresToPlot_partitionsUsed);
+                break;
+
+            case 'partitions.used.per_rules':
+                $this->setToPlot(self::toPlot_partitionsUsed_perRules);
+                $this->setStackedMeasuresToPlot(self::stackedMeasuresToPlot_partitionsUsed_perRules);
                 break;
 
             default:
