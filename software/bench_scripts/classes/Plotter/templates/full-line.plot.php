@@ -9,17 +9,26 @@ $plotConfig = $PLOTTER->plot_getConfig();
     $yPointPos = 3;
 }
 
+$timeDiv = $plotConfig['measure.div'];
+$formatY = $plotConfig['plot.format.y'];
+
 $xRangeMax = $plotConfig['plot.xrange.max'] ?? null;
 $yRangeMax = $plotConfig['plot.yrange.max'] ?? null;
 
 if ($yRangeMax !== null)
     echo "set yrange [0:$yRangeMax]\n";
 
+if ($logscale = ($plotConfig['logscale'] ?? null))
+    echo "set logscale y {$logscale}\n";
+
+$yloglabel = $logscale ? ' (log)' : null;
+
 echo <<<EOD
 set xrange [0:$xRangeMax]
 set xlabel "{$plotConfig['xlabel']}"
-set ylabel "{$plotConfig['ylabel']}"
-set format y "%gs"
+set ylabel "{$plotConfig['ylabel']}$yloglabel"
+set format y "$formatY"
+tm(x)=x/($timeDiv)
 
 EOD;
 
@@ -51,7 +60,23 @@ $selection = [
     'summary'
 ];
 
-foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
+$csvGroups = $PLOTTER->getCsvGroups();
+$allGroupsName = \array_keys($csvGroups);
+
+$fstyle = function ($configParam, int $i, string $groupName) use ($plotConfig, $allGroupsName) {
+    $style = $plotConfig[$configParam];
+
+    if (\is_callable($style))
+        return $style($groupName, $allGroupsName, $i);
+
+    $styleReplacement = [
+        'lc' => $i,
+        'lt' => $i
+    ];
+    return \str_format($style, $styleReplacement);
+};
+
+foreach ($csvGroups as $group => $csvPaths) {
     $csvData = $PLOTTER->getCsvData(\Help\Arrays::first($csvPaths));
     $dirName = \basename(\dirname(\Help\Arrays::first($csvPaths)));
     $delements = \Help\Plotter::extractDirNameElements($dirName);
@@ -59,10 +84,10 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
 
     $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName(\Help\Plotter::encodeDirNameElements($sdelements, ''));
 
-    if ($hasMultiplePartitioning) {
+    if ($hasMultiplePartitioning || ($plotConfig['display.partitioning'] ?? false)) {
         $titleRef = "{$delements['partitioning']} $titleRef";
     }
-    if ($hasMultipleDataset) {
+    if ($hasMultipleDataset || ($plotConfig['display.group'] ?? false)) {
         $delim = $hasMultiplePartitioning ? '.' : ' ';
         $titleRef = "{$delements['group']}$delim$titleRef";
     }
@@ -70,36 +95,29 @@ foreach ($PLOTTER->getCsvGroups() as $group => $csvPaths) {
     $titleRef = "\"$titleRef\"";
 
     $notitle = false;
-    $styleReplacement = [
-        'lc' => $i,
-        'lt' => $i
-    ];
 
     if ($plotConfig['plot.points']) {
         $title = $notitle ? "notitle" : "title $titleRef";
-        $style = $plotConfig['plot.points.style'];
-        $style = \str_format($style, $styleReplacement);
+        $style = $fstyle('plot.points.style', $i, $group, $allGroupsName);
 
-        $points[] = "'$group.dat' u $xPointPos:(\${$yPointPos}/1000) with points $title $style";
+        $points[] = "'$group.dat' u $xPointPos:(tm(\${$yPointPos})) with points $title $style";
         $notitle = true;
     }
 
     if ($plotConfig['plot.lines']) {
         $title = $notitle ? "notitle" : "title $titleRef";
-        $style = $plotConfig['plot.lines.style'];
-        $style = \str_format($style, $styleReplacement);
+        $style = $fstyle('plot.lines.style', $i, $group, $allGroupsName);
 
-        $lines[] = "'$group.dat' u $xPointPos:(\${$yPointPos}/1000) with lines $title $style";
+        $lines[] = "'$group.dat' u $xPointPos:(tm(\${$yPointPos})) with lines $title $style";
         $notitle = true;
     }
 
     if ($plotConfig['plot.fit.linear']) {
         $title = $notitle ? "notitle" : "title $titleRef";
-        $style = $plotConfig['plot.fit.linear.style'];
-        $style = \str_format($style, $styleReplacement);
+        $style = $fstyle('plot.fit.linear.style', $i, $group, $allGroupsName);
 
         echo "f$i(x) = a$i + b$i*x\n";
-        echo "fit f$i(x) '$group.dat' u $xPointPos:(\${$yPointPos}/1000) via a$i,b$i\n";
+        echo "fit f$i(x) '$group.dat' u $xPointPos:(tm(\${$yPointPos})) via a$i,b$i\n";
 
         $interpolate[] = "f$i(x) $title $style";
     }
