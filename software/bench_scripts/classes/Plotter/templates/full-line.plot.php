@@ -23,12 +23,16 @@ if ($logscale = ($plotConfig['logscale'] ?? null))
 
 $yloglabel = $logscale ? ' (log)' : null;
 
+$userCommands = (array) ($plotConfig['gnuplot.commands'] ?? null);
+$userCommands = \implode("\n", $userCommands);
+
 echo <<<EOD
 set xrange [0:$xRangeMax]
 set xlabel "{$plotConfig['xlabel']}"
 set ylabel "{$plotConfig['ylabel']}$yloglabel"
 set format y "$formatY"
 tm(x)=x/($timeDiv)
+$userCommands
 
 EOD;
 
