@@ -47,10 +47,9 @@ final class Plotter
         $theRules = $elements['rules'] ?? null;
         $qualifiers = $elements['qualifiers'] ?? null;
 
-        // if (isset($elements['full_partition']))
-        // $coll = $elements['full_partition']; //TODO correct
-        // else
-        {
+        if (isset($elements['full_partition']))
+            $coll = $elements['full_partition'];
+        else {
             $pid = $elements['partitioning'] ?? '';
             $coll = empty($pid) ? '' : ".$pid";
             $pid = $elements['partition'] ?? '';
