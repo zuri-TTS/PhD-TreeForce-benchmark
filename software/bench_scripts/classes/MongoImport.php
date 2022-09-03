@@ -114,6 +114,11 @@ final class MongoImport
 
         if (0 === ($exitCode = \simpleExec($cmd, $output, $err))) {
             $res = \json_decode($output);
+
+            if (null === $res) {
+                \fwrite(STDERR, "Cannot decode as json data:<<<\n'$output'\n>>>\nErrors: $err\n\n");
+                $res = [];
+            }
             $deleted = [];
 
             foreach ($collections as $coll) {
