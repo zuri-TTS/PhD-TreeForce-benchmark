@@ -26,22 +26,6 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
     {
         $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
         $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
-        $groups = \array_map(function ($p) {
-            $dirName = \basename($p);
-            $pelements = \Help\Plotter::extractDirNameElements($dirName);
-
-            $initialGroup = $pelements['full_group'];
-            $group = $pelements['group'];
-            $partitioning = $pelements['partitioning'];
-
-            $gp = $group;
-
-            if (! empty($partitioning))
-                $gp .= ".$partitioning";
-
-            // Remove cmd & date
-            return $pelements;
-        }, $dirs);
         \natcasesort($queries);
 
         $gdirs = [];
@@ -50,6 +34,8 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
             $d = \basename($dpath);
             $delements = \Help\Plotter::extractDirNameElements($d);
             unset($delements['partition']);
+            unset($delements['full_group']);
+            unset($delements['full_partition']);
             $dirGroup = \Help\Plotter::encodeDirNameElements($delements, '[%s]');
 
             foreach ($queries as $query)
@@ -163,7 +149,6 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
             $data = \Benchmark::normalizeDataMeasures($data);
 
             $elements = \Help\Plotter::extractDirNameElements(\basename(\dirname($csvPath)));
-            $partitionDataGroup = "{$elements['full_group']}[{$elements['qualifiers']}]";
             $partitionDataGroup = \Help\Plotter::encodeDirNameElements(\Help\Arrays::subSelect($elements, [
                 'group',
                 'rules',
@@ -171,7 +156,6 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
                 'partition',
                 'qualifiers'
             ]), '');
-
             foreach ($data as $k => $items) {
 
                 if (\Benchmark::isArrayMeasure($items)) {
