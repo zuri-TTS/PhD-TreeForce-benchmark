@@ -8,7 +8,7 @@ final class DoSummarize extends AbstractTest
 
     private int $strPrefixSize;
 
-    public function __construct(\DataSet $ds, CmdArgs $cmdParser, Data\IPartition ...$partitions)
+    public function __construct(\DataSet $ds, CmdArgs $cmdParser, \Data\IPartition ...$partitions)
     {
         parent::__construct($ds, $cmdParser, ...$partitions);
 
@@ -21,18 +21,27 @@ final class DoSummarize extends AbstractTest
         $this->strPrefixSize = $cmdParser->parsed()['javaProperties']['summary.filter.stringValuePrefix'];
     }
 
-    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType, int $strPrefixSize): void
+    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType, int $strPrefixSize, $cmdParser): void
     {
-        $summArgs = [
+        $skipSummaryCheck = $cmdParser['args']['skip-summary-check'];
+
+        $summArgs = ($skipSummaryCheck ? [
+            'output' => $cmdParser['args']['output'],
+            'bench-measures-nb' => $cmdParser['args']['bench-measures-nb'],
+            'doonce' => false,
+            'forget-results' => $cmdParser['args']['forget-results'],
+            'skip-existing' => $cmdParser['args']['skip-existing']
+        ] : [
+            'output' => \sys_get_temp_dir(),
+            'doonce' => true,
+            'forget-results' => true,
+            'skip-existing' => true
+        ]) + [
             'cmd' => 'summarize',
-            'skip-existing' => true,
             'generate-dataset' => false,
             'clean-db' => false,
             'summary' => $summaryType,
-            'output' => \sys_get_temp_dir(),
             'plot' => false,
-            'doonce' => true,
-            'forget-results' => true,
             'Psummary.filter.stringValuePrefix' => $strPrefixSize
         ];
         $doItParser = CmdArgs::default();
@@ -58,7 +67,7 @@ final class DoSummarize extends AbstractTest
             }
         }
 
-        if ($allExists) {
+        if ($allExists && ! $skipSummaryCheck) {
             if (\count($summaries) > 1)
                 echo "Nothing to do!\n";
             return;
@@ -74,6 +83,6 @@ final class DoSummarize extends AbstractTest
 
     public function execute()
     {
-        self::summarize($this->ds, $this->partitions[0], $this->summaryType, $this->strPrefixSize);
+        self::summarize($this->ds, $this->partitions[0], $this->summaryType, $this->strPrefixSize, $this->cmdParser);
     }
 }

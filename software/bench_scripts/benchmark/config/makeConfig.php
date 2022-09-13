@@ -184,9 +184,12 @@ function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
         ]);
     }
 
-    $sortMeasure = //
-    ($javaProperties['query.batches.nbThreads'] > 1 || $cmdArg['parallel']) ? //
-    'threads.time' : 'stats.db.time';
+    if ($javaProperties['query.batches.nbThreads'] > 1 || $cmdArg['parallel'])
+        $sortMeasure = 'threads.time';
+    elseif ($cmdArg['cmd'] === 'summarize')
+        $sortMeasure = 'summary.creation.total';
+    else
+        $sortMeasure = 'stats.db.time';
 
     // <<< >>>
 

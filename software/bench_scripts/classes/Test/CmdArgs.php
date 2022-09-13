@@ -14,6 +14,7 @@ final class CmdArgs implements \ArrayAccess
         'generate-dataset' => true,
         'cmd-display-output' => false,
         'write-all-partitions' => true,
+        'skip-summary-check' => false,
         'clean-db' => false,
         'clean-db-json' => false,
         'pre-clean-db' => false,
