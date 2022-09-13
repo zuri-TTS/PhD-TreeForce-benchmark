@@ -28,6 +28,7 @@ final class DoSummarize extends AbstractTest
         $summArgs = ($skipSummaryCheck ? [
             'output' => $cmdParser['args']['output'],
             'bench-measures-nb' => $cmdParser['args']['bench-measures-nb'],
+            'bench-measures-forget' => $cmdParser['args']['bench-measures-forget'],
             'doonce' => false,
             'forget-results' => $cmdParser['args']['forget-results'],
             'skip-existing' => $cmdParser['args']['skip-existing']
