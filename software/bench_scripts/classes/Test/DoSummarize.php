@@ -21,9 +21,12 @@ final class DoSummarize extends AbstractTest
         $this->strPrefixSize = $cmdParser->parsed()['javaProperties']['summary.filter.stringValuePrefix'];
     }
 
-    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType, int $strPrefixSize, $cmdParser): void
+    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType, int $strPrefixSize, $cmdParser = []): void
     {
-        $skipSummaryCheck = $cmdParser['args']['skip-summary-check'];
+        if (! empty($cmdParser))
+            $skipSummaryCheck = $cmdParser['args']['skip-summary-check'];
+        else
+            $skipSummaryCheck = false;
 
         $summArgs = ($skipSummaryCheck ? [
             'output' => $cmdParser['args']['output'],
