@@ -622,39 +622,78 @@ function include_script(string $filename, array $argv)
     return false;
 }
 
-function simpleExec(string $cmd, &$output, &$err, ?string $input = null): int
+function isStream($var)
 {
-    $parseDesc = fn ($d) => \in_array($d, [
-        STDOUT,
-        STDERR
-    ]) ? $d : [
-        'pipe',
-        'w'
+    return \is_resource($var) && \get_resource_type($var) === "stream";
+}
+
+function simpleExec(string $cmd, &$output, &$err, ?string $input = null, array $params = []): int
+{
+    $outErr = [
+        1 => &$output,
+        2 => &$err
     ];
     $descriptors = [
         [
             'pipe',
             'r'
         ],
-        $parseDesc($output),
-        $parseDesc($err)
+        [
+            'pipe',
+            'w'
+        ],
+        [
+            'pipe',
+            'w'
+        ]
     ];
+    \extract($params + [
+        'blockSize' => 1024,
+        'usleep' => 10
+    ]);
+
+    // ===========================================
+
     $proc = \proc_open($cmd, $descriptors, $pipes);
+
+    foreach ($outErr as $k => &$out) {
+        $pipe = $pipes[$k];
+        \stream_set_blocking($pipe, false);
+
+        if (\is_callable($out))
+            $callback = $out;
+        else if (isStream($out))
+            $callback = function ($streamData) use (&$out) {
+                \fwrite($out, $streamData);
+            };
+        else
+            $callback = function ($streamData) use (&$out) {
+                $out .= $streamData;
+            };
+
+        $callbacks[$k] = $callback;
+    }
 
     if (null !== $input)
         \fwrite($pipes[0], $input);
 
     \fclose($pipes[0]);
+    unset($pipes[0]);
 
-    while (($status = \proc_get_status($proc))['running'])
-        \usleep(10);
+    while (! empty($pipes)) {
 
-    if (isset($pipes[1]))
-        $output = \stream_get_contents($pipes[1]);
-    if (isset($pipes[2]))
-        $err = \stream_get_contents($pipes[2]);
+        foreach ($pipes as $k => &$pipe) {
+            $streamData = \stream_get_contents($pipe, $blockSize);
 
-    return $status['exitcode'];
+            if (0 < strlen($streamData))
+                $callbacks[$k]($streamData);
+
+            if (\feof($pipe))
+                unset($pipes[$k]);
+        }
+        \usleep($usleep);
+    }
+    return \proc_close($proc);
 }
 
 function get_include_contents(string $filename, array $variables, string $uniqueVar = '')
