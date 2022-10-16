@@ -151,7 +151,13 @@ final class MongoImport
         if (! $forceCheck && self::$collections_cache !== null)
             return self::$collections_cache;
 
-        $script = "printjson(db.getCollectionNames());";
+        $script = <<<EOD
+        collections = db.getCollectionNames();
+
+        for(var coll of collections){
+            print(coll);
+        }
+        EOD;
         $script = \escapeshellarg($script);
 
         $cmd = "mongosh treeforce --quiet --eval $script\n";
@@ -160,8 +166,7 @@ final class MongoImport
         if (empty($output))
             return [];
 
-        $output = \str_replace("'", '"', $output);
-        return self::$collections_cache = \json_decode($output);
+        return self::$collections_cache = explode("\n", $output);
     }
 
     public static function createIndex($collection, string $indexName, int $order = 1): void
