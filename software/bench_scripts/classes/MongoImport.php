@@ -270,11 +270,29 @@ final class MongoImport
         if (! \is_file($jsonFile))
             throw new \Exception("The file $jsonFile does not exists");
 
+        $lineBuff = "";
+
+        // Get only the last line
+        $err = function ($s) use (&$lineBuff) {
+            echo $s;
+            $s = \rtrim($s, "\n");
+            $pos = \strrpos($s, "\n");
+
+            if ($pos === false) {
+                $lineBuff .= $s;
+            } else {
+                $ss = \substr($s, $pos);
+
+                if (\strlen($ss) > 0)
+                    $lineBuff = $ss;
+            }
+        };
+
         $cname = \escapeshellarg($collectionName);
         $jsonFile = \escapeshellarg($jsonFile);
         \simpleExec("mongoimport -d treeforce -c $cname --file $jsonFile", $output, $err);
 
-        \preg_match('/(\d+) document\(s\) failed/', $err, $matches);
+        \preg_match('/(\d+) document\(s\) failed/', $lineBuff, $matches);
         $nbFails = (int) ($matches[1] ?? - 1);
 
         if (null !== self::$collections_cache)
