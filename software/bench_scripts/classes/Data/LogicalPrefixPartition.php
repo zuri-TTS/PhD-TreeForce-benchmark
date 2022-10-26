@@ -60,8 +60,6 @@ final class LogicalPrefixPartition extends LogicalPartition
 
     public function contains(array $data): bool
     {
-        $noPrefix = (object) null;
-        $f = \array_follow($data, $this->prefix, $noPrefix);
-        return $f !== $noPrefix;
+        throw new \Exception("Unsupported operation");
     }
 }
