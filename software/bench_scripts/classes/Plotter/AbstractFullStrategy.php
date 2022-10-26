@@ -37,12 +37,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $this;
     }
 
+    private $conf = null;
+
     public function plot_getConfig(array $default = []): array
     {
-        static $conf = null;
-
-        if ($conf !== null)
-            return $conf;
+        if ($this->conf !== null)
+            return $this->conf;
 
         $wd = getcwd();
         $path_ex = explode(DIRECTORY_SEPARATOR, $wd);
@@ -64,7 +64,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 }
             }
         }
-        return $conf += $default + [
+        return $this->conf = $conf + $default + [
             'plot.yrange' => 'global',
             'plot.yrange.display' => false,
             'plot.pattern.offset' => 0,
