@@ -13,10 +13,10 @@ $timeDiv = $plotConfig['measure.div'];
 $formatY = $plotConfig['plot.format.y'];
 
 $xRangeMax = $plotConfig['plot.xrange.max'] ?? null;
-$yRangeMax = $plotConfig['plot.yrange.max'] ?? null;
+$yRangeMax = $plotConfig['plot.yrange.max'] ?? '*';
+$yRangeMin = $plotConfig['plot.yrange.min'] ?? '*';
 
-if ($yRangeMax !== null)
-    echo "set yrange [0:$yRangeMax]\n";
+echo "set yrange [$yRangeMin:$yRangeMax]\n";
 
 if ($logscale = ($plotConfig['logscale'] ?? null))
     echo "set logscale y {$logscale}\n";
