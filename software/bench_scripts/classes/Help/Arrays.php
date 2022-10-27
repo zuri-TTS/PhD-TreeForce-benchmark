@@ -18,6 +18,48 @@ final class Arrays
         return $a[\array_key_first($a)];
     }
 
+    public static function jsonRecursiveCount(array $a)
+    {
+        $nb = 0;
+
+        $p = [
+            $a
+        ];
+
+        while (! empty($p)) {
+            $a = \array_pop($p);
+
+            if (\array_is_list($a))
+                $nb = $nb - 1 + \count($a);
+            else
+                $nb += \count($a);
+
+            foreach ($a as $v)
+                if (\is_array($v))
+                    $p[] = $v;
+        }
+        return $nb;
+    }
+
+    public static function recursiveCount(array $a)
+    {
+        $nb = 0;
+
+        $p = [
+            $a
+        ];
+
+        while (! empty($p)) {
+            $a = \array_pop($p);
+            $nb += \count($a);
+
+            foreach ($a as $v)
+                if (\is_array($v))
+                    $p[] = $v;
+        }
+        return $nb;
+    }
+
     public static function renameColumn(array $a, ...$pairs): array
     {
         while (! empty($pairs))

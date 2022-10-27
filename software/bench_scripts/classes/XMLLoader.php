@@ -24,7 +24,8 @@ final class XMLLoader
     private bool $summarize;
 
     private array $stats = [
-        'documents.nb' => 0
+        'documents.nb' => 0,
+        'edges.nb' => 0
     ];
 
     private \Data\ILoader $groupLoader;
@@ -421,6 +422,8 @@ final class XMLLoader
                 $this->updateStats($data2, $fileData);
             else
                 $this->writeFinal($data2, $fileData);
+
+            $this->stats['edges.nb'] += \Help\Arrays::jsonRecursiveCount($data2);
         }
     }
 
