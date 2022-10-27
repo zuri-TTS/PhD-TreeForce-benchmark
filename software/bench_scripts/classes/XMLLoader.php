@@ -178,10 +178,11 @@ final class XMLLoader
         $this->setPostProcesses();
 
         echo "Generating json:\n";
+        $datasets_exists = \array_map(fn ($d) => (string) $d, $this->dataSets_exists);
 
-        foreach ($this->dataSets as $d)
-            echo "$d", \in_array($d, $this->dataSets_exists) ? ' (Exists)' : '', "\n";
-
+        foreach ($this->dataSets as $d) {
+            echo "$d", \in_array((string) $d, $datasets_exists) ? ' (Exists)' : '', "\n";
+        }
         if (empty($this->filesData))
             return;
 
