@@ -10,14 +10,12 @@ while (! empty($exec = \parseArgvShift($argv, ";"))) {
     $types = \argShift($exec, 'types', '');
     $paths = \array_filter($exec, 'is_int', ARRAY_FILTER_USE_KEY);
 
-    $config = __DIR__ . '/gnuplot/config.php';
+    $config = include __DIR__ . '/gnuplot/config.php';
 
     if (! empty($types))
         $types = \explode(',', $types);
 
     $types = \array_unique($types);
-
-    $config = include $config;
 
     // Drop unused factories
     if (! empty($types)) {

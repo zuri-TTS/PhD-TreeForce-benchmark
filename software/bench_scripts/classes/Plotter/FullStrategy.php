@@ -15,6 +15,7 @@ final class FullStrategy extends AbstractFullStrategy
         'partitions.hasAnswer' => 'total',
         'queries' => 'total',
 //         'rules' => 'queries.cleaned.total',
+        'filter.prefix' => 'total'
     ];
 
     private const stackedMeasuresToPlot = [

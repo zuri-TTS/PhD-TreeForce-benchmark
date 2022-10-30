@@ -122,9 +122,21 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $toPlot = $plotConfig['toPlot'] ?? null;
 
         if (null === $toPlot)
-            return $this->toPlot;
+            $toPlot = $this->toPlot;
 
-        return $toPlot;
+        $ret = [];
+
+        foreach ($toPlot as $k => $v) {
+
+            if (\is_int($k)) {
+                list ($k, $v) = \explode(':', $v, 2);
+            }
+            $ret[] = [
+                $k,
+                $v
+            ];
+        }
+        return $ret;
     }
 
     private function toPlotIndex(): array
@@ -132,7 +144,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $index = [];
         $i = 2;
 
-        foreach ($this->toPlot() as $name => $v) {
+        foreach ($this->toPlot() as $pair) {
+            list ($name, $v) = $pair;
             $k = \explode('|', $name);
 
             foreach ($k as $k)
@@ -178,10 +191,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     {
         $ret[] = 'test';
 
-        foreach ($this->toPlot() as $what => $times)
+        foreach ($this->toPlot() as $pair) {
+            list ($what, $times) = $pair;
+
             foreach (\explode(',', $times) as $time)
                 $ret[] = "$what.$time";
-
+        }
         return $ret;
     }
 
@@ -200,6 +215,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'queries.nb.intended' => $intended,
             'queries.nb.cleaned' => $cleaned
         ];
+        $data['filter.prefix']['total'] = (int) $delements['filter_prefix'];
         return self::morePartitionsData($data);
     }
 
@@ -264,7 +280,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $yMin = &$range[0];
         $yMax = &$range[1];
 
-        foreach ($this->toPlot() as $what => $times) {
+        foreach ($this->toPlot() as $pair) {
+            list ($what, $times) = $pair;
 
             foreach (explode(',', $times) as $time) {
 
@@ -349,7 +366,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             }
         }
         $summary = $elements['summary'];
-        $score += self::summaryScore[$summary] * 2;
+        $score *= 1000;
+        $score += self::summaryScore[$summary] * 100;
         $score += (int) isset($elements['filter_prefix']);
 
         return $score;
@@ -400,8 +418,13 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $summary = 'depth';
         if (! empty($summary) && ! empty($testName))
             $summary = "($summary)";
-        if (! empty($filterPrefix))
-            $filterPrefix = "$";
+        if (! empty($filterPrefix)) {
+
+            // if ($filterPrefix != 5)
+            $filterPrefix = "-$filterPrefix$";
+            // else
+            // $filterPrefix = "$";
+        }
 
         switch ($partitioning) {
             case "":
@@ -427,7 +450,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
         {
             if ($parallel)
-                $parall1 = '\\|\\| ';
+//                 $parall1 = '\\|\\| ';
+                $parall1 = 'parall ';
             else
                 $parall1 = "";
 

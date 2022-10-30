@@ -110,12 +110,18 @@ final class FullPlotter extends AbstractFullPlotter
             $groupQueries = $group['queries'] ?? $queries;
             $groupConfig = $group['config'] ?? [];
 
-            $this->queries = $groupQueries;
+            if (is_callable($groupConfig))
+                $groupConfig = $groupConfig($plotConfig);
+
             $this->plotConfig = \array_merge($plotConfig, $groupConfig);
+            $groupsConfig = $this->plotConfig = \array_merge($this->plotConfig, $this->plotConfig['plot.groups.config'] ?? []);
+
+            $this->queries = $groupQueries;
             $this->csvGroups = [];
 
             // Write files csv & dat
             {
+                // @group as possible parameter for groupCSVFiles() like in FullLineStrategy
                 $g = $this->plotConfig['@group'] ?? '';
 
                 if (! isset($processedGroups[$g])) {
@@ -124,6 +130,7 @@ final class FullPlotter extends AbstractFullPlotter
                     $processedGroups[$g] = $csvGroups;
                     $this->writeDat($csvGroups);
                     $this->writeCsv($csvGroups);
+                    $this->writePhp($csvGroups);
                 } else
                     $csvGroups = $processedGroups[$g];
             }
@@ -177,11 +184,27 @@ final class FullPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
-    private function echoDat(array $csvFiles)
+    private function writePhp(array $cutData)
+    {
+        foreach ($cutData as $file => $csvFiles) {
+            $file = "$file.php";
+            echo "Writing $file\n";
+            $data = [];
+
+            foreach ($csvFiles as $csvPath) {
+                $dirName = \basename(\dirname($csvPath));
+                $elements = \Help\Plotter::extractDirNameElements($dirName);
+                $data[] = $elements['full_pattern'];
+            }
+            \file_put_contents($file, "<?php return " . var_export($data, true) . ';');
+        }
+    }
+
+    private function fwriteDat($fp, array $csvFiles)
     {
         $header = $this->strategy->getDataHeader();
         $header = \array_map('Help\Plotter::encodeDataValue', $header);
-        echo implode(' ', $header), "\n";
+        fwrite($fp, implode(' ', $header) . "\n");
         $data = [];
 
         foreach ($csvFiles as $csvPath) {
@@ -194,27 +217,27 @@ final class FullPlotter extends AbstractFullPlotter
         $this->strategy->sortDataLines($data);
 
         foreach ($data as $dataLine)
-            echo implode(' ', $dataLine), "\n";
+            fwrite($fp, implode(' ', $dataLine) . "\n");
     }
 
     private function writeDat(array $cutData)
     {
         foreach ($cutData as $file => $csvFiles) {
             $file = "$file.dat";
+            $fp = \fopen($file, "w");
             echo "Writing $file\n";
-            $content = \get_ob(fn () => $this->echoDat($csvFiles));
-
-            \file_put_contents($file, $content);
+            $this->fwriteDat($fp, $csvFiles);
+            \fclose($fp);
         }
     }
 
-    private function echoCsv(string $name, array $csvFiles)
+    private function fwriteCsv($fp, string $name, array $csvFiles)
     {
         foreach ($csvFiles as $csvPath) {
             $dataLine = $this->csvData[$csvPath];
             $dataLine[0] = "$name/{$dataLine[0]}";
             $dataLine = \array_map('Help\Plotter::encodeDataValue', $dataLine);
-            echo implode(',', $dataLine), "\n";
+            fwrite($fp, implode(',', $dataLine) . "\n");
         }
     }
 
@@ -230,8 +253,7 @@ final class FullPlotter extends AbstractFullPlotter
         fwrite($fp, implode(',', $header) . "\n");
 
         foreach ($cutData as $file => $csvFiles) {
-            $content = \get_ob(fn () => $this->echoCsv($file, $csvFiles));
-            \fwrite($fp, $content);
+            $this->fwriteCsv($fp, $file, $csvFiles);
         }
         \fclose($fp);
     }

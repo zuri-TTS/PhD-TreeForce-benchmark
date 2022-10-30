@@ -18,6 +18,11 @@ $dataFormat = $plotConfig['plot.ylabel.format'] ?? "%.1f";
 $plotYLabel = false;
 $timeDiv = $plotConfig['measure.div'];
 $formatY = $plotConfig['plot.format.y'];
+$morePlotCmd = $plotConfig['plot.commands'] ?? null;
+$plot_every = $plotConfig['plot.every'] ?? null;
+
+if (\is_array($morePlotCmd))
+    $morePlotCmd = \implode("\n", $morePlotCmd);
 
 // Prepare data format
 {
@@ -174,6 +179,8 @@ set rmargin 0
 set bmargin 0
 set tmargin 0
 
+$morePlotCmd
+
 EOD;
 
 $tinyFont = "Noto Sans,8";
@@ -227,6 +234,9 @@ EOD;
 
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $nbAnswers = [];
+
+    if (isset($plot_every))
+        $phpData = include "$fname.php";
 
     foreach ($csvPaths as $csvPath) {
 
@@ -294,7 +304,19 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                 "pos" => $pos
             ]);
             $measure = $measure;
-            $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes title '$measure' ls $ls fs pattern $pattern";
+
+            if (isset($plot_every)) {
+                $fnam = "$fname.dat";
+                $i = 0;
+
+                foreach ($phpData as $elements) {
+                    $every = \Help\Arrays::first($plot_every($elements));
+                    $tmp[] = "'$fnam' u ($i * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics every ::$i::$i with boxes title '$measure' $every";
+                    $fname = null;
+                    $i ++;
+                }
+            } else
+                $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes title '$measure' ls $ls fs pattern $pattern";
 
             if ($plotYLabel) {
                 $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "tm(\$$pos)");
