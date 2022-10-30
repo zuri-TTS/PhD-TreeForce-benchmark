@@ -139,21 +139,25 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $ret;
     }
 
-    private function toPlotIndex(): array
+    private function toPlotIndex()
     {
-        $index = [];
+        $ret = [];
+        $toPlot = $this->toPlot();
+        // Offset in the .dat file
         $i = 2;
 
-        foreach ($this->toPlot() as $pair) {
-            list ($name, $v) = $pair;
-            $k = \explode('|', $name);
+        foreach ($toPlot as $pair) {
+            list ($group, $measure) = $pair;
 
-            foreach ($k as $k)
-                $index[$k] = $i;
+            if (! isset($ret["$group:"]))
+                $ret["$group:"] = $i;
+
+            foreach (explode('|', $group) as $group)
+                $ret["$group:$measure"] = $i;
 
             $i ++;
         }
-        return $index;
+        return $ret;
     }
 
     public function plot_getStackedMeasures(array $measures = []): array
@@ -177,9 +181,24 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             }
             $s = [];
 
-            foreach ($stack as $measure => $displayName) {
-                $i = $toPlotIndex[$measure];
-                $s[$i] = $displayName;
+            foreach ($stack as $groupAndMeasure => $displayName) {
+                list ($group, $measure) = explode(':', $groupAndMeasure, 2) + [
+                    null,
+                    null
+                ];
+
+                foreach (explode('|', $group) as $group) {
+
+                    if (isset($toPlotIndex["$group:$measure"])) {
+                        $i = $toPlotIndex["$group:$measure"];
+                        break;
+                    }
+                }
+
+                if (! isset($i))
+                    fwrite(STDERR, "Invalid measure to plot '$groupAndMeasure'");
+                else
+                    $s[$i] = $displayName;
             }
             $ret[] = $s;
         }
