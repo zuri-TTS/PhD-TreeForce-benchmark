@@ -208,9 +208,29 @@ EOD;
 foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $nbAnswers = [];
 
-    if (isset($plot_every))
+    if (isset($plot_every)) {
         $phpData = include "$fname.php";
+        $plot_every_data = [];
+        $i = 0;
 
+        foreach ($phpData as $dataLine) {
+            foreach ($stacked as $m_i => $stack) {
+
+                foreach ($stack as $name) {
+                    $data = [
+                        'measure.i' => $m_i ++,
+                        'line.i' => $i
+                    ];
+
+                    $plot_every_data[] = [
+                        'stack' => $name,
+                        'every' => $plot_every($dataLine['elements'], $data)
+                    ];
+                }
+            }
+            $i ++;
+        }
+    }
     foreach ($csvPaths as $csvPath) {
 
         if (! is_file($csvPath))
@@ -268,27 +288,33 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $tmp = [];
     $xtics = ':xtic(1)';
     $spaceFactor = $boxwidth * $nbMeasuresToPlot + $gap;
+
+    if (isset($plot_every)) {
+        $every_i = 0;
+        $fnam = "$fname.dat";
+
+        foreach ($phpData as $i => $dataLine) {
+
+            foreach ($stacked as $stack_i => $stack) {
+
+                foreach ($stack as $pos => $measure) {
+                    $pevery = $plot_every_data[$every_i ++]['every'];
+                    $every = \Help\Arrays::first($pevery);
+                    $tmp[] = "'$fnam' u ($i * $spaceFactor + $stack_i):(tm(\$$pos))$xtics every ::$i::$i with boxes $every";
+                    $fnam = null;
+                }
+            }
+        }
+    }
     $stacked_i = 0;
 
-    foreach ($stacked as $stack) {
+    foreach ($stacked as $i => $stack) {
 
         foreach ($stack as $pos => $measure) {
             $printf = \str_format($dataFormat, [
                 "pos" => $pos
             ]);
-            $measure = $measure;
-
-            if (isset($plot_every)) {
-                $fnam = "$fname.dat";
-                $i = 0;
-
-                foreach ($phpData as $dataLine) {
-                    $every = \Help\Arrays::first($plot_every($dataLine['elements']));
-                    $tmp[] = "'$fnam' u ($i * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics every ::$i::$i with boxes $every";
-                    $fnam = null;
-                    $i ++;
-                }
-            } else
+            if (! isset($plot_every))
                 $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes ls $ls fs pattern $pattern";
 
             if ($plotYLabel) {
@@ -330,7 +356,7 @@ if ($plotLegend) {
     EOD;
 
     if (isset($plot_every)) {
-        $lines = \array_fill(0, count($phpData) + 1, 0);
+        $lines = \array_fill(0, count($plot_every_data) + 1, 0);
         $lines = \implode("\n", $lines);
         echo <<<EODD
         \$legend << EOD
@@ -342,10 +368,15 @@ if ($plotLegend) {
     $tmp = [];
     $i = 0;
 
-    foreach ($phpData as $dataLine) {
-        $pevery = $plot_every($dataLine['elements']);
-        $every = \Help\Arrays::first($pevery);
-        $title = $pevery['legend'];
+    foreach ($plot_every_data as $pevery) {
+        $every = \Help\Arrays::first($pevery['every']);
+        $title = $pevery['every']['legend'];
+
+        $stackName = $pevery['stack'];
+
+        if (! empty($stackName))
+            $title .= " {/=11($stackName)}";
+
         $tmp[] = "\$legend u (0):(0) every ::$i::$i title \"$title\" with boxes $every";
         $fname = null;
         $i ++;

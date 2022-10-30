@@ -196,7 +196,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 }
 
                 if (! isset($i))
-                    fwrite(STDERR, "Invalid measure to plot '$groupAndMeasure'");
+                    fwrite(STDERR, "Invalid measure to plot '$groupAndMeasure'\n");
                 else
                     $s[$i] = $displayName;
             }
