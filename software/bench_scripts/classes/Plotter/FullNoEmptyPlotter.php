@@ -33,20 +33,17 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
             'plot.y.step' => 50,
             'plot.format.y' => "%.0f%%",
             'plot.ylabel.format' => "%.0f%%",
-            'plot.measures' => [
-                'total/noempty' => ''
-            ],
             'measure.div' => 1,
             'toPlot' => [
-                'queries' => 'noempty/deleted',
-                'queries.ref' => 'empty',
+                'queries:%empty.nodeleted',
+                'queries.ref:empty',
                 'queries:total',
                 'queries:noempty',
                 'queries:noempty/total'
             ],
             'plot.measures' => [
                 [
-                    'queries' => 'ratio'
+                    'queries:%empty.nodeleted' => 'ratio'
                 ]
             ]
         ];
@@ -186,11 +183,15 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
                 'total' => $totalQueries,
                 'noempty' => $noEmptyQueries,
                 'noempty/total' => ((float) $noEmptyQueries / $totalQueries) * 100,
-                'noempty/deleted' => $noemptyDeleted,
-                'empty.deleted' => $nbDeletedEmptyQueries
+                'empty' => $emptyQueries,
+                'empty.deleted' => $nbDeletedEmptyQueries,
+                '%empty.deleted' => $noemptyDeleted,
+                '%empty.nodeleted' => ((float) $emptyQueries / $refEmptyQueries) * 100
             ],
             'queries.ref' => [
-                'empty' => $refEmptyQueries
+                'total' => $refTotalQueries,
+                'empty' => $refEmptyQueries,
+                'noempty' => $refTotalQueries - $refEmptyQueries
             ],
             'answers' => [
                 'total' => $normal['answers']['total'],
