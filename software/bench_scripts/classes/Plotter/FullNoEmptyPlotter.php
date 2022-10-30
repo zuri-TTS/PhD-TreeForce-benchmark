@@ -24,7 +24,7 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
         }
     }
 
-    public static function defaultPlotConfig()
+    public static function defaultPlotConfig(): array
     {
         return [
             'plot.yrange.min' => 0,
@@ -39,7 +39,10 @@ final class FullNoEmptyPlotter extends AbstractFullPlotter
             'measure.div' => 1,
             'toPlot' => [
                 'queries' => 'noempty/deleted',
-                'queries.ref' => 'empty'
+                'queries.ref' => 'empty',
+                'queries:total',
+                'queries:noempty',
+                'queries:noempty/total'
             ],
             'plot.measures' => [
                 [
