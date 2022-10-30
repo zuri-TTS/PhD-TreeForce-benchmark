@@ -71,6 +71,11 @@ $yMax = $graphics['plot.yrange.max'] ?? $yMax / $timeDiv;
 
 $nbQueries = \count($PLOTTER->getQueries());
 
+if ($plotLegend) {
+    $nbPlots ++;
+    $nbQueries ++;
+}
+
 if ($nbQueries > 0 && ! ($graphics['plots.x.max'] > 0))
     $graphics['plots.x.max'] = $nbQueries;
 
@@ -169,7 +174,7 @@ tm(x)=x/($timeDiv)
 set style fill pattern border -1
 set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
-set term terminal size $w, $h noenhance
+set term terminal size $w, $h
 set multiplot
 
 set style textbox opaque noborder
@@ -184,38 +189,6 @@ $morePlotCmd
 EOD;
 
 $tinyFont = "Noto Sans,8";
-
-if ($plotLegend) {
-    $tmp = [];
-    $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
-    $wfactor = ($plotConfig['plot.legend.w'] ?? $graphics['layout.lmargin']) / $graphics['w'];
-
-    foreach ($stacked as $stack) {
-
-        foreach ($stack as $pos => $measure) {
-            $legendTitle = "title '$measure'";
-            $tmp[] = "1/0 with boxes $legendTitle ls $ls fs pattern $pattern";
-            $pattern ++;
-        }
-    }
-    list ($lin, $col) = $graphics->plotPositionFactors(0, false);
-    $plot = \implode(',', $tmp);
-
-    echo <<<EOD
-    unset title
-    unset xtics
-    unset ytics
-    unset ylabel
-    set key inside left center horizontal samplen .5
-    set xrange [0:1]
-    set yrange [0:1]
-    set origin $col,$lin
-    set border 0
-    set size $wfactor,{$graphics['plot.h.factor']}
-    plot $plot
-    
-    EOD;
-}
 
 echo <<<EOD
 set size {$graphics['plot.w.factor']},{$graphics['plot.h.factor']}
@@ -309,14 +282,14 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                 $fnam = "$fname.dat";
                 $i = 0;
 
-                foreach ($phpData as $elements) {
-                    $every = \Help\Arrays::first($plot_every($elements));
-                    $tmp[] = "'$fnam' u ($i * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics every ::$i::$i with boxes title '$measure' $every";
-                    $fname = null;
+                foreach ($phpData as $dataLine) {
+                    $every = \Help\Arrays::first($plot_every($dataLine['elements']));
+                    $tmp[] = "'$fnam' u ($i * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics every ::$i::$i with boxes $every";
+                    $fnam = null;
                     $i ++;
                 }
             } else
-                $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes title '$measure' ls $ls fs pattern $pattern";
+                $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes ls $ls fs pattern $pattern";
 
             if ($plotYLabel) {
                 $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "tm(\$$pos)");
@@ -338,4 +311,74 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     $ls ++;
 
     echo "plot\\\n", implode(",\\\n", $tmp), "\n";
+}
+
+// ============================================================================
+
+if ($plotLegend) {
+    list ($lin, $col) = $graphics->plotPositionFactors($nbPlots);
+    echo <<<EOD
+    set origin $col,$lin
+    set notitle
+    unset title
+    unset xtics
+    unset ytics
+    unset ylabel
+    set border 0
+    set key inside left center reverse Left
+    
+    EOD;
+
+    if (isset($plot_every)) {
+        $lines = \array_fill(0, count($phpData) + 1, 0);
+        $lines = \implode("\n", $lines);
+        echo <<<EODD
+        \$legend << EOD
+        $lines
+        EOD
+
+        EODD;
+    }
+    $tmp = [];
+    $i = 0;
+
+    foreach ($phpData as $dataLine) {
+        $pevery = $plot_every($dataLine['elements']);
+        $every = \Help\Arrays::first($pevery);
+        $title = $pevery['legend'];
+        $tmp[] = "\$legend u (0):(0) every ::$i::$i title \"$title\" with boxes $every";
+        $fname = null;
+        $i ++;
+    }
+    echo "plot\\\n", implode(",\\\n", $tmp), "\n";
+} else {
+    $tmp = [];
+    $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);
+    $wfactor = ($plotConfig['plot.legend.w'] ?? $graphics['layout.lmargin']) / $graphics['w'];
+
+    foreach ($stacked as $stack) {
+
+        foreach ($stack as $pos => $measure) {
+            $legendTitle = "title '$measure'";
+            $tmp[] = "1/0 with boxes $legendTitle ls $ls fs pattern $pattern";
+            $pattern ++;
+        }
+    }
+    list ($lin, $col) = $graphics->plotPositionFactors(0, false);
+    $plot = \implode(',', $tmp);
+
+    echo <<<EOD
+    unset title
+    unset xtics
+    unset ytics
+    unset ylabel
+    set key inside left center horizontal samplen .5
+    set xrange [0:1]
+    set yrange [0:1]
+    set origin $col,$lin
+    set border 0
+    set size $wfactor,{$graphics['plot.h.factor']}
+    plot $plot
+
+    EOD;
 }

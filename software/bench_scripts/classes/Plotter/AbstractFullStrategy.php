@@ -373,6 +373,30 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $score;
     }
 
+    public static function makeXTic_numbers($testData, $query, $partitionsData)
+    {
+        foreach ($testData as $dirName => $data)
+            break;
+
+        $ret = [];
+        $nbAnswers = $data['answers']['total'];
+        $nbPartitions = $data['partitions']['total'] ?? 1;
+        $nbPartitionsHavingQueries = $data['partitions.used']['total'] ?? 1;
+        $allPartitionsSameQueries = $data['partitions.infos']['all.sameQueries'];
+        $nbReformulations = $data['partitions.infos']['all.queries.nb'] ?? $data['queries']['total'];
+
+        $ret[] = "$nbReformulations";
+        // $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
+        $font = "/=10";
+
+        if ($allPartitionsSameQueries && $nbPartitions > 1)
+            $ret[] = "\{$font\[$nbPartitions]}";
+        elseif (! empty($nbReformulations) && ! $allPartitionsSameQueries)
+            $ret[] = "\{$font\[$nbPartitionsHavingQueries/$nbPartitions]}";
+
+        return \implode('', $ret);
+    }
+
     public static function makeXTic($testData, $query, $partitionsData)
     {
         return self::makeXTic_clean('', false, true)($testData, $query, $partitionsData);

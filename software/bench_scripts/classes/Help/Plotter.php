@@ -18,6 +18,50 @@ final class Plotter
         return $v;
     }
 
+    public static function elementsFormat(array $elements, array $selection = [
+        'parallel',
+        'partitioning',
+        'summary'
+    ])
+    {
+        $ret = [];
+
+        foreach ($selection as $select) {
+
+            switch ($select) {
+
+                case 'parallel':
+                    if ($elements['parallel'])
+                        $ret[] = 'parallel';
+                    break;
+
+                case 'partitioning':
+                    if (empty($elements['partitioning']))
+                        break;
+                    if ($elements['partitioning'][0] === 'L')
+                        $ret[] = 'logical';
+                    else
+                        $ret[] = 'physical';
+                    break;
+
+                case 'summary':
+                    $s = $elements['summary'] ?? 'depth';
+
+                    if ($elements['filter_prefix'])
+                        $s .= "-{$elements['filter_prefix']}";
+
+                    $ret[] = $s;
+                    break;
+            }
+        }
+        return implode(' ', $ret);
+    }
+
+    public static function elementsSimpleFormat(array $elements): string
+    {
+        return self::elementsFormat($elements);
+    }
+
     public static function readJavaProperties($stream)
     {
         if (is_string($stream)) {

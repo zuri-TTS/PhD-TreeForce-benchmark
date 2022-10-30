@@ -194,7 +194,13 @@ final class FullPlotter extends AbstractFullPlotter
             foreach ($csvFiles as $csvPath) {
                 $dirName = \basename(\dirname($csvPath));
                 $elements = \Help\Plotter::extractDirNameElements($dirName);
-                $data[] = $elements['full_pattern'];
+                $data[] = [
+                    'dataLine' => \array_combine( //
+                    $this->strategy->getDataHeader(), //
+                    $this->strategy->getDataLine($csvPath) //
+                    ),
+                    'elements' => $elements['full_pattern']
+                ];
             }
             \file_put_contents($file, "<?php return " . var_export($data, true) . ';');
         }
