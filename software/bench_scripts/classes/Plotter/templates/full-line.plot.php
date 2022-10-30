@@ -12,7 +12,16 @@ $plotConfig = $PLOTTER->plot_getConfig();
 $timeDiv = $plotConfig['measure.div'];
 $formatY = $plotConfig['plot.format.y'];
 
-$xRangeMax = $plotConfig['plot.xrange.max'] ?? null;
+$yStep = $plotConfig['plot.y.step'] ?? null;
+$xStep = $plotConfig['plot.x.step'] ?? null;
+
+if($xStep !== null)
+    echo "set xtics $xStep\n";
+if($yStep !== null)
+    echo "set ytics $yStep\n";
+
+$xRangeMin = $plotConfig['plot.xrange.min'] ?? '*';
+$xRangeMax = $plotConfig['plot.xrange.max'] ?? '*';
 $yRangeMax = $plotConfig['plot.yrange.max'] ?? '*';
 $yRangeMin = $plotConfig['plot.yrange.min'] ?? '*';
 
@@ -27,7 +36,7 @@ $userCommands = (array) ($plotConfig['gnuplot.commands'] ?? null);
 $userCommands = \implode("\n", $userCommands);
 
 echo <<<EOD
-set xrange [0:$xRangeMax]
+set xrange [$xRangeMin:$xRangeMax]
 set xlabel "{$plotConfig['xlabel']}"
 set ylabel "{$plotConfig['ylabel']}$yloglabel"
 set format y "$formatY"
