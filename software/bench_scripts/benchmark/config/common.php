@@ -6,7 +6,7 @@ $outDir = $time;
 
 return [
     'datetime.format' => 'Y-m-d H:i:s v',
-    'jar.path' => "$basePath/software/java/treeforce-demo-0.1-SNAPSHOT.jar",
+    'jar.path' => "$basePath/software/java/hi-rule-0.1-SNAPSHOT.jar",
     'java.opt' => "-Xmx10G",
 
     'java.properties' => [
