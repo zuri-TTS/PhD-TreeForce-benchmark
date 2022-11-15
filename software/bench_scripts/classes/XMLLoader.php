@@ -397,7 +397,6 @@ final class XMLLoader
         $data = self::array_path($this->path, [
             $name => $destVal
         ]);
-
         $this->doSimplifyText($data);
         $this->stats['documents.nb'] ++;
         $dataSimple = null;
@@ -470,7 +469,8 @@ final class XMLLoader
 
     private function doSimplifyText(&$array, $name = ""): void
     {
-        if (\array_is_list($array))
+        if ($array === []);
+        elseif (\array_is_list($array))
             $this->doSimplifyListText($name, $array);
         elseif (\is_array($array))
             $this->doSimplifyObjectText($name, $array);
