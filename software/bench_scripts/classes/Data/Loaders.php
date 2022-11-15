@@ -9,7 +9,7 @@ final class Loaders
         throw new \Error();
     }
 
-    function getPartitioningWithLogical(string $name, array $partitioning, string $defaultJson = 'nopartition'): IPartitioning
+    public static function getPartitioningWithLogical(string $name, array $partitioning, string $defaultJson = 'nopartition'): IPartitioning
     {
         if (empty($name))
             return NoPartitioning::create('', $defaultJson);
