@@ -85,13 +85,11 @@ return [
         } else {
             $native = $cmdArg['native'] ?? '';
         }
-        $pid = $dataSet->getPartitioning()->getID();
-        $coll = empty($pid) ? '' : ".$pid";
-        $pid = $partition->getID();
-        $coll .= empty($pid) ? '' : ".$pid";
+
         $elements = [
             'group' => $group,
-            'full_partition' => $coll,
+            'partitioning' => $dataSet->getPartitioning()->getID(),
+            'partition' => $partition->getID(),
             'rules' => $theRules,
             'qualifiers' => $qualifiers,
             'summary' => $cmdArg['summary'],
