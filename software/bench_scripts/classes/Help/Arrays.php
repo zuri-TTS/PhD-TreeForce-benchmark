@@ -29,7 +29,8 @@ final class Arrays
         while (! empty($p)) {
             $a = \array_pop($p);
 
-            if (\array_is_list($a))
+            if (empty($a));
+            elseif (\array_is_list($a))
                 $nb = $nb - 1 + \count($a);
             else
                 $nb += \count($a);
