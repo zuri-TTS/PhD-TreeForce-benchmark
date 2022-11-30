@@ -9,9 +9,9 @@ scriptName=$(basename -s '.sh' "$0")
 ## 10M|100M|1G|10G|50G: XMARK
 ## 10M.Pcolls:  XMARK with physical paritioning
 ## 10M.LPcolls: XMARK with logical paritioning
-groups="DBLP DBLP.colls"
+groups="10M 10M.colls"
 
-# Precise the ruleset/query to test. Let it empty for testing all rulesets and queries.
+# Precise the 'ruleset/query' to test. Let it empty for testing all rulesets and queries.
 group2=
 
 # Parallelise the evaluation of partitions (boolean arg: -parallel=false, +parallel=true)
@@ -21,10 +21,10 @@ parallel=-parallel
 summaries="depth label path"
 
 # Size of the n-prefix summary.
-# Let the value empty for not using a prefix summary.
-strPrefSize= #5 # In our tests we used 5-prefix with label and path summaries
+# Let the value 0 for not using a prefix summary.
+strPrefSize=0 # In our tests we used 5-prefix with label and path summaries
 
-# Number of repetition of a same test
+# Number of repetitions of a same test
 nbMeasures=5
 
 # Number of measures to forget after all repetitions of a same test.
@@ -46,11 +46,11 @@ batchesNbThreads=1
 
 
 
-# More parameters to use:
+# More parameters to use: (boolean: +=true -=false)
 ## +skip-existing      Do not execute an already existing test (from a previous execution of the script).
 ## +clean-db           Clean the (mongodb) dataset collection before and after the tests using it.
-## +clean-db-json      Clean the json files used to load the (mongodb) collection after the tests.
-moreParams="+skip-existing +clean-db"
+## +clean-db-json      Clean the json files used to load the (mongodb) collection after the tests. Usefull for big datasets.
+moreParams="+skip-existing +clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
@@ -59,7 +59,6 @@ export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$str
 for group in $groups
 do
 	out=""
-	out="outputs/summary_stats"
 	com=$(sh/oneTest.sh "$group/$group2[simplified]" "$out" $*)
 
 	eval "php $com"
