@@ -30,7 +30,7 @@ final class PrefixPartitioning extends AbstractPartitioning
     {
         $ret = [];
 
-        $cname = \MongoImport::getCollectionName($ds);
+        $cname = \DBImports::getCollectionName($ds);
 
         foreach ($this->partitionsPrefix as $name => $prefix) {
 
@@ -95,7 +95,7 @@ final class PrefixPartitioning extends AbstractPartitioning
         } else
             $prefixes = \array_combine($prefixes, $prefixes);
 
-        $cname = \MongoImport::getCollectionName($ds);
+        $cname = \DBImports::getCollectionName($ds);
 
         foreach ($prefixes as $name => $prefix) {
 

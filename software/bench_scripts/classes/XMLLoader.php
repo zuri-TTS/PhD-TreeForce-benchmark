@@ -23,6 +23,8 @@ final class XMLLoader
 
     private bool $summarize;
 
+    private \DBImport\IDBImport $dbImport;
+
     private array $stats = [
         'documents.nb' => 0,
         'edges.nb' => 0
@@ -30,7 +32,7 @@ final class XMLLoader
 
     private \Data\ILoader $groupLoader;
 
-    public function __construct(array $dataSets)
+    public function __construct(\DBImport\IDBImport $dbImport, array $dataSets)
     {
         $groups = [];
 
@@ -47,6 +49,7 @@ final class XMLLoader
 
         $this->summarize = false;
         $this->groupLoader = DataSets::getGroupLoader($this->group);
+        $this->dbImport = $dbImport;
     }
 
     public static function of(\DataSet ...$dataSets)
@@ -121,6 +124,7 @@ final class XMLLoader
             $nb_a = [];
             $i_a = [];
             \wdPush($dataSet->path());
+            $pp = [];
 
             foreach ($dataSet->getPartitions() as $partition) {
                 $jsonFile = $partition->getJsonFile();
@@ -128,6 +132,7 @@ final class XMLLoader
                 $fp[] = \fopen($jsonFile, 'w');
                 $nb_a[] = 0;
                 $i_a[] = 0;
+                $pp[] = $partition->getID();
             }
             \wdPop();
 
@@ -139,7 +144,8 @@ final class XMLLoader
                 'pindex' => $partition_i,
                 'fp' => $fp,
                 'nbDocuments' => $nb_a,
-                'offsets' => $i_a
+                'offsets' => $i_a,
+                'partitions' => $pp
             ];
         }, $this->dataSets);
 
@@ -209,7 +215,7 @@ final class XMLLoader
         $dataSets = $this->dataSets;
 
         foreach ($dataSets as $ds)
-            MongoImport::importDataSet($ds);
+            $this->dbImport->importDataSet($ds);
     }
 
     // ========================================================================

@@ -1,29 +1,23 @@
 <?php
+namespace DBImport;
 
-final class MongoImport
+final class MongoDBImport implements IDBImport
 {
 
-    private DataSet $dataSet;
+    private ?array $collections_cache = null;
 
-    private static ?array $collections_cache = null;
+    private ?array $collections_stats_cache = null;
 
-    private static ?array $collections_stats_cache = null;
-
-    public function __construct(DataSet $dataSet)
-    {
-        $this->dataSet = $dataSet;
-    }
-
-    public static function import(): void
+    public function import(): void
     {
         $this->importDataSet($this->dataSet);
     }
 
     // ========================================================================
-    public static function countDocuments(DataSet $dataSet, bool $forceEval = false): int
+    public function countDocuments(\DataSet $dataSet, bool $forceEval = false): int
     {
         if (! $forceEval) {
-            $v = self::$collections_stats_cache[$dataSet->group()] ?? null;
+            $v = $this->collections_stats_cache[$dataSet->group()] ?? null;
 
             if (isset($v))
                 return $v;
@@ -46,7 +40,7 @@ final class MongoImport
         if (0 === ($exitCode = \simpleExec($cmd, $output, $err))) {
             $ret = (int) ($output);
             var_dump($ret);
-            self::$collections_stats_cache[$dataSet->group()] = $ret;
+            $this->collections_stats_cache[$dataSet->group()] = $ret;
             return $ret;
         } else {
             throw new \Exception("Error on command: $cmd\nexit code: $exitCode\n");
@@ -54,32 +48,32 @@ final class MongoImport
     }
 
     // ========================================================================
-    public static function dropDataSets(array $dataSets): void
+    public function dropDataSets(array $dataSets): void
     {
         foreach ($dataSets as $ds)
             self::dropDataSet($ds);
     }
 
-    public static function dropDataSet(DataSet $dataSet): void
+    public function dropDataSet(\DataSet $dataSet): void
     {
         self::_dropCollections(...$dataSet->getCollections());
     }
 
-    public static function dropCollection(string $collection): void
+    public function dropCollection(string $collection): void
     {
         self::_dropCollection((array) $collection);
     }
 
-    public static function dropCollections(array $collections): void
+    public function dropCollections(array $collections): void
     {
         self::_dropCollection($collections);
     }
 
-    private static function _dropCollections(string ...$collections): void
+    private function _dropCollections(string ...$collections): void
     {
-        if (null !== self::$collections_cache)
+        if (null !== $this->collections_cache)
             $delCache = function (array $collections) {
-                \array_delete(self::$collections_cache, ...$collections);
+                \array_delete($this->collections_cache, ...$collections);
             };
         else
             $delCache = function () {};
@@ -136,20 +130,20 @@ final class MongoImport
     }
 
     // ========================================================================
-    public static function collectionExists(string $collection): bool
+    public function collectionExists(string $collection): bool
     {
         return \in_array($collection, self::getCollections());
     }
 
-    public static function collectionsExists(array $collection): bool
+    public function collectionsExists(array $collection): bool
     {
         return empty(\array_diff($collection, self::getCollections()));
     }
 
-    public static function getCollections(bool $forceCheck = false): array
+    public function getCollections(bool $forceCheck = false): array
     {
-        if (! $forceCheck && self::$collections_cache !== null)
-            return self::$collections_cache;
+        if (! $forceCheck && $this->collections_cache !== null)
+            return $this->collections_cache;
 
         $script = <<<EOD
         collections = db.getCollectionNames();
@@ -166,14 +160,14 @@ final class MongoImport
         if (empty($output))
             return [];
 
-        return self::$collections_cache = explode("\n", $output);
+        return $this->collections_cache = explode("\n", $output);
     }
 
-    public static function createIndex($collection, string $indexName, int $order = 1): void
+    public function createIndex($collection, string $indexName, int $order = 1): void
     {
         if (is_string($collection))
             $collections = (array) $collection;
-        elseif ($collection instanceof DataSet)
+        elseif ($collection instanceof \DataSet)
             $collections = $collection->getCollections();
         elseif (is_array($collection))
             $collections = $collection;
@@ -193,25 +187,25 @@ final class MongoImport
     }
 
     // ========================================================================
-    public static function importDataSet(DataSet $dataSet): void
+    public function importDataSet(\DataSet $dataSet): void
     {
-        DataSets::checkNotExists([
+        \DataSets::checkNotExists([
             $dataSet
         ]);
         self::_importCollections($dataSet, $dataSet->getCollections());
     }
 
-    public static function importCollection(DataSet $dataSet, string $collection): void
+    public function importCollection(\DataSet $dataSet, string $collection): void
     {
         self::importCollections($dataSet, $collection);
     }
 
-    public static function importCollections(DataSet $dataSet, array $collections): void
+    public function importCollections(\DataSet $dataSet, array $collections): void
     {
         self::_importCollections($dataSet, $collections);
     }
 
-    private static function _importCollections(DataSet $dataSet, array $collections): void
+    private function _importCollections(\DataSet $dataSet, array $collections): void
     {
         $dsColls = $dataSet->getCollections();
         $collections = \array_unique($collections);
@@ -259,7 +253,7 @@ final class MongoImport
         echo "\n";
     }
 
-    private static function importPartition(DataSet $dataSet, \Data\PhysicalPartition $partition): int
+    private function importPartition(\DataSet $dataSet, \Data\PhysicalPartition $partition): int
     {
         \wdPush($dataSet->path());
 
@@ -290,24 +284,18 @@ final class MongoImport
 
         $cname = \escapeshellarg($collectionName);
         $jsonFile = \escapeshellarg($jsonFile);
-        \simpleExec("mongoimport -d treeforce -c $cname --file $jsonFile", $output, $err);
+        $moreParams = "--numInsertionWorkers=4";
+        \simpleExec("mongoimport -d treeforce -c $cname --file $jsonFile $moreParams", $output, $err);
 
         \preg_match('/(\d+) document\(s\) failed/', $lineBuff, $matches);
         $nbFails = (int) ($matches[1] ?? - 1);
 
-        if (null !== self::$collections_cache)
-            self::$collections_cache[] = $collectionName;
+        if (null !== $this->collections_cache)
+            $this->collections_cache[] = $collectionName;
 
         \wdPop();
         return $nbFails;
     }
 
     // ========================================================================
-    public static function getCollectionName(DataSet $dataSet)
-    {
-        if (! $dataSet->hasQueryingVocabulary())
-            return $dataSet->group() . DataSets::getQualifiersString($dataSet->qualifiers());
-
-        return \str_replace('/', '_', $dataSet->id());
-    }
 }

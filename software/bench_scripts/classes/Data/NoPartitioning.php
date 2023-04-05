@@ -28,7 +28,7 @@ final class NoPartitioning implements IPartitioning
             function __construct(\DataSet $ds, string $json, ?ILogicalPartitioningFactory $logical)
             {
                 parent::__construct('', $json);
-                $this->cname = \MongoImport::getCollectionName($ds);
+                $this->cname = \DBImports::getCollectionName($ds);
                 $this->logicalPFactory = $logical;
             }
 

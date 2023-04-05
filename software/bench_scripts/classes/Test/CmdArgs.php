@@ -11,6 +11,7 @@ final class CmdArgs implements \ArrayAccess
     private array $parsed;
 
     private const cmdArgsDef = [
+        'documentstore' => 'MongoDB',
         'generate-dataset' => true,
         'cmd-display-output' => false,
         'write-all-partitions' => true,
@@ -48,6 +49,11 @@ final class CmdArgs implements \ArrayAccess
         $ret = new self(self::cmdArgsDef, self::getDefaultJavaProperties());
         $ret->parse([]);
         return $ret;
+    }
+
+    public static function cmd(array $cmdArgsDef): CmdArgs
+    {
+        return new self($cmdArgsDef, []);
     }
 
     private const expandables = [
@@ -120,8 +126,11 @@ final class CmdArgs implements \ArrayAccess
         $javaProperties = self::shiftJavaProperties($cmdRemains);
 
         if (! empty($cmdRemains)) {
-            $usage = "\nValid cli arguments are:\n" . \var_export($args, true) . //
-            "\nor a Java property of the form P#prop=#val:\n" . \var_export($this->javaDefault, true) . "\n";
+            $usage = "\nValid cli arguments are:\n" . \var_export($args, true);
+
+            if (! empty($this->javaDefault))
+                $usage .= "\nor a Java property of the form P#prop=#val:\n" . \var_export($this->javaDefault, true) . "\n";
+
             fwrite(STDERR, $usage);
             throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true));
         }

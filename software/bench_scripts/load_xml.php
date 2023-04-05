@@ -6,6 +6,7 @@ include_once __DIR__ . '/common/functions.php';
 \array_shift($argv);
 
 $cmdArgsDef = [
+    'documentstore' => "MongoDB",
     'cmd-display-output' => false,
     'drop-empty' => false,
     'drop' => false,
@@ -25,22 +26,15 @@ $cmdArgsDef = [
 if (empty($argv))
     $argv[] = ";";
 
+$cmdParser = \Test\CmdArgs::cmd($cmdArgsDef);
+
 while (! empty($argv)) {
-    $cmdParsed = $cmdArgsDef;
-    $cmdRemains = \updateArray_getRemains(\parseArgvShift($argv, ';'), $cmdParsed);
+    $current_argv = \parseArgvShift($argv, ';');
+    $cmdParser->parse($current_argv);
 
-    $dataSets = \array_filter_shift($cmdRemains, 'is_int', ARRAY_FILTER_USE_KEY);
-
-    $javaProperties = \array_filter_shift($cmdRemains, fn ($k) => ($k[0] ?? '') === 'P', ARRAY_FILTER_USE_KEY);
-
-    if (! empty($cmdRemains)) {
-        $usage = "\nValid cli arguments are:\n" . \var_export($cmdParsed, true) . //
-        "\nor a Java property of the form P#prop=#val\n";
-        throw new \Exception("Unknown cli argument(s):\n" . \var_export($cmdRemains, true) . $usage);
-    }
-    $cmdParsed += $javaProperties;
-    $dataSets = DataSets::all($dataSets);
+    $dataSets = $cmdParser['dataSets'];
     DataSets::checkNotExists($dataSets, false);
+    $cmdParsed = $cmdParser['args'];
 
     // Group by 'group'
     $toProcess = [];
@@ -49,14 +43,15 @@ while (! empty($argv)) {
         $qualifiers = $dataSet->qualifiersString();
         $toProcess["$group"][] = $dataSet;
     }
+    $dbImport = \DBImports::get($cmdParser);
 
     foreach ($toProcess as $dataSets) {
         $qualifiers = $dataSets[0]->qualifiers();
-        $converter = (new \XMLLoader($dataSets))-> //
+        $converter = (new \XMLLoader($dbImport, $dataSets))-> //
         summarize($cmdParsed['summarize']);
 
         if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
-            MongoImport::dropCollections($dataSets);
+            $dbImport->dropCollections($dataSets);
 
         if ($cmdParsed['pre-clean'] || $cmdParsed['pre-clean-all'])
             $converter->clean();

@@ -12,6 +12,8 @@ abstract class AbstractTest
 
     protected CmdArgs $cmdParser;
 
+    protected \DBImport\IDBImport $dbImport;
+
     private \XMLLoader $xmlLoader;
 
     public abstract function execute();
@@ -26,6 +28,7 @@ abstract class AbstractTest
 
         $this->cmdParser = $cmdParser;
         $this->xmlLoader = \XMLLoader::of($ds);
+        $this->dbImport = \DBImports::get($cmdParser, $ds);
     }
 
     public final function getCollectionsName(): array
@@ -35,15 +38,15 @@ abstract class AbstractTest
 
     public final function collectionsExists(): bool
     {
-        return \MongoImport::collectionsExists($this->getCollectionsName());
+        return $this->dbImport->collectionsExists($this->getCollectionsName());
     }
 
     public final function dropCollections(string $clean = "*.json"): void
     {
         if ($this->cmdParser['args']['write-all-partitions'])
-            \MongoImport::dropDataset($this->ds);
+            $this->dbImport->dropDataset($this->ds);
         else
-            \MongoImport::dropCollections($this->getCollectionsName());
+            $this->dbImport->dropCollections($this->getCollectionsName());
 
         if (! empty($clean))
             $this->xmlLoader->clean($clean);
@@ -52,7 +55,7 @@ abstract class AbstractTest
     public final function loadIndex(string $indexName): void
     {
         foreach ($this->getCollectionsName() as $coll)
-            \MongoImport::createIndex($coll, $indexName);
+            $this->dbImport->createIndex($coll, $indexName);
     }
 
     public final function loadCollections(): void
@@ -60,9 +63,9 @@ abstract class AbstractTest
         $this->xmlLoader->convert();
 
         if ($this->cmdParser['args']['write-all-partitions'])
-            \MongoImport::importDataset($this->ds);
+            $this->dbImport->importDataset($this->ds);
         else
-            \MongoImport::importCollections($this->ds, $this->getCollectionsName());
+            $this->dbImport->importCollections($this->ds, $this->getCollectionsName());
     }
 
     public final function reportErrors(?array $errors = null): void
