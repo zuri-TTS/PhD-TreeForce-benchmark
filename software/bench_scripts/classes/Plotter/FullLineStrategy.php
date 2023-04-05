@@ -66,7 +66,7 @@ final class FullLineStrategy extends AbstractFullStrategy
         "plot.points" => false,
         "plot.lines" => false,
         "plot.fit.linear" => true,
-        "plot.points.style" => "lt %lt lc %lc ps 1.75 lw 2",
+        "plot.points.style" => "lt %lt lc %lc ps 1.75 lw 1",
         "plot.lines.style" => "lc %lc",
         "plot.fit.linear.style" => "dt 5 lw 1 lc %lc"
     ];
@@ -140,7 +140,9 @@ final class FullLineStrategy extends AbstractFullStrategy
             'group',
             'qualifiers',
             'partitioning',
-            'parallel'
+            'parallel',
+            'summary',
+            'filter_prefix'
         ];
 
         foreach ($csvFiles as $csvFile) {

@@ -127,6 +127,7 @@ final class FullPlotter extends AbstractFullPlotter
                 if (! isset($processedGroups[$g])) {
                     $this->plotConfig['@group'] = $g;
                     $csvGroups = $this->strategy->groupCSVFiles($csvPaths);
+
                     $processedGroups[$g] = $csvGroups;
                     $this->writeDat($csvGroups);
                     $this->writeCsv($csvGroups);

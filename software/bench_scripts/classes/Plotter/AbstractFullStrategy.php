@@ -200,7 +200,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
                 else
                     $s[$i] = $displayName;
             }
-            $ret[] = $s;
+            if (! empty($s))
+                $ret[] = $s;
         }
         return $ret;
     }
@@ -235,6 +236,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             'queries.nb.cleaned' => $cleaned
         ];
         $data['filter.prefix']['total'] = (int) $delements['filter_prefix'];
+        $data['dir.elements'] = $delements;
         return self::morePartitionsData($data);
     }
 
@@ -246,21 +248,26 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
         if (isset($data['partitions'])) {
             $partitionsData = $data['partitions'];
-            $patitionsNbQueries = \explode(',', $partitionsData['each.queries.total']);
-            $uniqueNbQueries = \array_unique($patitionsNbQueries);
+            $partitionsNbQueries = \explode(',', $partitionsData['each.queries.total']);
+            $partitionsNbQueries = \array_filter($partitionsNbQueries); // Delete 0 queries values
+            $uniqueNbQueries = \array_unique($partitionsNbQueries);
             $allPartitionsSameQueries = \count($uniqueNbQueries) == 1;
             $nbPartitionsHavingQueries = $data['partitions.used']['total'];
 
             $data['partitions.infos']['all.sameQueries'] = $allPartitionsSameQueries;
 
             if ($allPartitionsSameQueries)
-                $nbReformulations /= $nbPartitions;
+                $allQueries = $nbReformulations / $nbPartitionsHavingQueries;
 
-            $data['partitions.infos']['all.queries.nb'] = $nbReformulations;
+            $data['partitions.infos'] += [
+                'all.queries.nb' => $allQueries ?? $nbReformulations,
+                'used.queries.avg' => $nbReformulations / $nbPartitionsHavingQueries
+            ];
         } else {
             $data['partitions.infos'] = [
                 'all.sameQueries' => 1,
-                'all.queries.nb' => $nbReformulations
+                'all.queries.nb' => $nbReformulations,
+                'used.queries.avg' => $nbReformulations
             ];
         }
         return $data;
@@ -392,7 +399,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $score;
     }
 
-    public static function makeXTic_numbers($testData, $query, $partitionsData)
+    public static function getFun_makeXTic_numbers(?array $select = null)
+    {
+        return fn ($a, $b, $c) => self::makeXTic_numbers($a, $b, $c, $select);
+    }
+
+    public static function makeXTic_numbers($testData, $query, $partitionsData, ?array $select = null)
     {
         foreach ($testData as $dirName => $data)
             break;
@@ -404,9 +416,23 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $allPartitionsSameQueries = $data['partitions.infos']['all.sameQueries'];
         $nbReformulations = $data['partitions.infos']['all.queries.nb'] ?? $data['queries']['total'];
 
-        $ret[] = "$nbReformulations";
-        // $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
         $font = "/=10";
+
+        if ($data['partitions.infos']['all.sameQueries']) {
+            $ret[] = "$nbReformulations";
+        } else {
+            $ret[] = "{/=9(∑)}$nbReformulations";
+            $avg = \round($data['partitions.infos']['used.queries.avg']);
+            $ret[] = "{/=9(µ)}$avg";
+        }
+
+        if ($select['rules'] ?? false) {
+            $rules = $data['rules']['queries.nb.intended'];
+
+            if ($rules != $nbReformulations)
+                $ret[] = "\{$font\ /($rules)}";
+        }
+        // $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;
 
         if ($allPartitionsSameQueries && $nbPartitions > 1)
             $ret[] = "\{$font\[$nbPartitions]}";
@@ -464,7 +490,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         if (! empty($filterPrefix)) {
 
             // if ($filterPrefix != 5)
-            $filterPrefix = "-$filterPrefix$";
+            $filterPrefix = "-$filterPrefix";
             // else
             // $filterPrefix = "$";
         }
@@ -493,7 +519,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
         {
             if ($parallel)
-//                 $parall1 = '\\|\\| ';
+                // $parall1 = '\\|\\| ';
                 $parall1 = 'parall ';
             else
                 $parall1 = "";

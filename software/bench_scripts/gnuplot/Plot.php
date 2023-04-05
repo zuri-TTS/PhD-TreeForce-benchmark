@@ -28,6 +28,7 @@ final class Plot
             $ite = new RecursiveIteratorIterator($dir);
             $ite->setMaxDepth(1);
             $reg = new RegexIterator($ite, "#/[^@][^/]*\.csv$#");
+            $csvPaths = [];
 
             foreach ($reg as $file) {
                 $csv = $file->getRealPath();

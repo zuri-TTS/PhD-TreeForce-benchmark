@@ -125,7 +125,7 @@ if ($logscale) {
     $rangeScale = $maxScale - $minScale;
 
     $unit = $plotYLabelYOffset / $graphics['plot.h'] * log($yMax, $logscaleBase);
-    $plotYLabelYOffsetPattern = "10 ** ($unit + log10(%s))";
+    $plotYLabelYOffsetPattern = "10 ** ($unit + log10(%1s))";
     $plotYLabelYOffsetMaxPattern = "10 ** ($maxScale - $unit)";
     $plotYLabelYOffsetMinPattern = "10 ** ($minScale + $unit)";
 
@@ -151,11 +151,11 @@ $boxwidth = 1;
 
 $plotYTics = "set format y \"$formatY\"\n";
 
-if ($plotConfig['multiplot.title'] === true) {
-    $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
-    $multiplotTitle = "title \"$theTitle\"\n";
-} else
-    $multiplotTitle = null;
+// if ($plotConfig['multiplot.title'] === true) {
+// $theTitle = \dirname(\dirname(\array_keys($PLOT->getData())[0]));
+// $multiplotTitle = "title \"$theTitle\"\n";
+// } else
+// $multiplotTitle = null;
 
 $xmax = $boxwidth * $nbBars - $boxwidth / 2;
 $xmin = - $boxwidth / 2;
@@ -170,7 +170,8 @@ $gap = $graphics['bar.gap.factor'];
 echo <<<EOD
 if(!exists("terminal")) terminal="png"
 
-tm(x)=x/($timeDiv)
+
+tm(x)=(x == 0 ? 0.5 : x)/($timeDiv)
 set style fill pattern border -1
 set boxwidth $boxwidth
 set style line 1 lc rgb 'black' lt 1 lw .5
@@ -237,11 +238,15 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
             continue;
 
         $csvData = $PLOTTER->getCsvData($csvPath);
-        $nbAnswers[] = $csvData['answers']['total'];
+        $nbAnswers[] = $csvData['answers']['total'] ?? 0;
     }
 
     if (null !== ($f = $plotConfig['plot.title']))
-        $title = $f($fname, $nbAnswers);
+        $title = $f([
+            'fileName' => $fname,
+            'nbAnswers' => $nbAnswers,
+            'phpData' => $phpData
+        ]);
     else
         $title = "$fname\\n({$nbAnswers[0]} answers)";
 
@@ -351,7 +356,7 @@ if ($plotLegend) {
     unset ytics
     unset ylabel
     set border 0
-    set key inside left center reverse Left
+    set key vertical inside left center reverse Left spacing 1.25 width -5
     
     EOD;
 
@@ -367,6 +372,7 @@ if ($plotLegend) {
     }
     $tmp = [];
     $i = 0;
+    $allTitles = [];
 
     foreach ($plot_every_data as $pevery) {
         $every = \Help\Arrays::first($pevery['every']);
@@ -377,7 +383,10 @@ if ($plotLegend) {
         if (! empty($stackName))
             $title .= " {/=11($stackName)}";
 
-        $tmp[] = "\$legend u (0):(0) every ::$i::$i title \"$title\" with boxes $every";
+        if (! \in_array($title, $allTitles)) {
+            $tmp[] = "\$legend u (0):(0) every ::$i::$i title \"$title\" with boxes $every";
+            $allTitles[] = $title;
+        }
         $fname = null;
         $i ++;
     }

@@ -5,6 +5,8 @@ final class FullStrategy extends AbstractFullStrategy
 {
 
     private const toPlot = [
+        'dir.elements' => 'summary',
+        'answers' => 'total',
         'summary.create' => 'r',
         'rewriting.rules.apply' => 'r',
         'rewriting.total' => 'r',

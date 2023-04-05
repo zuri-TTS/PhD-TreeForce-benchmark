@@ -1,7 +1,13 @@
-set terminal pngcairo size 1000,500
+terminal="pngcairo"
+set terminal terminal size 1000,500
 set key outside below horizontal maxcols 2
 <?php
 $plotConfig = $PLOTTER->plot_getConfig();
+
+$fmakeLegend = $plotConfig['plot.legend'] ?? null;
+
+if (! \is_callable($fmakeLegend))
+    $fmakeLegend = '\Help\Plotter::elementsSimpleFormat';
 
 // Define what to plot
 {
@@ -12,12 +18,12 @@ $plotConfig = $PLOTTER->plot_getConfig();
 $timeDiv = $plotConfig['measure.div'];
 $formatY = $plotConfig['plot.format.y'];
 
-$yStep = $plotConfig['plot.y.step'] ?? null;
-$xStep = $plotConfig['plot.x.step'] ?? null;
+$yStep = $plotConfig['plot.yrange.step'] ?? null;
+$xStep = $plotConfig['plot.xrange.step'] ?? null;
 
-if($xStep !== null)
+if ($xStep !== null)
     echo "set xtics $xStep\n";
-if($yStep !== null)
+if ($yStep !== null)
     echo "set ytics $yStep\n";
 
 $xRangeMin = $plotConfig['plot.xrange.min'] ?? '*';
@@ -70,7 +76,8 @@ $fit = "";
 $selection = [
     'group',
     'parallel',
-    'summary'
+    'summary',
+    'filter_prefix'
 ];
 
 $csvGroups = $PLOTTER->getCsvGroups();
@@ -95,11 +102,13 @@ foreach ($csvGroups as $group => $csvPaths) {
     $delements = \Help\Plotter::extractDirNameElements($dirName);
     $sdelements = \Help\Arrays::subSelect($delements, $selection);
 
-    $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName(\Help\Plotter::encodeDirNameElements($sdelements, ''));
+    // $titleRef = \Plotter\AbstractFullStrategy::makeXTic_fromDirName(\Help\Plotter::encodeDirNameElements($sdelements, ''));
+    $titleRef = $fmakeLegend($delements);
+    // $titleRef = \str_replace('||', 'parallel', $titleRef);
 
-    if ($hasMultiplePartitioning || ($plotConfig['display.partitioning'] ?? false)) {
-        $titleRef = "{$delements['partitioning']} $titleRef";
-    }
+    // if ($hasMultiplePartitioning || ($plotConfig['display.partitioning'] ?? false)) {
+    // $titleRef = "{$delements['partitioning']} $titleRef";
+    // }
     if ($hasMultipleDataset || ($plotConfig['display.group'] ?? false)) {
         $delim = $hasMultiplePartitioning ? '.' : ' ';
         $titleRef = "{$delements['group']}$delim$titleRef";
