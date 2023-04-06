@@ -627,6 +627,51 @@ function isStream($var)
     return \is_resource($var) && \get_resource_type($var) === "stream";
 }
 
+function lastLineStreamBuffer(int $nbLines, &$lineBuffer, callable $lineFilter = null): callable
+{
+    if ($lineFilter === null)
+        $lineFilter = fn ($l) => true;
+
+    return function (?string $s) use (&$lineBuffer, $nbLines, $lineFilter) {
+
+        if (! isset($lineBuffer[0]))
+            $lineBuffer[0] = '';
+
+        if ($s === null)
+            $s = "\n";
+
+        $pos = \strpos($s, "\n");
+
+        // No end of line
+        if ($pos === false) {
+            $lineBuffer[0] .= $s;
+        } else {
+            $lastIsNL = $s[\strlen($s) - 1] == "\n";
+
+            $slines = \explode("\n", $s);
+            $lineBuffer[] = $lineBuffer[0] . $slines[0];
+            unset($lineBuffer[0]);
+            unset($slines[0]);
+
+            foreach ($slines as $s)
+                $lineBuffer[] = $s;
+
+            $lineBuffer = \array_filter($lineBuffer, $lineFilter);
+
+            $bf = $lastIsNL ? '' : array_pop($lineBuffer);
+
+            $size = \count($lineBuffer);
+
+            if ($size > $nbLines)
+                $lineBuffer = \array_slice($lineBuffer, - $nbLines);
+
+            $lineBuffer = \array_merge([
+                $bf
+            ], $lineBuffer);
+        }
+    };
+}
+
 function simpleExec(string $cmd, &$output, &$err, ?string $input = null, array $params = []): int
 {
     $outErr = [
@@ -688,8 +733,10 @@ function simpleExec(string $cmd, &$output, &$err, ?string $input = null, array $
             if (0 < strlen($streamData))
                 $callbacks[$k]($streamData);
 
-            if (\feof($pipe))
+            if (\feof($pipe)) {
+                $callbacks[$k](null);
                 unset($pipes[$k]);
+            }
         }
         \usleep($usleep);
     }

@@ -51,7 +51,8 @@ while (! empty($argv)) {
         summarize($cmdParsed['summarize']);
 
         if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
-            $dbImport->dropCollections($dataSets);
+            foreach ($dataSets as $dataSet)
+                $dbImport->dropCollections($dataSet->getCollections());
 
         if ($cmdParsed['pre-clean'] || $cmdParsed['pre-clean-all'])
             $converter->clean();

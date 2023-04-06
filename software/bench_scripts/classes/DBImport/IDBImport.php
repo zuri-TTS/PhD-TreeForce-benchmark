@@ -14,6 +14,8 @@ interface IDBImport
 
     function dropCollections(array $collections): void;
 
+    function importCollection(\DataSet $dataSet, string $collection): void;
+
     function importCollections(\DataSet $dataSet, array $collections): void;
 
     function importDataSet(\DataSet $dataSet): void;

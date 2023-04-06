@@ -1,7 +1,7 @@
 <?php
 namespace DBImport;
 
-final class MongoDBImport implements IDBImport
+final class MongoDBImport extends AbstractDBImport
 {
 
     private ?array $collections_cache = null;
@@ -59,14 +59,9 @@ final class MongoDBImport implements IDBImport
         self::_dropCollections(...$dataSet->getCollections());
     }
 
-    public function dropCollection(string $collection): void
-    {
-        self::_dropCollection((array) $collection);
-    }
-
     public function dropCollections(array $collections): void
     {
-        self::_dropCollection($collections);
+        self::_dropCollections(...$collections);
     }
 
     private function _dropCollections(string ...$collections): void
@@ -103,6 +98,7 @@ final class MongoDBImport implements IDBImport
         print(ret);
         EOD;
 
+        var_dump($script);
         $script = \escapeshellarg($script);
         $cmd = "mongosh treeforce --quiet --eval $script";
 
@@ -187,85 +183,8 @@ final class MongoDBImport implements IDBImport
     }
 
     // ========================================================================
-    public function importDataSet(\DataSet $dataSet): void
+    protected function _importJsonFile(string $jsonFile, string $collectionName): int
     {
-        \DataSets::checkNotExists([
-            $dataSet
-        ]);
-        self::_importCollections($dataSet, $dataSet->getCollections());
-    }
-
-    public function importCollection(\DataSet $dataSet, string $collection): void
-    {
-        self::importCollections($dataSet, $collection);
-    }
-
-    public function importCollections(\DataSet $dataSet, array $collections): void
-    {
-        self::_importCollections($dataSet, $collections);
-    }
-
-    private function _importCollections(\DataSet $dataSet, array $collections): void
-    {
-        $dsColls = $dataSet->getCollections();
-        $collections = \array_unique($collections);
-        $invalidColls = \array_diff($collections, $dsColls);
-
-        if (! empty($invalidColls)) {
-            $invalidColls = implode(',', $invalidColls);
-            $dsColls = implode(',', $dsColls);
-            throw new \Exception("$dataSet does not have collections [$invalidColls]; has [$dsColls]");
-        }
-        $ignoreCollections = \array_diff($dsColls, $collections);
-        $ignoreCollections = \array_combine($ignoreCollections, \array_fill(0, \count($ignoreCollections), true));
-
-        echo "\nImporting $dataSet\n";
-
-        $partitions = $dataSet->getPartitions();
-        $nbFails = [];
-        $loading = \array_combine($collections, \array_fill(0, \count($collections), false));
-
-        foreach ($partitions as $partition) {
-            $collectionName = $partition->getCollectionName();
-
-            if (isset($ignoreCollections[$collectionName]));
-            elseif (! $loading[$collectionName] && self::collectionExists($collectionName))
-                echo "$collectionName: already exists\n";
-            else {
-                $fails = self::importPartition($dataSet, $partition);
-
-                if ($fails != 0)
-                    $nbFails[$collectionName] = $fails;
-
-                $loading[$collectionName] = true;
-            }
-        }
-
-        if (empty($nbFails))
-            echo "Success";
-        else {
-            foreach ($nbFails as $coll => $nb)
-                $displayFail[] = "$coll:$nb";
-
-            $displayFail = \implode(',', $displayFail);
-            throw new \Exception("MongoDb: import failed for $dataSet ($displayFail)");
-        }
-        echo "\n";
-    }
-
-    private function importPartition(\DataSet $dataSet, \Data\PhysicalPartition $partition): int
-    {
-        \wdPush($dataSet->path());
-
-        $collectionName = $partition->getCollectionName();
-        $jsonFile = $partition->getJsonFile();
-        echo "$jsonFile in collection: $collectionName\n";
-
-        if (! \is_file($jsonFile))
-            throw new \Exception("The file $jsonFile does not exists");
-
-        $lineBuff = "";
-
         // Get only the last line
         $err = function ($s) use (&$lineBuff) {
             echo $s;
@@ -284,7 +203,8 @@ final class MongoDBImport implements IDBImport
 
         $cname = \escapeshellarg($collectionName);
         $jsonFile = \escapeshellarg($jsonFile);
-        $moreParams = "--numInsertionWorkers=4";
+        // $moreParams = "--numInsertionWorkers=4";
+        $moreParams = "";
         \simpleExec("mongoimport -d treeforce -c $cname --file $jsonFile $moreParams", $output, $err);
 
         \preg_match('/(\d+) document\(s\) failed/', $lineBuff, $matches);
@@ -293,7 +213,6 @@ final class MongoDBImport implements IDBImport
         if (null !== $this->collections_cache)
             $this->collections_cache[] = $collectionName;
 
-        \wdPop();
         return $nbFails;
     }
 
