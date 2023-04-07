@@ -20,4 +20,22 @@ final class Strings
 
         return $ret;
     }
+
+    public static function removePrefix(string $s, string $prefix): string
+    {
+        if (0 === \strpos($s, $prefix))
+            return \substr($s, \strlen($prefix));
+
+        return $s;
+    }
+
+    public static function removeSuffix(string $s, string $suffix): string
+    {
+        $len = \strlen($suffix);
+
+        if (\strlen($s) - $len === \strrpos($s, $suffix))
+            return \substr($s, 0, - $len);
+
+        return $s;
+    }
 }

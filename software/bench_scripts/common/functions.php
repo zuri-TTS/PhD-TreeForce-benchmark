@@ -15,6 +15,15 @@ if (! function_exists('str_starts_with')) {
     }
 }
 
+if (! function_exists('str_ends_with')) {
+
+    function str_ends_with(string $haystack, string $needle): bool
+    {
+        $needle_len = strlen($needle);
+        return ($needle_len === 0 || 0 === substr_compare($haystack, $needle, - $needle_len));
+    }
+}
+
 function ensureArray($element): array
 {
     if (\is_array($element))
@@ -136,14 +145,6 @@ function scandirNoPoints(string $path = '.', bool $getPath = false)
         $ret = \array_map(fn ($v) => "$path/$v", $ret);
 
     return $ret;
-}
-
-function removePrefix(string $s, string $prefix): string
-{
-    if (0 === \strpos($s, $prefix))
-        return \substr($s, \strlen($prefix));
-
-    return $s;
 }
 
 function in_range($val, $min, $max)
