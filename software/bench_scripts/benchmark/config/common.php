@@ -30,7 +30,7 @@ return [
         'summary.prettyPrint' => 'n',
         'summary.filter.types' => 'y',
         'summary.filter.stringValuePrefix' => 0,
-        'partition.id' => '_id'
+        'partition.id' => 'pid'
     ],
     'bench.measures' => [
         'default' => [
