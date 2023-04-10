@@ -4,6 +4,8 @@ namespace DBImport;
 interface IDBImport
 {
 
+    function makeJavaProperties(array $serverConfig): array;
+
     function collectionExists(string $collection): bool;
 
     function collectionsExists(array $collection): bool;

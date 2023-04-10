@@ -16,6 +16,20 @@ final class ArangoDBImport extends AbstractDBImport
         $this->ensureDatabaseExists();
     }
 
+    public function makeJavaProperties(array $serverConfig): array
+    {
+        $serverName = $serverConfig['server.name'] ?? 'localhost';
+        $url = "arangodb://$serverName";
+        $db = $serverConfig['server.db'] ?? 'treeforce';
+        $coll = $serverConfig['server.collection'] ?? '??';
+
+        return [
+            'data' => $url,
+            'db' => $db,
+            'db.collection' => $this->escapeCollectionName($coll)
+        ];
+    }
+
     public function collectionsExists(array $collections): bool
     {
         $collections = $this->escapeCollectionsName($collections);

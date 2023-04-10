@@ -8,6 +8,20 @@ final class MongoDBImport extends AbstractDBImport
 
     private ?array $collections_stats_cache = null;
 
+    public function makeJavaProperties(array $serverConfig): array
+    {
+        $serverName = $serverConfig['server.name'] ?? 'localhost';
+        $url = "mongodb://$serverName";
+        $db = $serverConfig['server.db'] ?? 'treeforce';
+        $coll = $serverConfig['server.collection'] ?? '??';
+
+        return [
+            'data' => $url,
+            'db' => $db,
+            'db.collection' => $coll
+        ];
+    }
+
     public function import(): void
     {
         $this->importDataSet($this->dataSet);
