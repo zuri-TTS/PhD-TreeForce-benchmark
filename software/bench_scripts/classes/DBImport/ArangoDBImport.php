@@ -11,7 +11,7 @@ final class ArangoDBImport extends AbstractDBImport
         'server.endpoint' => null
     ];
 
-    function __construct()
+    public function __construct()
     {
         $this->ensureDatabaseExists();
     }

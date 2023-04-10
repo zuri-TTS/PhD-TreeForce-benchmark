@@ -10,6 +10,10 @@ interface IDBImport
 
     function createIndex($collection, string $indexName, int $order = 1): void;
 
+    function dropDataset(\DataSet $ds): void;
+
+    function dropDataSets(array $dataSets): void;
+
     function dropCollection(string $collection): void;
 
     function dropCollections(array $collections): void;

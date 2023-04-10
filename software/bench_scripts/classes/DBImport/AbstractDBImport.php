@@ -4,33 +4,46 @@ namespace DBImport;
 abstract class AbstractDBImport implements IDBImport
 {
 
-    function collectionExists(string $collection): bool
+    public function collectionExists(string $collection): bool
     {
         return $this->collectionsExists([
             $collection
         ]);
     }
 
-    function dropCollection(string $collection): void
+    public function dropCollection(string $collection): void
     {
         $this->dropCollections([
             $collection
         ]);
     }
 
-    function importCollection(\DataSet $dataSet, string $collection): void
+    public function importCollection(\DataSet $dataSet, string $collection): void
     {
         $this->importCollection($dataSet, [
             $collection
         ]);
     }
 
-    function importDataSet(\DataSet $dataSet): void
+    public function importDataSet(\DataSet $dataSet): void
     {
         \DataSets::checkNotExists([
             $dataSet
         ]);
         $this->importCollections($dataSet, $dataSet->getCollections());
+    }
+
+    public function dropDataSet(\DataSet $dataSet): void
+    {
+        $this->dropDataSets([
+            $dataSet
+        ]);
+    }
+
+    public function dropDataSets(array $dataSets): void
+    {
+        foreach ($dataSets as $ds)
+            $this->dropCollections($ds->getCollections());
     }
 
     /**

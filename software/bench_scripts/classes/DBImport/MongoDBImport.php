@@ -48,16 +48,6 @@ final class MongoDBImport extends AbstractDBImport
     }
 
     // ========================================================================
-    public function dropDataSets(array $dataSets): void
-    {
-        foreach ($dataSets as $ds)
-            self::dropDataSet($ds);
-    }
-
-    public function dropDataSet(\DataSet $dataSet): void
-    {
-        self::_dropCollections(...$dataSet->getCollections());
-    }
 
     public function dropCollections(array $collections): void
     {
@@ -98,7 +88,6 @@ final class MongoDBImport extends AbstractDBImport
         print(ret);
         EOD;
 
-        var_dump($script);
         $script = \escapeshellarg($script);
         $cmd = "mongosh treeforce --quiet --eval $script";
 
