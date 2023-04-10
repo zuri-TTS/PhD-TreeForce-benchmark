@@ -11,6 +11,10 @@ final class CmdArgs implements \ArrayAccess
     private array $parsed;
 
     private const cmdArgsDef = [
+        'server.name' => 'localhost',
+        'server.db' => 'treeforce',
+        'server.collection' => null,
+        'server.url' => null,
         'documentstore' => 'MongoDB',
         'generate-dataset' => true,
         'cmd-display-output' => false,

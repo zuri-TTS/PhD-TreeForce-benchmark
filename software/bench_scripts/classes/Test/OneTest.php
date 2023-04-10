@@ -73,7 +73,7 @@ final class OneTest extends AbstractTest
         if ($args['forget-results'])
             $args['plot'] = false;
 
-        $this->testConfig = \makeConfig($this->ds, $partitions, $cmdParser);
+        $this->testConfig = \makeConfig($this->dbImport, $this->ds, $partitions, $cmdParser);
         $this->javaProperties = $javaProperties;
     }
 
@@ -151,7 +151,7 @@ final class OneTest extends AbstractTest
             }
 
             if (! $collExists)
-                throw new \Exception("The collection treeforce.$this->collection must exists in the database");
+                throw new \Exception("The collection treeforce.$this->ds must exists in the database");
 
             // Load the index
             if ($args['cmd'] === 'querying' && $partition->isLogical()) {
@@ -214,7 +214,7 @@ final class OneTest extends AbstractTest
             $this->ensurePartition($partition);
 
         // TODO: do not repeat \makeConfig twice : make a class MakeConfig
-        $this->testConfig = \makeConfig($this->ds, $this->partitions, $this->cmdParser);
+        $this->testConfig = \makeConfig($this->dbImport, $this->ds, $this->partitions, $this->cmdParser);
     }
 
     private function ensurePartition(\Data\LogicalPartition $partition): void
@@ -231,6 +231,7 @@ final class OneTest extends AbstractTest
             'plot' => false,
             'doonce' => true,
             'forget-results' => true,
+            'documentstore' => $this->cmdParser['args']['documentstore'],
             'Ppartition.id' => $this->javaProperties['partition.id']
         ];
         $doItParser = CmdArgs::default();
@@ -251,7 +252,7 @@ final class OneTest extends AbstractTest
         if (empty($summary))
             return;
 
-        DoSummarize::summarize($this->ds, $partition, $summary, $strValuePrefix);
+        DoSummarize::summarize($this->dbImport, $this->ds, $partition, $summary, $strValuePrefix);
     }
 
     private function checkSummaries(array $paths): void

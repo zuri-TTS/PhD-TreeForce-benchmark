@@ -1,12 +1,14 @@
 <?php
 
-function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
+function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
 {
     $cmdArg = &$cmdParser['args'];
     $javaProperties = $cmdParser['javaProperties'];
     $group = $dataSet->group();
     $rules = $dataSet->rules();
     $dataSetPath = $dataSet->path();
+
+    $serverConf = \array_filter($cmdArg, fn ($k) => \str_starts_with($k, 'server.'), ARRAY_FILTER_USE_KEY);
 
     $cmd = $cmdArg['cmd'];
     $cold = $cmdArg['cold'];
@@ -95,6 +97,9 @@ function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
         }
         $outDirPattern = $outputDirGenerator($dataSet, \Data\Partitions::noPartition(), $cmdArg, $javaProperties);
     } else {
+        //
+        // Not parallel: test only one collection
+        //
         if (\is_array($partitions) && count($partitions) == 1)
             $partitions = \array_shift($partitions);
 
@@ -130,10 +135,10 @@ function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
         }
         $outDirPattern = $outputDirGenerator($dataSet, $partition, $cmdArg, $javaProperties);
     }
+    $serverConf['server.collection'] = $javaCollection;
 
     $javaProperties = array_merge([
         'dataset.baseDir' => $dataSetPath,
-        'db.collection' => $javaCollection,
         'queries.dir' => DataSets::getQueriesBasePath($dataSet->group()),
         'rules' => '',
         'summary' => $javaSummary,
@@ -231,5 +236,6 @@ function makeConfig(DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
             'rules' => $dataSet->rulesPath()
         ]);
 
+    $ret['java.properties'] = $dbImport->makeJavaProperties($serverConf) + $ret['java.properties'];
     return $ret;
 }

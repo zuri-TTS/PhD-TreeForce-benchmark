@@ -27,8 +27,8 @@ abstract class AbstractTest
             throw new \Exception("$ds does not have the collection $collectionName");
 
         $this->cmdParser = $cmdParser;
-        $this->xmlLoader = \XMLLoader::of($ds);
         $this->dbImport = \DBImports::get($cmdParser, $ds);
+        $this->xmlLoader = \XMLLoader::of($this->dbImport, $ds);
     }
 
     public final function getCollectionsName(): array

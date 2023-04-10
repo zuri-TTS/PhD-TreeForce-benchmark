@@ -52,9 +52,9 @@ final class XMLLoader
         $this->dbImport = $dbImport;
     }
 
-    public static function of(\DataSet ...$dataSets)
+    public static function of(\DBImport\IDBImport $dbImport, \DataSet ...$dataSets)
     {
-        return new self($dataSets);
+        return new self($dbImport, $dataSets);
     }
 
     // ========================================================================

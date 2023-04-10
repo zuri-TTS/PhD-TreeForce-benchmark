@@ -11,7 +11,6 @@ return [
     'java.opt' => "-Xmx10G",
 
     'java.properties' => [
-        'db' => 'treeforce',
         'base.path' => $basePath,
         'output.measures' => "std://out",
         'query.batches.nbThreads' => 1,
@@ -28,7 +27,6 @@ return [
         'querying.config.print' => 'y',
         'toNative.dots' => 'n',
         'rewritings.deduplicate' => 'n',
-        'data' => 'mongodb://localhost',
         'summary.prettyPrint' => 'n',
         'summary.filter.types' => 'y',
         'summary.filter.stringValuePrefix' => 0,

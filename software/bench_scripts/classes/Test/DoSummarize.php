@@ -21,12 +21,16 @@ final class DoSummarize extends AbstractTest
         $this->strPrefixSize = $cmdParser->parsed()['javaProperties']['summary.filter.stringValuePrefix'];
     }
 
-    public static function summarize(\DataSet $ds, \Data\IPartition $partition, string $summaryType, int $strPrefixSize, $cmdParser = []): void
+    public static function summarize(\DBImport\IDBImport $dbImport, \DataSet $ds, \Data\IPartition $partition, string $summaryType, int $strPrefixSize, $cmdParser = []): void
     {
         if (! empty($cmdParser))
             $skipSummaryCheck = $cmdParser['args']['skip-summary-check'];
         else
             $skipSummaryCheck = false;
+
+        $dbImportName = \get_class($dbImport);
+        $dbImportName = \Help\Strings::removeSuffix($dbImportName, 'Import');
+        $dbImportName = \Help\Strings::removePrefix($dbImportName, 'DBImport\\');
 
         $summArgs = ($skipSummaryCheck ? [
             'output' => $cmdParser['args']['output'],
@@ -42,6 +46,7 @@ final class DoSummarize extends AbstractTest
             'skip-existing' => true
         ]) + [
             'cmd' => 'summarize',
+            'documentstore' => $dbImportName,
             'generate-dataset' => false,
             'clean-db' => false,
             'summary' => $summaryType,
@@ -78,7 +83,7 @@ final class DoSummarize extends AbstractTest
         }
         $summaryName = \basename($summaryPath);
 
-        $xmlLoader = \XMLLoader::of($ds);
+        $xmlLoader = \XMLLoader::of($dbImport, $ds);
         $xmlLoader->convert();
         $xmlLoader->load();
         $doIt->execute();
@@ -87,6 +92,6 @@ final class DoSummarize extends AbstractTest
 
     public function execute()
     {
-        self::summarize($this->ds, $this->partitions[0], $this->summaryType, $this->strPrefixSize, $this->cmdParser);
+        self::summarize($this->dbImport, $this->ds, $this->partitions[0], $this->summaryType, $this->strPrefixSize, $this->cmdParser);
     }
 }
