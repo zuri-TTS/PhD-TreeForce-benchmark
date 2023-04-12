@@ -2,7 +2,10 @@
 
 scriptName=$(basename -s '.sh' "$0")
 
-# The dataset to test:
+# The document-store to use (mongodb|arangodb)
+docstore=MongoDB
+
+# The datasets to test:
 ## DBLP
 ## DBLP.colls:  DBLP with physical partitioning
 ## DBLP.Lcolls: DBLP with logical partitioning
@@ -54,7 +57,7 @@ moreParams="+skip-existing +clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
-export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id=$id Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' $parallel bench-measures-nb=$nbMeasures bench-measures-forget=$nbForget Pquery.batchSize: '[$qBatchSize]' $moreParams"
+export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id=$id Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' $parallel bench-measures-nb=$nbMeasures bench-measures-forget=$nbForget Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' $moreParams"
 
 for group in $groups
 do
