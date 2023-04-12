@@ -155,7 +155,7 @@ final class ArangoDBImport extends AbstractDBImport
 
     private function escapeCollectionName(string $cname): string
     {
-        return 'tf_' . \strtr($cname, '[]()', '----');
+        return 'tf_' . \strtr($cname, '[]().', '-----');
     }
 
     private function ensureDatabaseExists()
