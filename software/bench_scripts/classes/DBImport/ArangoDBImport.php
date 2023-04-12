@@ -23,10 +23,18 @@ final class ArangoDBImport extends AbstractDBImport
         $db = $serverConfig['server.db'] ?? 'treeforce';
         $coll = $serverConfig['server.collection'] ?? '??';
 
+        if (\is_array($coll))
+            $colls = \array_map([
+                $this,
+                'escapeCollectionName'
+            ], $coll);
+        else
+            $colls = $this->escapeCollectionName($coll);
+
         return [
             'data' => $url,
             'db' => $db,
-            'db.collection' => $this->escapeCollectionName($coll)
+            'db.collection' => $colls
         ];
     }
 
