@@ -51,7 +51,8 @@ final class DoSummarize extends AbstractTest
             'clean-db' => false,
             'summary' => $summaryType,
             'plot' => false,
-            'Psummary.filter.stringValuePrefix' => $strPrefixSize
+            'Psummary.filter.stringValuePrefix' => $strPrefixSize,
+            'toNative_summary' => ''
         ];
         $doItParser = CmdArgs::default();
         $doItParser->parse($summArgs);
