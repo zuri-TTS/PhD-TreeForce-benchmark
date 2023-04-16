@@ -25,6 +25,7 @@ return [
         'output.pattern' => '${output.path}/${query.name}_%s.txt',
         'query' => '${queries.dir}/${query.name}',
         'querying.config.print' => 'y',
+        'querying.timeout' => 0,
         'toNative.dots' => 'n',
         'rewritings.deduplicate' => 'n',
         'summary.prettyPrint' => 'n',
