@@ -2,8 +2,11 @@
 
 scriptName=$(basename -s '.sh' "$0")
 
+
 # The document-store to use (mongodb|arangodb)
+[ -z ${docstore+x} ] &&
 docstore=MongoDB
+
 
 # The datasets to test:
 ## DBLP
@@ -12,38 +15,65 @@ docstore=MongoDB
 ## 10M|100M|1G|10G|50G: XMARK
 ## 10M.Pcolls:  XMARK with physical paritioning
 ## 10M.LPcolls: XMARK with logical paritioning
+[ -z ${groups+x} ] &&
 groups="10M 10M.colls"
 
+
 # Precise the 'ruleset/query' to test. Let it empty for testing all rulesets and queries.
+[ -z ${group2+x} ] &&
 group2=
 
+
 # Parallelise the evaluation of partitions (boolean arg: -parallel=false, +parallel=true)
-parallel=-parallel
+[ -z ${parallel+x} ] &&
+parallel=-
+
 
 # Summaries to use
+[ -z ${summaries+x} ] &&
 summaries="depth label path"
+
 
 # Size of the n-prefix summary.
 # Let the value 0 for not using a prefix summary.
+[ -z ${strPrefSize+x} ] &&
 strPrefSize=0 # In our tests we used 5-prefix with label and path summaries
 
+
 # Number of repetitions of a same test
+[ -z ${nbMeasures+x} ] &&
 nbMeasures=5
+
 
 # Number of measures to forget after all repetitions of a same test.
 # The (ordered) $nbForget first and last values are forget; so at the end $nbForget*2 are unused.
+[ -z ${nbForget+x} ] &&
 nbForget=1
 
+
+# Query execution timeout; empty or 0 for undefined
+[ -z ${timeout+x} ] &&
+timeout=
+
+# Output directory
+[ -z ${out+x} ] &&
+out=""
+
+[ ! -d "$out" ] && mkdir -p "$out"
 
 #### Nothing usefull to change here
 
 # Partition id field name
+[ -z ${id+x} ] &&
 id=pid
 # Filter the reformulations to process (val: 'noempty', 'empty', '')
+[ -z ${filter+x} ] &&
 filter=
 # Number of reformulations per batch.
+[ -z ${qBatchSize+x} ] &&
 qBatchSize=1000
 
+[ -z ${batchesNbThreads+x} ] &&
 batchesNbThreads=1
 ####
 
@@ -57,11 +87,10 @@ moreParams="+skip-existing +clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
-export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id=$id Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' $parallel bench-measures-nb=$nbMeasures bench-measures-forget=$nbForget Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' $moreParams"
+export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id: '[$id]' Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' ${parallel}parallel  Pquerying.timeout='$timeout' bench-measures-nb=$nbMeasures bench-measures-forget=$nbForget Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' $moreParams"
 
 for group in $groups
 do
-	out=""
 	com=$(sh/oneTest.sh "$group/$group2[simplified]" "$out" $*)
 
 	eval "php $com"
