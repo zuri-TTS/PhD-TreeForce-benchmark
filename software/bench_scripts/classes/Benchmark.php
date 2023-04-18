@@ -441,7 +441,11 @@ final class Benchmark
 
             if ($this->config['app.output.display'])
                 \readfile($this->tmpOutFile);
-
+            if($this->config['bench-measures-output_on_file'])
+            {
+               $fileName = sprintf("%s/%s_measures.txt", $config['bench.output.path'], $incVars['query.name']);
+               \file_put_contents($fileName, \file_get_contents($this->tmpOutFile));
+            }
             $measures[] = [
                 'test' => [
                     'index' => $i ++
