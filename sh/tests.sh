@@ -83,7 +83,7 @@ batchesNbThreads=1
 ## +skip-existing      Do not execute an already existing test (from a previous execution of the script).
 ## +clean-db           Clean the (mongodb) dataset collection before and after the tests using it.
 ## +clean-db-json      Clean the json files used to load the (mongodb) collection after the tests. Usefull for big datasets.
-moreParams="+skip-existing +clean-db -clean-db-json"
+moreParams="Pquerying.config.print=y -skip-existing +clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
