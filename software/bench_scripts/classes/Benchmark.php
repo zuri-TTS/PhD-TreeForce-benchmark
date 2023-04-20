@@ -394,6 +394,7 @@ final class Benchmark
             $native = sprintf($n, $query);
 
         return [
+            'bench.measures.i' => 1,
             'query.name' => $query,
             'query.native' => $native ?? ''
         ];
@@ -435,17 +436,14 @@ final class Benchmark
             \fwrite($pipes[0], $this->writeJavaProperties($incVars));
             \fclose($pipes[0]);
             $cmdReturn = \proc_close($proc);
+            $incVars['bench.measures.i'] ++;
 
             if (0 !== $cmdReturn)
                 exit($cmdReturn);
 
             if ($this->config['app.output.display'])
                 \readfile($this->tmpOutFile);
-            if($this->config['bench-measures-output_on_file'])
-            {
-               $fileName = sprintf("%s/%s_measures.txt", $config['bench.output.path'], $incVars['query.name']);
-               \file_put_contents($fileName, \file_get_contents($this->tmpOutFile));
-            }
+
             $measures[] = [
                 'test' => [
                     'index' => $i ++

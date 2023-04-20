@@ -12,7 +12,7 @@ return [
 
     'java.properties' => [
         'base.path' => $basePath,
-        'output.measures' => "std://out",
+        'output.measures' => 'std://out,${output.path}/${query.name}_measures-${bench.measures.i}.txt',
         'query.batches.nbThreads' => 1,
         'query.native' => "",
         'query.batchSize' => 1000,

@@ -37,7 +37,6 @@ final class CmdArgs implements \ArrayAccess
         'plot' => '',
         'forget-results' => false,
         'sort-measure' => null,
-        'bench-measures-output_on_file' => true,
         'bench-measures-nb' => 1,
         'bench-measures-forget' => 0
     ];

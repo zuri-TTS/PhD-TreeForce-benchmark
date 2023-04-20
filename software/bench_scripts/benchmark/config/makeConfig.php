@@ -224,7 +224,6 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
         'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
         'bench.plot.types' => $cmdArg['plot'],
-        'bench-measures-output_on_file' => $cmdArg['bench-measures-output_on_file'],
         'app.output.display' => $cmdArg['cmd-display-output']
     ]);
     $ret['bench.measures']['default']['nb'] = (int) $cmdArg['bench-measures-nb'];
