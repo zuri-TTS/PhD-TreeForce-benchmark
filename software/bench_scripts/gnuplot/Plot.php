@@ -11,7 +11,7 @@ final class Plot
 
     private array $data;
 
-    private array $csvGroupByBasePath;
+    private array $dirToQueriesName;
 
     private string $workingDir;
 
@@ -19,6 +19,13 @@ final class Plot
 
     function __construct(string $workingDir)
     {
+        if (is_file($workingDir)) {
+            $testFiles = [
+                $workingDir
+            ];
+            $workingDir = \dirname($workingDir);
+        }
+
         if (is_dir($workingDir)) {
             $dir = new RecursiveDirectoryIterator($workingDir, //
             FilesystemIterator::KEY_AS_PATHNAME | //
@@ -27,32 +34,33 @@ final class Plot
 
             $ite = new RecursiveIteratorIterator($dir);
             $ite->setMaxDepth(1);
-            $reg = new RegexIterator($ite, "#/[^@][^/]*\.csv$#");
-            $csvPaths = [];
+            $testFiles = [];
 
-            foreach ($reg as $file) {
-                $csv = $file->getRealPath();
+            foreach ($ite as $file) {
+                $fname = $file->getFilename();
+                $testDir = \basename(\dirname($file->getRealPath()));
 
-                if (! str_starts_with(\basename(\dirname($csv)), "full_"))
-                    $csvPaths[] = $csv;
+                if (\preg_match('#^([^@][^/]*)\.csv$#', $fname, $matches))
+                    $testFiles[] = "$testDir/{$matches[1]}";
             }
-        } elseif (is_file($workingDir) && preg_match('#\.csv$#', $workingDir)) {
-            $csvPaths = [
-                $workingDir
-            ];
-            $workingDir = \dirname($workingDir);
-        } else {
-            throw new \Exception("Can't handle '$workingDir'");
-        }
+        } else
+            throw new \Exception("Plot: can't handle '$workingDir'");
+
         $this->workingDir = \realpath($workingDir);
 
-        foreach ($csvPaths as $csvPath) {
-            $groupByBase[\dirname($csvPath)][] = \basename($csvPath, '.csv');
-        }
-        foreach ($groupByBase as &$group)
-            \natsort($group);
+        foreach ($testFiles as $ftest) {
+            $dirName = \dirname($ftest);
 
-        $this->csvGroupByBasePath = $groupByBase;
+            if (\str_starts_with($dirName, 'full_'))
+                continue;
+
+            $groupByBase[$dirName][] = \basename($ftest);
+        }
+        foreach ($groupByBase as &$group) {
+            \natsort($group);
+            $group = \array_values($group);
+        }
+        $this->dirToQueriesName = $groupByBase;
     }
 
     public function getData(): array
@@ -104,24 +112,36 @@ final class Plot
 
     public function plot(array $config)
     {
-        $this->plotters = $this->getPlotters($config);
-        $csvFiles = [];
-
-        foreach ($this->csvGroupByBasePath as $base => $csvFile) {
-            echo "\nPlotting group\n<$base>/\n";
-            $groupCsvFiles = \array_map(fn ($f) => "$base/$f.csv", $csvFile);
-            \wdPush($base);
-            $this->_plotGroup($groupCsvFiles);
-            $csvFiles = \array_merge($csvFiles, $groupCsvFiles);
-            \wdPop();
-        }
-
+        $plotters = $this->getPlotters($config);
         \wdPush($this->workingDir);
-        $nbFiles = \count($csvFiles);
 
-        foreach ($this->plotters as $plotter) {
+        $groupPlotters = \array_filter($plotters, fn ($p) => $p instanceof \Plotter\IGroupPlotter);
 
-            if ($plotter->getProcessType() === self::PROCESS_FULL) {
+        if (! empty($groupPlotters)) {
+            $this->plotters = $groupPlotters;
+
+            foreach ($this->dirToQueriesName as $testDir => $queriesName) {
+                echo "\nPlotting group\n<$testDir>/\n";
+                $this->_plotGroup($testDir, $queriesName);
+            }
+        }
+        $fullPlotters = \array_filter($plotters, fn ($p) => $p instanceof \Plotter\IFullPlotter);
+
+        if (! empty($fullPlotters)) {
+
+            $tests = [];
+            foreach ($this->dirToQueriesName as $testDir => $queriesName)
+                foreach ($queriesName as $qname)
+                    $tests[] = "$testDir/$qname";
+
+            $nbFiles = \count($tests);
+
+            $this->data = [];
+            foreach ($this->dirToQueriesName as $testDir => $queriesName) {
+                $this->data = \array_merge($this->data, $this->makeData($testDir, $queriesName));
+            }
+            foreach ($fullPlotters as $plotter) {
+
                 echo "\nPlotting Full ({$plotter->getID()}) with $nbFiles files\n";
                 $outDir = "full_{$plotter->getID()}";
 
@@ -129,97 +149,76 @@ final class Plot
                     \mkdir($outDir);
 
                 \wdPush($outDir);
-                $this->plotFull($csvFiles, $plotter);
+                $this->plotFull($tests, $plotter);
                 \wdPop();
             }
         }
         \wdPop();
     }
 
-    private function _plotGroup(array $csvFiles)
+    private function _plotGroup(string $dirName, array $queriesName)
     {
         foreach ($this->plotters as $plotter) {
 
             if ($plotter->getProcessType() === self::PROCESS_EACH)
-                $this->plotEach($csvFiles, $plotter);
+                $this->plotEach($dirName, $queriesName, $plotter);
         }
-        $this->setData($csvFiles);
+        $this->setData($dirName, $queriesName);
 
         foreach ($this->plotters as $plotter) {
 
             if ($plotter->getProcessType() === self::PROCESS_GROUP)
-                $this->plotGroup($csvFiles, $plotter);
+                $this->plotGroup($dirName, $queriesName, $plotter);
         }
     }
 
-    private function setData(array $csvFiles)
+    private function makeData(string $dirName, array $queriesName): array
     {
-        $this->data = [];
+        $ret = [];
+        $measures = new Measures($dirName);
 
-        foreach ($csvFiles as $csvPath) {
-            $basePath = \dirname($csvPath);
-            $configPath = "$basePath/@config.csv";
+        foreach ($queriesName as $qname)
+            $ret["$dirName/$qname"] = $measures->loadMeasuresOf($qname);
 
-            $data = \CSVReader::read($csvPath);
+        return $ret;
+    }
 
-            if (\is_file($configPath))
-                $data = \array_merge_recursive($data, \CSVReader::read($configPath));
+    private function setData(string $dirName, array $queriesName)
+    {
+        $this->data = $this->makeData($dirName, $queriesName);
+    }
 
-            $this->data[$csvPath] = $data;
+    // ========================================================================
+    private function plotFull(array $tests, Plotter\IPlotter $plotter)
+    {
+        $plotter->plot($tests);
+    }
+
+    private function plotGroup(string $dirName, array $queriesName, Plotter\IPlotter $plotter)
+    {
+        $plotter->plot($dirName, $queriesName);
+    }
+
+    // ========================================================================
+    private function plotEach(string $dirName, array $queriesName, Plotter\IPlotter $plotter)
+    {
+        foreach ($queriesName as $qname) {
+            $this->setData($dirName, (array) $qname);
+            $this->plotOne($dirName, $qname, $plotter);
         }
     }
 
-    // ========================================================================
-    private function plotFull(array $csvFiles, Plotter\IPlotter $plotter)
+    private function plotOne(string $dirName, string $queryName, Plotter\IPlotter $plotter)
     {
-        $this->plotFiles($csvFiles, $plotter, \realpath(\dirname($csvFiles[0]) . "/.."), "full_");
-    }
+        echo "plotting $dirName/$queryName\n";
 
-    private function plotGroup(array $csvFiles, Plotter\IPlotter $plotter)
-    {
-        $this->plotFiles($csvFiles, $plotter, \dirname($csvFiles[0]), "all_");
-    }
-
-    private function plotFiles(array $csvFiles, Plotter\IPlotter $plotter, string $basePath, string $filePrefix)
-    {
-        $wdir = \getcwd();
-        $data = \array_values($this->data)[0];
-        $plotter->plot($csvFiles);
+        $plotter->plot($dirName, (array) $queryName);
     }
 
     // ========================================================================
-    private function plotEach(array $csvFiles, Plotter\IPlotter $plotter)
+    public static function plotterFileName(Plotter\IPlotter $plotter, string $queryName, string $suffix = ''): string
     {
-        foreach ($csvFiles as $file) {
-            $this->setData((array) $file);
-            $this->plotOne($file, $plotter);
-        }
-    }
-
-    private function plotOne(string $csvPath, Plotter\IPlotter $plotter)
-    {
-        $csvFileName = \basename($csvPath);
-        echo "plotting from $csvFileName\n";
-
-        $data = $this->data[$csvPath];
-        $plotter->plot((array) $csvPath);
-    }
-
-    // ========================================================================
-    public static function isTimeMeasure(array $data): bool
-    {
-        return array_keys($data) === [
-            'r',
-            'u',
-            's',
-            'c'
-        ];
-    }
-
-    public static function plotterFileName(Plotter\IPlotter $plotter, string $csvPath, string $suffix = ''): string
-    {
-        $fileName = \baseName($csvPath, ".csv");
-        return "{$fileName}_{$plotter->getId()}$suffix";
+        return "{$queryName}_{$plotter->getId()}$suffix";
     }
 
     public function gnuplotSpecialChars(string $s): string

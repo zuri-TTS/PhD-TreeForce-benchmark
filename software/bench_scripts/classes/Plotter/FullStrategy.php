@@ -16,6 +16,7 @@ final class FullStrategy extends AbstractFullStrategy
         'partitions.used' => 'total',
         'partitions.hasAnswer' => 'total',
         'queries' => 'total',
+        'error.timeout' => 'value',
 //         'rules' => 'queries.cleaned.total',
         'filter.prefix' => 'total'
     ];
@@ -44,10 +45,10 @@ final class FullStrategy extends AbstractFullStrategy
         return 'group_query';
     }
 
-    public function groupCSVFiles(array $csvFiles): array
+    public function groupTests(array $testGroups): array
     {
-        $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
-        $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
+        $queries = \array_unique(\array_map(fn ($p) => \basename($p), $testGroups));
+        $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $testGroups));
         $groups = \array_map(function ($p) {
             $dirName = \basename($p);
             $elements = \Help\Plotter::extractDirNameElements($dirName);
@@ -72,7 +73,7 @@ final class FullStrategy extends AbstractFullStrategy
             $gdirs = \array_column($gdirs, 1);
 
             foreach ($queries as $query) {
-                $dd = \array_map(fn ($p) => "$p/$query.csv", $gdirs);
+                $dd = \array_map(fn ($p) => "$p/$query", $gdirs);
                 $ret["{$group}_$query"] = \array_values($dd);
             }
         }

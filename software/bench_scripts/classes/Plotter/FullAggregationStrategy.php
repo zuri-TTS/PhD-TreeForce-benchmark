@@ -28,10 +28,10 @@ final class FullAggregationStrategy extends AbstractFullStrategy
         return 'aggregation';
     }
 
-    function groupCSVFiles(array $csvFiles): array
+    function groupTests(array $groupTests): array
     {
-        $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
-        $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
+        $queries = \array_unique(\array_map(fn ($p) => \basename($p), $groupTests));
+        $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $groupTests));
         $groups = \array_map(function ($p) {
             $dirName = \basename($p);
             \preg_match("#^\[(.+)(?:\..+)?\]#U", $dirName, $matches);
@@ -40,8 +40,8 @@ final class FullAggregationStrategy extends AbstractFullStrategy
         $groups = \array_unique($groups, SORT_REGULAR);
         \natcasesort($groups);
 
-        foreach ($groups as $group) {
-            $regex = "#/\[$group(?:\..+)?\]#U";
+        foreach ($groups as $groupName) {
+            $regex = "#\[$groupName(?:\..+)?\]#U";
             $gdirs = \array_filter($dirs, fn ($d) => \preg_match($regex, $d));
             $gscores = \array_map(fn ($d) => $this->sortScore(\basename($d)), $gdirs);
             $gdirs = \array_map(null, $gscores, $gdirs);
@@ -56,8 +56,8 @@ final class FullAggregationStrategy extends AbstractFullStrategy
             $gdirs = \array_column($gdirs, 1);
 
             foreach ($queries as $query) {
-                $dd = \array_map(fn ($p) => "$p/$query.csv", $gdirs);
-                $ret["{$group}_$query"] = \array_values($dd);
+                $dd = \array_map(fn ($p) => "$p/$query", $gdirs);
+                $ret["{$groupName}_$query"] = \array_values($dd);
             }
         }
         return $ret;

@@ -21,13 +21,11 @@ $blocGroups = [
 $data = $PLOTTER->getData();
 $blocs = $graphics->prepareBlocs($blocGroups, $bench_exclude, $data);
 
-
 list ($yMin, $yMax) = $graphics->getYMinMax($PLOT->getData());
 $ymin = \max(0, $yMin - 1);
 
-$nbMeasures = \count(\array_filter($data, fn ($d) => \PLOT::isTimeMeasure($d)));
+$nbMeasures = \count(\array_filter($data, fn ($d) => \Measures::isTimeMeasure($d)));
 $nbBars = $nbMeasures * 2;
-
 
 $graphics->compute($nbBars, $nbMeasures, 1);
 echo $graphics->addFooter($blocs);

@@ -14,14 +14,14 @@ final class FullParallelPartitioningPlotter extends AbstractFullPlotter
         return \Plot::PROCESS_FULL;
     }
 
-    public function plot(array $csvPaths): void
+    public function plot(array $tests): void
     {
-        $this->cleanCurrentDir();
-        $this->writeCsv($csvPaths);
+        // $this->cleanCurrentDir();
+        $this->writeCsv($tests);
     }
 
     // ========================================================================
-    private static function prepareMeasures(string $csvFile): array
+    private static function prepareMeasures(string $test): array
     {
         $selection = [
             'group',
@@ -30,8 +30,8 @@ final class FullParallelPartitioningPlotter extends AbstractFullPlotter
             'qualifiers'
         ];
 
-        $data = \CSVReader::read($csvFile);
-        $elements = \Help\Plotter::extractDirNameElements(\basename(\dirname($csvFile)));
+        $data = \Measures::loadTestMeasures($test);
+        $elements = \Help\Plotter::extractDirNameElements(\dirname($test));
         $partitionDataGroup = "{$elements['group']}[{$elements['qualifiers']}]/{$elements['partition']}";
         $newElements = \Help\Arrays::subSelect($elements, $selection);
         $newData = [];
@@ -60,22 +60,24 @@ final class FullParallelPartitioningPlotter extends AbstractFullPlotter
         return $newData + $partitionsStats;
     }
 
-    private static function writeCsv(array $csvFiles)
+    private static function writeCsv(array $tests)
     {
-        foreach ($csvFiles as $file) {
+        foreach ($tests as $test) {
 
-            if (! \is_file($file))
-                continue;
+            // if (! \is_file($test))
+            // continue;
 
-            $fname = \basename($file);
-            $prepareMeasures = self::prepareMeasures($file);
-            $basePath = \basename(\dirname($file));
+            $fname = \basename($test);
+            \wdPush("..");
+            $prepareMeasures = self::prepareMeasures($test);
+            \wdPop();
+            $basePath = \basename(\dirname($test));
             $basePath = \Help\Plotter::encodeDirNameElements(\Help\Plotter::extractDirNameElements($basePath), '[%s]');
 
             if (! \is_dir($basePath))
                 \mkdir($basePath);
 
-            $csvFile = "$basePath/$fname";
+            $csvFile = "$basePath/$fname.csv";
             \CSVReader::write($csvFile, $prepareMeasures);
         }
     }

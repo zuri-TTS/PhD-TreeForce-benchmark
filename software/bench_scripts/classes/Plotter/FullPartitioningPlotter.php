@@ -14,32 +14,31 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
         return \Plot::PROCESS_FULL;
     }
 
-    public function plot(array $csvPaths): void
+    public function plot(array $tests): void
     {
         $this->cleanCurrentDir();
-        $cutData = self::groupCSVFiles($csvPaths);
-        self::writeCsv($cutData);
+        $testGroups = self::groupTests($tests);
+        self::writeCsv($testGroups);
     }
 
     // ========================================================================
-    public static function groupCSVFiles(array $csvFiles): array
+    public static function groupTests(array $csvFiles): array
     {
-        $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvFiles));
-        $dirs = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
+        $queries = \array_unique(\array_map(fn ($p) => \basename($p), $csvFiles));
+        $groupNames = \array_unique(\array_map(fn ($p) => \dirname($p), $csvFiles));
         \natcasesort($queries);
 
         $gdirs = [];
 
-        foreach ($dirs as $dpath) {
-            $d = \basename($dpath);
-            $delements = \Help\Plotter::extractDirNameElements($d);
+        foreach ($groupNames as $gname) {
+            $delements = \Help\Plotter::extractDirNameElements($gname);
             unset($delements['partition']);
             unset($delements['full_group']);
             unset($delements['full_partition']);
             $dirGroup = \Help\Plotter::encodeDirNameElements($delements, '[%s]');
 
             foreach ($queries as $query)
-                $ret[$query][$dirGroup][] = "$dpath/$query.csv";
+                $ret[$query][$dirGroup][] = "$gname/$query";
         }
         return $ret;
     }
@@ -133,9 +132,9 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
     protected static function prepareData(array $data, string $partitionDataGroup, array &$partitionsData, array &$ret): void
     {}
 
-    private static function prepareMeasures(array $colls): array
+    private static function prepareMeasures(array $tests): array
     {
-        $nbColls = \count($colls);
+        $nbColls = \count($tests);
 
         $staticParts = [
             'bench'
@@ -144,11 +143,12 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
         $ret['collections']['nb'] = $nbColls;
         $partitionsData = [];
 
-        foreach ($colls as $csvPath) {
-            $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
-            $data = \Benchmark::normalizeDataMeasures($data);
+        foreach ($tests as $test) {
+            $data = \Measures::loadTestMeasures($test);
+            unset($data['bench']);
+            $data = \Measures::toArrayTimeMeasures($data);
 
-            $elements = \Help\Plotter::extractDirNameElements(\basename(\dirname($csvPath)));
+            $elements = \Help\Plotter::extractDirNameElements(\basename(\dirname($test)));
             $partitionDataGroup = \Help\Plotter::encodeDirNameElements(\Help\Arrays::subSelect($elements, [
                 'group',
                 'rules',
@@ -158,7 +158,7 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
             ]), '');
             foreach ($data as $k => $items) {
 
-                if (\Benchmark::isArrayMeasure($items)) {
+                if (\Measures::isArrayTimeMeasure($items)) {
                     $partitionsData["$partitionDataGroup/measures"][$k] = $items;
                 } else {
                     $partitionsData["$partitionDataGroup/$k"] = $items;
@@ -170,17 +170,17 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
                     if (! isset($ret[$k]))
                         $ret[$k] = $items;
                     elseif ($ret[$k] != $items)
-                        fprintf(STDERR, "Not the same $k value:\nHave:\n" . print_r($ret[$k], true) . "Set:\n" . print_r($items, true));
+                        fwrite(STDERR, "Not the same $k value:\nHave:\n" . print_r($ret[$k], true) . "Set:\n" . print_r($items, true));
                 } else {
 
                     foreach ($items as $ki => $item) {
 
-                        if (\Benchmark::isArrayMeasure($item)) {
+                        if (\Measures::isArrayTimeMeasure($item)) {
 
                             if (! isset($ret[$k][$ki]))
                                 $ret[$k][$ki] = $item;
                             else
-                                $ret[$k][$ki] = \Benchmark::sumArrayMeasures($ret[$k][$ki], $item);
+                                $ret[$k][$ki] = \Measures::sumArrayMeasures($ret[$k][$ki], $item);
                         } elseif (! isset($ret[$k][$ki]))
                             $ret[$k][$ki] = (int) $item;
                         else
@@ -197,21 +197,22 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
         return $ret;
     }
 
-    private static function writeCsv(array $cutData): array
+    private static function writeCsv(array $testGroups): array
     {
         $newCsvFiles = [];
 
-        foreach ($cutData as $query => $groups) {
+        foreach ($testGroups as $query => $groups) {
 
-            foreach ($groups as $group => $colls) {
-                $prepareMeasures = self::prepareMeasures($colls);
-                $prepareMeasures = \Benchmark::toStringDataMeasures($prepareMeasures);
-                $basePath = $group;
+            foreach ($groups as $groupName => $tests) {
+                \wdPush('..');
+                $prepareMeasures = self::prepareMeasures($tests);
+                $prepareMeasures = \Measures::toStringTimeMeasures($prepareMeasures);
+                \wdPop();
 
-                if (! \is_dir($basePath))
-                    \mkdir($basePath);
+                if (! \is_dir($groupName))
+                    \mkdir($groupName);
 
-                $csvFile = "$basePath/$query.csv";
+                $csvFile = "$groupName/$query.csv";
                 \CSVReader::write($csvFile, $prepareMeasures);
                 $newCsvFiles[] = $csvFile;
             }

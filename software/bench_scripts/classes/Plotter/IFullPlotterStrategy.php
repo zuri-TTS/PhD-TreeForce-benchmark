@@ -6,9 +6,9 @@ interface IFullPlotterStrategy
 
     function getID(): string;
 
-    function groupCSVFiles(array $csvFiles): array;
+    function groupTests(array $tests): array;
 
-    function getDataLine(string $csvPath = ''): array;
+    function getDataLine(string $test, array $data): array;
 
     function sortDataLines(array &$data): void;
 

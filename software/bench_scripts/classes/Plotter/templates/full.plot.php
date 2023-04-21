@@ -2,8 +2,8 @@
 $plotterStrategy = $PLOTTER->getStrategy();
 
 $plotConfig = $PLOTTER->plot_getConfig();
-$csvGroups = $PLOTTER->getCsvGroups();
-$csvFiles = \array_merge(...\array_values($csvGroups));
+$testGroups = $PLOTTER->gettestGroups();
+$csvFiles = \array_merge(...\array_values($testGroups));
 $nbPlots = $PLOTTER->getNbGroups();
 $stacked = $plotterStrategy->plot_getStackedMeasures($plotConfig['plot.measures'] ?? []);
 $nbMeasuresToPlot = \count($stacked);
@@ -79,8 +79,8 @@ if ($plotLegend) {
 if ($nbQueries > 0 && ! ($graphics['plots.x.max'] > 0))
     $graphics['plots.x.max'] = $nbQueries;
 
-$getMeasure = function ($csvData, $what, $time) {
-    return (int) (($csvData[$what] ?? [])[$time] ?? 0);
+$getMeasure = function ($testData, $what, $time) {
+    return (int) (($testData[$what] ?? [])[$time] ?? 0);
 };
 $nbMeasures = 0;
 
@@ -206,15 +206,16 @@ set key off
 
 EOD;
 
-foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
+foreach ($PLOTTER->getTestGroups() as $groupName => $tests) {
     $nbAnswers = [];
 
     if (isset($plot_every)) {
-        $phpData = include "$fname.php";
+        $phpData = include "$groupName.php";
         $plot_every_data = [];
         $i = 0;
 
         foreach ($phpData as $dataLine) {
+
             foreach ($stacked as $m_i => $stack) {
 
                 foreach ($stack as $name) {
@@ -232,23 +233,19 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
             $i ++;
         }
     }
-    foreach ($csvPaths as $csvPath) {
-
-        if (! is_file($csvPath))
-            continue;
-
-        $csvData = $PLOTTER->getCsvData($csvPath);
-        $nbAnswers[] = $csvData['answers']['total'] ?? 0;
+    foreach ($tests as $test) {
+        $testData = $PLOTTER->getTestData($test);
+        $nbAnswers[] = $testData['answers']['total'] ?? 0;
     }
 
     if (null !== ($f = $plotConfig['plot.title']))
         $title = $f([
-            'fileName' => $fname,
+            'fileName' => $groupName,
             'nbAnswers' => $nbAnswers,
             'phpData' => $phpData
         ]);
     else
-        $title = "$fname\\n({$nbAnswers[0]} answers)";
+        $title = "$groupName\\n({$nbAnswers[0]} answers)";
 
     list ($lin, $col) = $graphics->plotPositionFactors($nbPlots);
     echo "set origin $col,$lin\n";
@@ -260,7 +257,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     }
 
     if ($plotConfig['plot.yrange'] === 'local') {
-        list ($min, $max) = $plotterStrategy->plot_getYRange(...$csvPaths);
+        list ($min, $max) = $plotterStrategy->plot_getYRange(...$tests);
         $yMin /= $timeDiv;
         $yMax /= $timeDiv;
 
@@ -280,7 +277,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
     if ($plotConfig['plot.yrange.display'] ?? false)
         echo "set ylabel offset 15,0 \"[$yrange]\"\n";
 
-    echo "set title \"$title\"\n";
+    echo "set title \"$title\" noenhanced\n";
 
     if ($nbYTics !== $nbYTics_max && $plotYTicsStep && ($nbPlots % $nbXPlots - 1) % $plotYTicsStep == 0) {
         echo $plotYTics;
@@ -296,7 +293,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
 
     if (isset($plot_every)) {
         $every_i = 0;
-        $fnam = "$fname.dat";
+        $fnam = "$groupName.dat";
 
         foreach ($phpData as $i => $dataLine) {
 
@@ -320,7 +317,7 @@ foreach ($PLOTTER->getCsvGroups() as $fname => $csvPaths) {
                 "pos" => $pos
             ]);
             if (! isset($plot_every))
-                $tmp[] = "'$fname.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes ls $ls fs pattern $pattern";
+                $tmp[] = "'$groupName.dat' u (\$0 * $spaceFactor + $stacked_i):(tm(\$$pos))$xtics with boxes ls $ls fs pattern $pattern";
 
             if ($plotYLabel) {
                 $plotYLabelYOffset = sprintf($plotYLabelYOffsetPattern, "tm(\$$pos)");
@@ -369,28 +366,28 @@ if ($plotLegend) {
         EOD
 
         EODD;
-    }
-    $tmp = [];
-    $i = 0;
-    $allTitles = [];
+        $tmp = [];
+        $i = 0;
+        $allTitles = [];
 
-    foreach ($plot_every_data as $pevery) {
-        $every = \Help\Arrays::first($pevery['every']);
-        $title = $pevery['every']['legend'];
+        foreach ($plot_every_data as $pevery) {
+            $every = \Help\Arrays::first($pevery['every']);
+            $title = $pevery['every']['legend'];
 
-        $stackName = $pevery['stack'];
+            $stackName = $pevery['stack'];
 
-        if (! empty($stackName))
-            $title .= " {/=11($stackName)}";
+            if (! empty($stackName))
+                $title .= " {/=11($stackName)}";
 
-        if (! \in_array($title, $allTitles)) {
-            $tmp[] = "\$legend u (0):(0) every ::$i::$i title \"$title\" with boxes $every";
-            $allTitles[] = $title;
+            if (! \in_array($title, $allTitles)) {
+                $tmp[] = "\$legend u (0):(0) every ::$i::$i title \"$title\" with boxes $every";
+                $allTitles[] = $title;
+            }
+            $groupName = null;
+            $i ++;
         }
-        $fname = null;
-        $i ++;
+        echo "plot\\\n", implode(",\\\n", $tmp), "\n";
     }
-    echo "plot\\\n", implode(",\\\n", $tmp), "\n";
 } else {
     $tmp = [];
     $pattern = (int) ($plotConfig['plot.pattern.offset'] ?? 0);

@@ -276,24 +276,23 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     public function sortDataLines(array &$data): void
     {}
 
-    public function getDataLine(string $csvPath = ''): array
+    public function getDataLine(string $test, array $data): array
     {
         $ret = [];
         $plotConfig = $this->plot_getConfig();
-        $data = \is_file($csvPath) ? \CSVReader::read($csvPath) : [];
 
         $makeXTics = $plotConfig['plot.xtic'] ?? [
             $this,
             'makeXTic'
         ];
-        $dirName = \basename(\dirname($csvPath));
+        $dirName = \basename(\dirname($test));
         $partitionsData = [];
 
         $data = self::moreData($data, $dirName);
 
         $testData[$dirName] = $data;
 
-        $query = \basename($csvPath, '.csv');
+        $query = \basename($test, '.csv');
         $xtic = $makeXTics($testData, $query, $partitionsData ?? []);
 
         $ret[] = $xtic;
@@ -302,7 +301,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $gyMin = &$globalRange[0];
         $gyMax = &$globalRange[1];
 
-        $range = &$this->getRange($csvPath);
+        $range = &$this->getRange($test);
         $yMin = &$range[0];
         $yMax = &$range[1];
 
@@ -312,7 +311,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             foreach (explode(',', $times) as $time) {
 
                 foreach (explode('|', $what) as $what) {
-                    $v = \Benchmark::getOneMeasure($data, $what, $time);
+                    $v = \Measures::getOneMeasure($data, $what, $time);
 
                     if (\is_numeric($v)) {
                         $v = (int) $v;

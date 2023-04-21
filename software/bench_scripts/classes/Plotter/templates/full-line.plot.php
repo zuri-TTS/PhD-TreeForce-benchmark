@@ -59,7 +59,7 @@ $fit = "";
 
 // Search if multiple dataset are used
 {
-    $groups = \array_keys($PLOTTER->getCsvGroups());
+    $groups = \array_keys($PLOTTER->gettestGroups());
     $names = $parts = [];
 
     foreach ($groups as $g) {
@@ -80,8 +80,8 @@ $selection = [
     'filter_prefix'
 ];
 
-$csvGroups = $PLOTTER->getCsvGroups();
-$allGroupsName = \array_keys($csvGroups);
+$testGroups = $PLOTTER->gettestGroups();
+$allGroupsName = \array_keys($testGroups);
 
 $fstyle = function ($configParam, int $i, string $groupName) use ($plotConfig, $allGroupsName) {
     $style = $plotConfig[$configParam];
@@ -96,9 +96,8 @@ $fstyle = function ($configParam, int $i, string $groupName) use ($plotConfig, $
     return \str_format($style, $styleReplacement);
 };
 
-foreach ($csvGroups as $group => $csvPaths) {
-    $csvData = $PLOTTER->getCsvData(\Help\Arrays::first($csvPaths));
-    $dirName = \basename(\dirname(\Help\Arrays::first($csvPaths)));
+foreach ($testGroups as $groupName => $tests) {
+    $dirName = \dirname(\Help\Arrays::first($tests));
     $delements = \Help\Plotter::extractDirNameElements($dirName);
     $sdelements = \Help\Arrays::subSelect($delements, $selection);
 
@@ -120,26 +119,26 @@ foreach ($csvGroups as $group => $csvPaths) {
 
     if ($plotConfig['plot.points']) {
         $title = $notitle ? "notitle" : "title $titleRef";
-        $style = $fstyle('plot.points.style', $i, $group, $allGroupsName);
+        $style = $fstyle('plot.points.style', $i, $groupName, $allGroupsName);
 
-        $points[] = "'$group.dat' u $xPointPos:(tm(\${$yPointPos})) with points $title $style";
+        $points[] = "'$groupName.dat' u $xPointPos:(tm(\${$yPointPos})) with points $title $style";
         $notitle = true;
     }
 
     if ($plotConfig['plot.lines']) {
         $title = $notitle ? "notitle" : "title $titleRef";
-        $style = $fstyle('plot.lines.style', $i, $group, $allGroupsName);
+        $style = $fstyle('plot.lines.style', $i, $groupName, $allGroupsName);
 
-        $lines[] = "'$group.dat' u $xPointPos:(tm(\${$yPointPos})) with lines $title $style";
+        $lines[] = "'$groupName.dat' u $xPointPos:(tm(\${$yPointPos})) with lines $title $style";
         $notitle = true;
     }
 
     if ($plotConfig['plot.fit.linear']) {
         $title = $notitle ? "notitle" : "title $titleRef";
-        $style = $fstyle('plot.fit.linear.style', $i, $group, $allGroupsName);
+        $style = $fstyle('plot.fit.linear.style', $i, $groupName, $allGroupsName);
 
         echo "f$i(x) = a$i + b$i*x\n";
-        echo "fit f$i(x) '$group.dat' u $xPointPos:(tm(\${$yPointPos})) via a$i,b$i\n";
+        echo "fit f$i(x) '$groupName.dat' u $xPointPos:(tm(\${$yPointPos})) via a$i,b$i\n";
 
         $interpolate[] = "f$i(x) $title $style";
     }

@@ -1,18 +1,18 @@
 <?php
 namespace Plotter;
 
-final class GroupPlotter implements IPlotter
+final class GroupPlotter implements IGroupPlotter
 {
 
     private const template = __DIR__ . '/templates/group.plot.php';
 
     private \Plot $plot;
 
-    private array $csvPaths;
-
-    private string $basePath;
-
     private array $data;
+
+    private string $dirName;
+
+    private array $queriesName;
 
     public function __construct(\Plot $plot)
     {
@@ -24,19 +24,19 @@ final class GroupPlotter implements IPlotter
         return 'group';
     }
 
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    public function getDirName()
+    {
+        return $this->dirName;
+    }
+
     public function getProcessType(): string
     {
         return \Plot::PROCESS_GROUP;
-    }
-
-    public function getCSVPaths(): array
-    {
-        return $this->csvPaths;
-    }
-
-    public function getGroupPath(): string
-    {
-        return $this->basePath;
     }
 
     public function getOutFileName(string $suffix = ""): string
@@ -44,11 +44,12 @@ final class GroupPlotter implements IPlotter
         return "all_time$suffix";
     }
 
-    public function plot(array $csvPaths): void
+    public function plot(string $dirName, array $queriesName): void
     {
-        $this->csvPaths = $csvPaths;
-        $this->basePath = \getcwd();
-
+        \wdPush($dirName);
+        $this->dirName = $dirName;
+        $this->queriesName = $queriesName;
+        $this->data = \array_combine($queriesName, $this->plot->getData());
         $contents = \get_include_contents(self::template, [
             'PLOT' => $this->plot,
             'PLOTTER' => $this
@@ -61,6 +62,7 @@ final class GroupPlotter implements IPlotter
         echo "writing $outFilePath\n";
 
         system($cmd);
+        \wdPop();
     }
 
     // ========================================================================

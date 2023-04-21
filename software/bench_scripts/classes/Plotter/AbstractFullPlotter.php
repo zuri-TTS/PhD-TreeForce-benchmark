@@ -1,7 +1,7 @@
 <?php
 namespace Plotter;
 
-abstract class AbstractFullPlotter implements IPlotter
+abstract class AbstractFullPlotter implements IFullPlotter
 {
 
     // protected bool $xtics_pretty = true;
@@ -22,9 +22,14 @@ abstract class AbstractFullPlotter implements IPlotter
     // return (int) $matches[1] * (self::factors[$matches[2]] ?? 0);
     // return 0;
     // }
-    protected function cleanCurrentDir()
+    protected function cleanCurrentDir(string ...$globs)
     {
-        foreach ($g = \glob('*.dat') as $file)
-            \unlink($file);
+        if (empty($globs))
+            $globs = [
+                '*.dat'
+            ];
+        foreach ($globs as $glob)
+            foreach ($g = \glob($glob) as $file)
+                \unlink($file);
     }
 }

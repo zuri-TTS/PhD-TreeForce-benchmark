@@ -103,7 +103,7 @@ final class FullLineStrategy extends AbstractFullStrategy
         });
     }
 
-    public function groupCSVFiles(array $csvFiles): array
+    public function groupTests(array $testGroups): array
     {
         $config = $this->getPlotter()->plot_getConfig();
         $g = $config['@group'];
@@ -145,14 +145,14 @@ final class FullLineStrategy extends AbstractFullStrategy
             'filter_prefix'
         ];
 
-        foreach ($csvFiles as $csvFile) {
-            $dirName = \basename(\dirname($csvFile));
+        foreach ($testGroups as $test) {
+            $dirName = \dirname($test);
             $delements = \Help\Plotter::extractDirNameElements($dirName);
             $elements = \Help\Arrays::subSelect($delements, $selection);
 
             $k = \Help\Plotter::encodeDirNameElements($elements, '');
 
-            $ret["$k$g"][] = $csvFile;
+            $ret["$k$g"][] = $test;
         }
         if (\count($ret) == 1)
             return $ret;

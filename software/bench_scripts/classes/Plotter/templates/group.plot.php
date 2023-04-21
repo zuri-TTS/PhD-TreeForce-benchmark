@@ -21,12 +21,10 @@ $blocGroup = [
     'bench'
 ];
 
-foreach ($PLOTTER->getCSVPaths() as $path) {
-    $data = $PLOT->getData()[$path];
-    $fileName = \basename($path,'.csv');
+foreach ($PLOTTER->getData() as $qname => $data) {
     $bloc = &$blocs[];
     $bloc[] = [
-        "<$fileName>"
+        "<$qname>"
     ];
     $bloc += $graphics->prepareOneBloc($blocGroup, [], [
         'bench' => [
@@ -39,18 +37,16 @@ foreach ($PLOTTER->getCSVPaths() as $path) {
 list ($yMin, $yMax) = $graphics->getYMinMax($PLOT->getData());
 $ymin = \max(0, $yMin - 1);
 
-$nbMeasures = \count(\array_filter($data, fn ($d) => \PLOT::isTimeMeasure($d)));
+$nbMeasures = \count(\array_filter($data, fn ($d) => \Measures::isTimeMeasure($d)));
 $nbBars = $nbMeasures * $nbQueries * 2;
-
 
 $graphics->compute($nbBars, $nbMeasures, $yMax);
 
 echo $graphics->addFooter($blocs);
 $w = $graphics['w'];
 $h = $graphics['h'];
-
 ?>
-set title "<?=$PLOT->gnuplotSpecialChars(\basename($PLOTTER->getGroupPath()))?>"
+set title "<?=$PLOT->gnuplotSpecialChars(\basename($PLOTTER->getDirName()))?>"
 set ylabel "time (ms)"
 set key title "Times"
 
@@ -78,20 +74,19 @@ set tmargin <?=(int)ceil($graphics['plot.header.h'] / $graphics['font.size'])?>
 
 set origin <?=$graphics['plot.x'] / $w?>, <?=$graphics['plot.y'] / $h?>
 
-set size <?=$graphics['plot.w'] / $w?>, <?=$graphics['plot.h'] / $h?>
+# set size <?=$graphics['plot.w'] / $w?>, <?=$graphics['plot.h'] / $h?>
 
-set term png size <?=$w?>, <?=$h?>
+set term png size <?=$h?>, <?=$w?>
 
 <?php
 $plot_lines = $graphics->plotYLines($yMax);
 $ls = 1;
 
-foreach ($PLOTTER->getCSVPaths() as $f) {
-    $fname = \basename($f, '.csv') . '_time';
-    $title = $PLOT->gnuplotSpecialChars($fname);
-    
+foreach ($PLOTTER->getData() as $qname => $data) {
+    $title = $PLOT->gnuplotSpecialChars("Q$qname");
+
     $tmp[] = <<<EOD
-    '$fname.dat' u 2:xtic(1) title "$title real" ls $ls fs pattern 0 \\
+    '{$qname}_time.dat' u 2:xtic(1) title "$title real" ls $ls fs pattern 0 \\
     ,'' u 3 title "$title cpu" fs pattern 3 ls $ls \\\n
     EOD;
     $ls ++;

@@ -34,13 +34,13 @@ final class FullPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
-    private array $csvPaths;
+    private array $tests;
 
-    private array $csvGroups;
+    private array $testGroups;
 
     private array $groupsInfos;
 
-    private array $csvData;
+    private array $testsData;
 
     private array $queries;
 
@@ -61,22 +61,24 @@ final class FullPlotter extends AbstractFullPlotter
         return $this->groupsInfos;
     }
 
-    public function getCsvGroups(): array
+    public function getTestGroups(): array
     {
-        return $this->csvGroups;
+        return $this->testGroups;
+    }
+
+    public function getTestData(string $test): array
+    {
+        // \wdPush("..");
+        // $groupName = \dirname($test);
+        // $query = \basename($test);
+        // $ret = (new \Measures($groupName))->loadMeasuresOf($query);
+        // \wdPop();
+        return $this->plot->getData()[$test];
     }
 
     public function getNbGroups(): int
     {
-        return \count($this->csvGroups);
-    }
-
-    public function getCsvData(?string $csvPath = null): array
-    {
-        if (null === $csvPath)
-            return \array_map(fn ($p) => \CSVReader::read($p), $this->csvPaths);
-
-        return \CSVReader::read($csvPath);
+        return \count($this->testGroups);
     }
 
     public function plot_getConfig(): array
@@ -84,11 +86,10 @@ final class FullPlotter extends AbstractFullPlotter
         return $this->plotConfig;
     }
 
-    public function plot(array $csvPaths): void
+    public function plot(array $tests): void
     {
-        $this->csvPaths = $csvPaths;
-        $this->cleanCurrentDir();
-        $queries = \array_unique(\array_map(fn ($p) => \basename($p, '.csv'), $csvPaths));
+        $this->tests = $tests;
+        $queries = \array_unique(\array_map(fn ($p) => \basename($p), $tests));
 
         $plotConfig = $this->strategy->plot_getConfig();
         $plotGroups = $plotConfig['plot.groups'] ?? null;
@@ -102,7 +103,7 @@ final class FullPlotter extends AbstractFullPlotter
         $nbGroups = \count($plotGroups);
         $processedGroups = [];
 
-        foreach ($plotGroups as $groupName => $group) {
+        foreach ($plotGroups as $plotGroupName => $group) {
 
             if (empty($group))
                 $group = [];
@@ -117,36 +118,42 @@ final class FullPlotter extends AbstractFullPlotter
             $groupsConfig = $this->plotConfig = \array_merge($this->plotConfig, $this->plotConfig['plot.groups.config'] ?? []);
 
             $this->queries = $groupQueries;
-            $this->csvGroups = [];
+            $this->testGroups = [];
 
             // Write files csv & dat
             {
-                // @group as possible parameter for groupCSVFiles() like in FullLineStrategy
+                // @group as possible parameter for groupTests() like in FullLineStrategy
                 $g = $this->plotConfig['@group'] ?? '';
 
                 if (! isset($processedGroups[$g])) {
                     $this->plotConfig['@group'] = $g;
-                    $csvGroups = $this->strategy->groupCSVFiles($csvPaths);
+                    $testGroups = $this->strategy->groupTests($tests);
 
-                    $processedGroups[$g] = $csvGroups;
-                    $this->writeDat($csvGroups);
-                    $this->writeCsv($csvGroups);
-                    $this->writePhp($csvGroups);
+                    foreach ($testGroups as $groupName => $tests) {
+                        foreach ($tests as $test) {
+                            $dataLine = $this->strategy->getDataLine($test, $this->plot->getData()[$test]);
+                            $this->testsData[$test] = $dataLine;
+                        }
+                    }
+                    $processedGroups[$g] = $testGroups;
+                    $this->writeDat($testGroups);
+                    $this->writeCsv($testGroups);
+                    $this->writePhp($testGroups);
                 } else
-                    $csvGroups = $processedGroups[$g];
+                    $testGroups = $processedGroups[$g];
             }
 
-            foreach ($csvGroups as $csvGroup => $files) {
-                $files = \array_filter($files, fn ($p) => in_array(\basename($p, '.csv'), $groupQueries));
+            foreach ($testGroups as $testGroup => $tests) {
+                $tests = \array_filter($tests, fn ($p) => in_array(\basename($p), $groupQueries));
 
-                if (empty($files))
+                if (empty($tests))
                     continue;
 
-                $this->csvGroups[$csvGroup] = $files;
-                $this->groupsInfos[$csvGroup]['nb'] = \count($files);
+                $this->testGroups[$testGroup] = $tests;
+                $this->groupsInfos[$testGroup]['nb'] = \count($tests);
             }
 
-            if (empty($this->csvGroups))
+            if (empty($this->testGroups))
                 continue;
 
             $contents = \get_include_contents($this->template, [
@@ -156,7 +163,7 @@ final class FullPlotter extends AbstractFullPlotter
             $fileName = "all_time";
 
             if ($nbGroups > 1)
-                $fileName .= $groupName;
+                $fileName .= $plotGroupName;
 
             $plotFileName = "$fileName.plot";
             \file_put_contents($plotFileName, $contents);
@@ -185,20 +192,24 @@ final class FullPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
-    private function writePhp(array $cutData)
+    private function writePhp(array $testGroups)
     {
-        foreach ($cutData as $file => $csvFiles) {
-            $file = "$file.php";
+        foreach ($testGroups as $groupName => $tests) {
+            $file = "$groupName.php";
+
+            if (\is_file($file))
+                continue;
+
             echo "Writing $file\n";
             $data = [];
 
-            foreach ($csvFiles as $csvPath) {
-                $dirName = \basename(\dirname($csvPath));
+            foreach ($tests as $test) {
+                $dirName = \dirname($test);
                 $elements = \Help\Plotter::extractDirNameElements($dirName);
                 $data[] = [
                     'dataLine' => \array_combine( //
                     $this->strategy->getDataHeader(), //
-                    $this->strategy->getDataLine($csvPath) //
+                    $this->strategy->getDataLine($test, $this->plot->getData()[$test]) //
                     ),
                     'elements' => $elements['full_pattern']
                 ];
@@ -207,33 +218,33 @@ final class FullPlotter extends AbstractFullPlotter
         }
     }
 
-    private function fwriteDat($fp, array $csvFiles)
+    private function fwriteDat($fp, array $tests)
     {
         $header = $this->strategy->getDataHeader();
         $header = \array_map('Help\Plotter::encodeDataValue', $header);
         fwrite($fp, implode(' ', $header) . "\n");
         $data = [];
 
-        foreach ($csvFiles as $csvPath) {
-            $dirName = \basename(\dirname($csvPath));
-            $dataLine = $this->strategy->getDataLine($csvPath);
-            $this->csvData[$csvPath] = $dataLine;
-            $dataLine = \array_map('Help\Plotter::encodeDataValue', $dataLine);
-            $data[] = $dataLine;
-        }
+        foreach ($tests as $test)
+            $data[] = \array_map('\Help\Plotter::encodeDataValue', $this->testsData[$test]);
+
         $this->strategy->sortDataLines($data);
 
         foreach ($data as $dataLine)
             fwrite($fp, implode(' ', $dataLine) . "\n");
     }
 
-    private function writeDat(array $cutData)
+    private function writeDat(array $testsGroup)
     {
-        foreach ($cutData as $file => $csvFiles) {
-            $file = "$file.dat";
+        foreach ($testsGroup as $groupName => $tests) {
+            $file = "$groupName.dat";
+
+            if (\is_file($file))
+                continue;
+
             $fp = \fopen($file, "w");
             echo "Writing $file\n";
-            $this->fwriteDat($fp, $csvFiles);
+            $this->fwriteDat($fp, $tests);
             \fclose($fp);
         }
     }
@@ -241,7 +252,7 @@ final class FullPlotter extends AbstractFullPlotter
     private function fwriteCsv($fp, string $name, array $csvFiles)
     {
         foreach ($csvFiles as $csvPath) {
-            $dataLine = $this->csvData[$csvPath];
+            $dataLine = $this->testsData[$csvPath];
             $dataLine[0] = "$name/{$dataLine[0]}";
             $dataLine = \array_map('Help\Plotter::encodeDataValue', $dataLine);
             fwrite($fp, implode(',', $dataLine) . "\n");
@@ -252,6 +263,10 @@ final class FullPlotter extends AbstractFullPlotter
     {
         $group = $this->plotConfig['@group'];
         $file = "table$group.csv";
+
+        if (\is_file($file))
+            return;
+
         echo "Writing $file\n";
         $fp = \fopen($file, "w");
 

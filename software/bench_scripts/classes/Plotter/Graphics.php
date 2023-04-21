@@ -203,7 +203,7 @@ final class Graphics implements \ArrayAccess
 
             foreach ($csvData as $meas) {
 
-                if (! \Plot::isTimeMeasure($meas))
+                if (! \Measures::isTimeMeasure($meas))
                     continue;
 
                 foreach ($times as $t) {
