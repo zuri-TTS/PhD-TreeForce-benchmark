@@ -171,6 +171,17 @@ final class Benchmark
 
             if ($this->config['app.output.display'])
                 \readfile($this->tmpOutFile);
+
+            $measures = \Measures::parseLinesOfMeasures(\file($outFile));
+
+            // No query case: we can skip because hirule asks nothing to the document-store
+            if ((int) $measures['queries']['total'] === 0) {
+                echo "Skipped because no queries to send\n";
+                $nbMeasures = 0;
+            } elseif (isset($measures['error.timeout'])) {
+                echo "Skipped because of timeout `{$measures['error.timeout']['value']}ms`\n";
+                $nbMeasures = 0;
+            }
         }
     }
 
