@@ -224,7 +224,8 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
         'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
         'bench.plot.types' => $cmdArg['plot'],
-        'app.output.display' => $cmdArg['cmd-display-output']
+        'app.output.display' => $cmdArg['cmd-display-output'],
+        'timeout.order.queries' => $cmdArg['timeout-order-queries']
     ]);
     $ret['bench.measures']['default']['nb'] = (int) $cmdArg['bench-measures-nb'];
     $ret['bench.measures']['default']['forget'] = (int) $cmdArg['bench-measures-forget'];

@@ -15,6 +15,10 @@ final class Benchmark
 
     private array $javaOutput;
 
+    private bool $timeoutAllQueries;
+
+    private bool $timeout = false;
+
     function __construct(array $config)
     {
         $this->config = $config;
@@ -153,6 +157,7 @@ final class Benchmark
         $i = 1;
 
         while ($nbMeasures --) {
+            $this->timeout = false;
 
             if ($cold)
                 $config['bench.cold.function']();
@@ -180,6 +185,7 @@ final class Benchmark
                 $nbMeasures = 0;
             } elseif (isset($measures['error.timeout'])) {
                 echo "Skipped because of timeout `{$measures['error.timeout']['value']}ms`\n";
+                $this->timeout = true;
                 $nbMeasures = 0;
             }
         }
@@ -216,12 +222,23 @@ final class Benchmark
         $this->createAndWdPushOutputDir();
         $queries = $this->config['dataSet']->getQueries();
 
+        $qorder = (array) $this->config['timeout.order.queries'];
+        $this->timeoutAllQueries = ! empty($qorder);
+        $qorder = \array_intersect($qorder, $queries);
+        $queries = \array_merge($qorder, \array_diff($queries, $qorder));
+
         echo $this->cmd, "\n\n";
 
         foreach ($queries as $query) {
             $header = "<{$this->config['dataSet']}> ({$this->config['app.cmd']}) query: $query";
             $this->executeMeasures($query, $header, $forceNbMeasures);
             echo "\n";
+
+            if ($this->timeout && $this->timeoutAllQueries) {
+                $q = \implode(',', $queries);
+                echo "End of TEST because of timeout.order.queries: [$q]\n";
+                break;
+            }
         }
         \wdPop();
     }
