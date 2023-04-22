@@ -11,4 +11,6 @@ export qBatchSize=70
 export timeout=15m
 export nbMeasures=5
 
+export moreParams="+clean-db +clean-db-json"
+
 ./sh/tests.sh

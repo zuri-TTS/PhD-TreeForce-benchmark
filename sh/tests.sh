@@ -83,11 +83,12 @@ batchesNbThreads=1
 ## +skip-existing      Do not execute an already existing test (from a previous execution of the script).
 ## +clean-db           Clean the (mongodb) dataset collection before and after the tests using it.
 ## +clean-db-json      Clean the json files used to load the (mongodb) collection after the tests. Usefull for big datasets.
-moreParams="Pquerying.config.print=y -skip-existing +clean-db -clean-db-json"
+[ -z ${moreParams+x} ] &&
+moreParams="-skip-existing +clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
-export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id: '[$id]' Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' ${parallel}parallel  Pquerying.timeout='$timeout' bench-measures-nb=$nbMeasures bench-measures-forget=$nbForget Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' $moreParams"
+export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id: '[$id]' Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' ${parallel}parallel  Pquerying.timeout='$timeout' bench-measures-nb=$nbMeasures bench-measures-forget=$nbForget Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' Pquerying.config.print=y $moreParams"
 
 for group in $groups
 do
