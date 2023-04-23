@@ -229,7 +229,7 @@ final class Benchmark
 
         echo $this->cmd, "\n\n";
 
-        foreach ($queries as $query) {
+        foreach ($queries as $i => $query) {
             $header = "<{$this->config['dataSet']}> ({$this->config['app.cmd']}) query: $query";
             $this->executeMeasures($query, $header, $forceNbMeasures);
             echo "\n";
@@ -237,6 +237,13 @@ final class Benchmark
             if ($this->timeout && $this->timeoutAllQueries) {
                 $q = \implode(',', $queries);
                 echo "End of TEST because of timeout.order.queries: [$q]\n";
+                $data = [
+                    'order' => \implode(',', $queries),
+                    'timeout.queries' => \implode(',', \array_slice($queries, $i))
+                ];
+                $fp = \fopen("timeout_queries.txt", "w");
+                \Measures::writeAsJavaProperties($data, $fp);
+                \fclose($fp);
                 break;
             }
         }
