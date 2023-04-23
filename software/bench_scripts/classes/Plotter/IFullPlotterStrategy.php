@@ -8,7 +8,7 @@ interface IFullPlotterStrategy
 
     function groupTests(array $tests): array;
 
-    function getDataLine(string $test, array $data): array;
+    function getDataLine(\Measures $measures): array;
 
     function sortDataLines(array &$data): void;
 

@@ -6,13 +6,11 @@ final class FullPlotter extends AbstractFullPlotter
 
     private $template = __DIR__ . '/templates/full.plot.php';
 
-    private \Plot $plot;
-
     private IFullPlotterStrategy $strategy;
 
     public function __construct(\Plot $plot, IFullPlotterStrategy $strategy)
     {
-        $this->plot = $plot;
+        parent::__construct($plot);
         $this->strategy = $strategy;
         $strategy->setPlotter($this);
     }
@@ -42,6 +40,8 @@ final class FullPlotter extends AbstractFullPlotter
 
     private array $testsData;
 
+    private array $testsMeasures = [];
+
     private array $queries;
 
     private array $plotConfig;
@@ -66,14 +66,19 @@ final class FullPlotter extends AbstractFullPlotter
         return $this->testGroups;
     }
 
-    public function getTestData(string $test): array
+    public function getTestsMeasures(): array
     {
-        // \wdPush("..");
-        // $groupName = \dirname($test);
-        // $query = \basename($test);
-        // $ret = (new \Measures($groupName))->loadMeasuresOf($query);
-        // \wdPop();
-        return $this->plot->getData()[$test];
+        return $this->testsMeasures;
+    }
+
+    public function getTestMeasures(string $test, array $config = []): \Measures
+    {
+        if (isset($this->testMeasures[$test]))
+            return $this->testMeasures[$test];
+
+        return $this->testMeasures[$test] = //
+        $this->plot->getTestMeasures($test)->average($config + $this->plot_getConfig());
+        return $this->getTestsMeasures()[$test];
     }
 
     public function getNbGroups(): int
@@ -83,7 +88,7 @@ final class FullPlotter extends AbstractFullPlotter
 
     public function plot_getConfig(): array
     {
-        return $this->plotConfig;
+        return $this->plotConfig ?? [];
     }
 
     public function plot(array $tests): void
@@ -130,8 +135,12 @@ final class FullPlotter extends AbstractFullPlotter
                     $testGroups = $this->strategy->groupTests($tests);
 
                     foreach ($testGroups as $groupName => $tests) {
+
                         foreach ($tests as $test) {
-                            $dataLine = $this->strategy->getDataLine($test, $this->plot->getData()[$test]);
+                            // TODO external parameter for average
+                            $this->testMeasures[$test] = //
+                            $testMeasures = $this->getTestMeasures($test);
+                            $dataLine = $this->strategy->getDataLine($testMeasures);
                             $this->testsData[$test] = $dataLine;
                         }
                     }
@@ -197,8 +206,8 @@ final class FullPlotter extends AbstractFullPlotter
         foreach ($testGroups as $groupName => $tests) {
             $file = "$groupName.php";
 
-            if (\is_file($file))
-                continue;
+            // if (\is_file($file))
+            // continue;
 
             echo "Writing $file\n";
             $data = [];
@@ -209,7 +218,7 @@ final class FullPlotter extends AbstractFullPlotter
                 $data[] = [
                     'dataLine' => \array_combine( //
                     $this->strategy->getDataHeader(), //
-                    $this->strategy->getDataLine($test, $this->plot->getData()[$test]) //
+                    $this->testsData[$test] //
                     ),
                     'elements' => $elements['full_pattern']
                 ];

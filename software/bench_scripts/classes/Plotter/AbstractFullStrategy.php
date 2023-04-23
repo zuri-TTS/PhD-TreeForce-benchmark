@@ -4,7 +4,7 @@ namespace Plotter;
 abstract class AbstractFullStrategy implements IFullPlotterStrategy
 {
 
-    private array $ranges = [];
+    private array $range = [];
 
     protected array $toPlot;
 
@@ -41,45 +41,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
     public function plot_getConfig(array $default = []): array
     {
-        if ($this->conf !== null)
-            return $this->conf;
-
-        $wd = getcwd();
-        $path_ex = explode(DIRECTORY_SEPARATOR, $wd);
-        $PARENT = [];
-        $conf = [];
-
-        for ($i = 1, $c = \count($path_ex); $i <= $c; $i ++) {
-            $path = \implode(DIRECTORY_SEPARATOR, \array_slice($path_ex, 0, $i));
-            $confFiles = [
-                "$path/full.php",
-                "$path/full_{$this->getID()}.php"
-            ];
-
-            foreach ($confFiles as $confFile) {
-
-                if (\is_file($confFile)) {
-                    $conf = \array_merge($conf, include $confFile);
-                    $PARENT = $conf;
-                }
-            }
-        }
-        return $this->conf = $conf + $default + [
-            'plot.yrange' => 'global',
-            'plot.yrange.display' => false,
-            'plot.pattern.offset' => 0,
-            'plot.legend' => true,
-            'plot.legend.w' => null,
-            'plot.ytics.step' => 1,
-            'plot.ytics.nb' => 1,
-            'plot.xtic' => null, // function
-            'plot.title' => null, // function
-            'plot.format.y' => "%gs",
-            'multiplot.title' => true,
-            'queries' => null, // array,
-            'query.dat.file' => null, // function
-            'measure.div' => 1000
-        ];
+        return $this->plotter->getPlot()->getConfigFor($this->plotter, $default);
     }
 
     // ========================================================================
@@ -88,26 +50,29 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         0
     ];
 
-    private function &getRange(string $csvPath = ''): array
+    private function &getRange(string $tests = ''): array
     {
-        if (! isset($this->range[$csvPath]))
-            $this->range[$csvPath] = self::MAX_RANGE;
+        if (! isset($this->range[$tests]))
+            $this->range[$tests] = self::MAX_RANGE;
 
-        return $this->range[$csvPath];
+        return $this->range[$tests];
     }
 
-    public function plot_getYRange(string ...$csvPath): array
+    public function plot_getYRange(array $testsMeasures): array
     {
-        if (empty($csvPath))
-            $csvPath = [
+        return self::MAX_RANGE;
+        // TODO
+        if (empty($tests))
+            $tests = [
                 ''
             ];
 
-        if (\count($csvPath) === 1)
-            return $this->range[$csvPath[0]] ?? self::MAX_RANGE;
+        if (\count($tests) === 1)
+            return $this->getRange($tests[0]->getTestName());
 
-        return \array_reduce($csvPath, function ($a, $b) {
-            list ($bmin, $bmax) = $this->range[$b];
+        $tests = \array_map(fn ($t) => $this->plotter->getTestMeasures($t), $tests);
+        return \array_reduce($tests, function ($a, $b) {
+            list ($bmin, $bmax) = $this->getRange($b);
             return [
                 \min($a[0], $bmin),
                 \max($a[1], $bmax)
@@ -248,11 +213,14 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
 
         if (isset($data['partitions'])) {
             $partitionsData = $data['partitions'];
-            $partitionsNbQueries = \explode(',', $partitionsData['each.queries.total']);
+            $partitionsNbQueries = \Help\Arrays::decode($partitionsData['each.queries.total']);
             $partitionsNbQueries = \array_filter($partitionsNbQueries); // Delete 0 queries values
             $uniqueNbQueries = \array_unique($partitionsNbQueries);
             $allPartitionsSameQueries = \count($uniqueNbQueries) == 1;
-            $nbPartitionsHavingQueries = $data['partitions.used']['total'];
+
+            $nbPartitionsHavingQueries = //
+            $data['partitions']['used'] ?? //
+            $data['partitions.used']['total']; //
 
             $data['partitions.infos']['all.sameQueries'] = $allPartitionsSameQueries;
 
@@ -276,23 +244,27 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     public function sortDataLines(array &$data): void
     {}
 
-    public function getDataLine(string $test, array $data): array
+    public function getDataLine(\Measures $testMeasures): array
     {
         $ret = [];
+        $test = $testMeasures->getTestName();
+        $dirName = $testMeasures->getDirectoryName();
+        $query = $testMeasures->getQueryName();
         $plotConfig = $this->plot_getConfig();
 
         $makeXTics = $plotConfig['plot.xtic'] ?? [
             $this,
             'makeXTic'
         ];
-        $dirName = \basename(\dirname($test));
         $partitionsData = [];
 
+        $data = $testMeasures->getMeasures();
+        $data = $data['measures'] + $data;
+        unset($data['measures']);
         $data = self::moreData($data, $dirName);
 
         $testData[$dirName] = $data;
 
-        $query = \basename($test, '.csv');
         $xtic = $makeXTics($testData, $query, $partitionsData ?? []);
 
         $ret[] = $xtic;
@@ -411,7 +383,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $ret = [];
         $nbAnswers = $data['answers']['total'];
         $nbPartitions = $data['partitions']['total'] ?? 1;
-        $nbPartitionsHavingQueries = $data['partitions.used']['total'] ?? 1;
+        $nbPartitionsHavingQueries = $data['partitions']['used'] ?? $data['partitions.used']['total'] ?? 1;
         $allPartitionsSameQueries = $data['partitions.infos']['all.sameQueries'];
         $nbReformulations = $data['partitions.infos']['all.queries.nb'] ?? $data['queries']['total'];
 

@@ -4,6 +4,11 @@ namespace Plotter;
 final class FullPartitioningPlotter extends AbstractFullPlotter
 {
 
+    public function __construct(\Plot $plot)
+    {
+        parent::__construct($plot);
+    }
+
     public function getId(): string
     {
         return 'partitioning';
@@ -14,11 +19,14 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
         return \Plot::PROCESS_FULL;
     }
 
+    private $plotConfig = [];
+
     public function plot(array $tests): void
     {
         $this->cleanCurrentDir();
+        $this->plotConfig = $this->plot->getConfigFor($this);
         $testGroups = self::groupTests($tests);
-        self::writeCsv($testGroups);
+        $this->writeMeasures($testGroups);
     }
 
     // ========================================================================
@@ -44,179 +52,132 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
-    private const partitionsStatsGroups = [
-        'answers',
-        'queries'
-    ];
-
-    /**
-     * Clean measures [$kgoup][$kmeasure][] that equals to 0
-     */
-    private static function cleanPartitionsStats(array $stats, string $kgroup, string $kmeasure): array
+    private function prepareMeasures(string $queryName, array $tests): array
     {
-        $drop = [];
-
-        foreach ($stats[$kgroup][$kmeasure] as $k => $v) {
-
-            if ((int) $v == 0)
-                $drop[] = $k;
-        }
-        $ret = [];
-
-        foreach ($stats as $kA => $itemsA)
-            $ret[$kA] = \Help\Arrays::dropColumn($itemsA, ...$drop);
-
-        return $ret;
-    }
-
-    public static function extractPartitionsStats(array $data, array $statsGroups = [])
-    {
-        if (empty($statsGroups))
-            $statsGroups = self::partitionsStatsGroups;
-
-        $partitionsName = [];
-
-        $keys = \array_keys($data);
-
-        foreach ($keys as $k) {
-
-            if (! \preg_match("#^(.+)/#", $k, $matches))
-                continue;
-
-            $keysA[] = $matches[1];
-        }
-        $keysA = \array_unique($keysA);
-        sort($keysA);
-
-        $stats = [];
-
-        foreach ($keysA as $kA) {
-            $elements = \Help\Plotter::extractDirNameElements($kA);
-            $partitionsName[] = $elements['partition'];
-            $stats['partitions']['total'][] = 1;
-
-            foreach ($statsGroups as $kB) {
-
-                foreach ($data["$kA/$kB"] as $k => $v) {
-                    $stats[$kB][$k][] = $v;
-                }
-            }
-        }
-        $stats['partition']['name'] = $partitionsName;
-        $stats = [
-            'partitions' => $stats,
-            'partitions.used' => self::cleanPartitionsStats($stats, 'queries', 'total'),
-            'partitions.hasAnswer' => self::cleanPartitionsStats($stats, 'answers', 'total')
-        ];
-        $ret = [];
-
-        foreach ($stats as $type => $subStats) {
-
-            foreach ($subStats as $kA => $itemsA) {
-
-                foreach (\array_keys($itemsA) as $kB) {
-                    $ret[$type]["$kA.$kB"] = \array_sum($itemsA[$kB]);
-                    $ret[$type]["each.$kA.$kB"] = \implode(',', $itemsA[$kB]);
-                }
-            }
-        }
-        // Clean unusefull stats
-        $ret = \Help\Arrays::dropColumn($ret, ...[
-            'each.partitions.total',
-            'partition.name'
-        ]);
-        $ret = \Help\Arrays::renameColumn($ret, 'partitions.total', 'total', 'each.partition.name', 'names');
-        return $ret;
-    }
-
-    protected static function prepareData(array $data, string $partitionDataGroup, array &$partitionsData, array &$ret): void
-    {}
-
-    private static function prepareMeasures(array $tests): array
-    {
-        $nbColls = \count($tests);
-
         $staticParts = [
             'bench'
         ];
-        $ret = null;
-        $ret['collections']['nb'] = $nbColls;
-        $partitionsData = [];
+        $elementsGroups = [
+            'group',
+            'rules',
+            'partitioning',
+            'partition',
+            'qualifiers'
+        ];
+        $plotConfig = $this->plotConfig;
+        $debug = $plotConfig['debug'];
 
-        foreach ($tests as $test) {
-            $data = \Measures::loadTestMeasures($test);
-            unset($data['bench']);
-            $data = \Measures::toArrayTimeMeasures($data);
+        $nbColls = \count($tests);
 
-            $elements = \Help\Plotter::extractDirNameElements(\basename(\dirname($test)));
-            $partitionDataGroup = \Help\Plotter::encodeDirNameElements(\Help\Arrays::subSelect($elements, [
-                'group',
-                'rules',
-                'partitioning',
-                'partition',
-                'qualifiers'
-            ]), '');
-            foreach ($data as $k => $items) {
+        $infos['collections']['nb'] = $nbColls;
 
-                if (\Measures::isArrayTimeMeasure($items)) {
-                    $partitionsData["$partitionDataGroup/measures"][$k] = $items;
-                } else {
-                    $partitionsData["$partitionDataGroup/$k"] = $items;
+        $testPartitionsMeasures = [];
+        $nbRepetitions = 0;
+
+        // Post-process: get the number of repetitions
+        foreach ($tests as $k => $test) {
+            $allMeasures[$k] = $m = $this->plot->getTestMeasures($test);
+            $nbRepetitions = \max($nbRepetitions, $m->getNbRepetitions());
+        }
+
+        // Get all the partitions measures of each test repetition
+        for ($i = 0; $i < $nbRepetitions; $i ++) {
+
+            foreach ($tests as $k => $test) {
+                $measures = $allMeasures[$k];
+                $elements = \Help\Plotter::extractDirNameElements($measures->getDirectoryName());
+                $partitionDataGroup = \Help\Plotter::encodeDirNameElements(\Help\Arrays::subSelect($elements, $elementsGroups), '');
+
+                $items = $measures->getMeasuresFromRepetition($i);
+                unset($items['bench']);
+
+                $items['partitions'] = [
+                    'total' => 1,
+                    'used' => (int) ($items['queries']['total'] > 0),
+                    'hasAnswer' => (int) ($items['answers']['total'] > 0)
+                ];
+                $items['partition'] = [
+                    'name' => $elements["partition"]
+                ];
+
+                // Make `each` categories
+                foreach ($items as $groupName => $gmeasures) {
+                    if ($groupName == "measures")
+                        continue;
+
+                    foreach ($gmeasures as $mname => $v)
+                        $items['partitions']["each.$groupName.$mname"] = [
+                            $v
+                        ];
                 }
+                $testPartitionsMeasures[$i][$partitionDataGroup] = $items;
+            }
 
-                // Do not sum static items
-                if (\in_array($k, $staticParts)) {
-
-                    if (! isset($ret[$k]))
-                        $ret[$k] = $items;
-                    elseif ($ret[$k] != $items)
-                        fwrite(STDERR, "Not the same $k value:\nHave:\n" . print_r($ret[$k], true) . "Set:\n" . print_r($items, true));
-                } else {
-
-                    foreach ($items as $ki => $item) {
-
-                        if (\Measures::isArrayTimeMeasure($item)) {
-
-                            if (! isset($ret[$k][$ki]))
-                                $ret[$k][$ki] = $item;
-                            else
-                                $ret[$k][$ki] = \Measures::sumArrayMeasures($ret[$k][$ki], $item);
-                        } elseif (! isset($ret[$k][$ki]))
-                            $ret[$k][$ki] = (int) $item;
-                        else
-                            $ret[$k][$ki] += (int) $item;
-                    }
-                }
+            if ($debug) {
+                $fp = \fopen("full_partitioning/{$queryName}_partitions-measures.txt", "w");
+                $partitionsIni = \Help\Arrays::prefixSubItemsWithKey($testPartitionsMeasures[$i], ':');
+                \Measures::writeAsIni($partitionsIni, $fp);
+                \fclose($fp);
             }
         }
-        $partitionsStats = self::extractPartitionsStats($partitionsData);
-        $ret += $partitionsStats;
 
-        uksort($partitionsData, 'strnatcasecmp');
-        $ret += $partitionsData;
-        return $ret;
+        // Sum partitions' results
+        $sumTests = [];
+        for ($i = 0; $i < $nbRepetitions; $i ++) {
+            $measures = \array_reduce($testPartitionsMeasures[$i], function ($a, $b) {
+                if (empty($a))
+                    return $b;
+
+                foreach ($a as $group => $values) {
+                    $isTimeMeasure = $group === 'measures';
+
+                    foreach ($values as $k => $av) {
+
+                        if (! isset($b[$group][$k]))
+                            $v = $av;
+                        else {
+                            $bv = $b[$group][$k];
+
+                            if ($isTimeMeasure)
+                                $v = \Measures::sumStringTimeMeasures($av, $bv);
+                            elseif (\is_numeric($av) && \is_numeric($bv))
+                                $v = $av + $bv;
+                            elseif (\is_array($av) && \is_array($bv))
+                                $v = \array_merge($av, $bv);
+                            else
+                                $v = "$av,$bv";
+                        }
+                        $a[$group][$k] = $v;
+                    }
+                }
+
+                return $a;
+            }, []);
+            $sumTests[$i] = $measures + $infos;
+        }
+        return $sumTests;
     }
 
-    private static function writeCsv(array $testGroups): array
+    private function writeMeasures(array $testGroups): void
     {
-        $newCsvFiles = [];
-
         foreach ($testGroups as $query => $groups) {
 
             foreach ($groups as $groupName => $tests) {
                 \wdPush('..');
-                $prepareMeasures = self::prepareMeasures($tests);
-                $prepareMeasures = \Measures::toStringTimeMeasures($prepareMeasures);
+                $aggregationMeasures = $this->prepareMeasures($query, $tests);
                 \wdPop();
 
                 if (! \is_dir($groupName))
                     \mkdir($groupName);
 
-                $csvFile = "$groupName/$query.csv";
-                \CSVReader::write($csvFile, $prepareMeasures);
-                $newCsvFiles[] = $csvFile;
+                $i = 1;
+                foreach ($aggregationMeasures as $measures) {
+                    $fp = \fopen("$groupName/{$query}_measures-$i.txt", "w");
+                    \Measures::writeAsIni($measures, $fp);
+                    \fclose($fp);
+                    $i ++;
+                }
             }
         }
-        return $newCsvFiles;
     }
 }

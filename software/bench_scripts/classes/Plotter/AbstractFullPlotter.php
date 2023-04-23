@@ -4,24 +4,18 @@ namespace Plotter;
 abstract class AbstractFullPlotter implements IFullPlotter
 {
 
-    // protected bool $xtics_pretty = true;
+    protected \Plot $plot;
 
-    // protected bool $xtics_infos = true;
+    protected function __construct(\Plot $plot)
+    {
+        $this->plot = $plot;
+    }
 
-    // protected bool $xtics_infos_answers_nb = true;
+    public function getPlot(): \Plot
+    {
+        return $this->plot;
+    }
 
-    // private const factors = [
-    // 'K' => 10 ** 3,
-    // 'M' => 10 ** 6,
-    // 'G' => 10 ** 9
-    // ];
-
-    // protected static function nbFromGroupName(string $groupName)
-    // {
-    // if (\preg_match('#^(\d+)([KMG])#', $groupName, $matches))
-    // return (int) $matches[1] * (self::factors[$matches[2]] ?? 0);
-    // return 0;
-    // }
     protected function cleanCurrentDir(string ...$globs)
     {
         if (empty($globs))

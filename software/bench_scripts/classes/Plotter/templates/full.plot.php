@@ -2,8 +2,8 @@
 $plotterStrategy = $PLOTTER->getStrategy();
 
 $plotConfig = $PLOTTER->plot_getConfig();
-$testGroups = $PLOTTER->gettestGroups();
-$csvFiles = \array_merge(...\array_values($testGroups));
+// $testGroups = $PLOTTER->gettestGroups();
+// $csvFiles = \array_merge(...\array_values($testGroups));
 $nbPlots = $PLOTTER->getNbGroups();
 $stacked = $plotterStrategy->plot_getStackedMeasures($plotConfig['plot.measures'] ?? []);
 $nbMeasuresToPlot = \count($stacked);
@@ -64,7 +64,7 @@ if ($plotYLabelYOffset < 0) {
 $ystep = $graphics['plot.yrange.step'];
 $logscale = $graphics['logscale'];
 
-list ($yMin, $yMax) = $plotterStrategy->plot_getYRange(...$csvFiles);
+list ($yMin, $yMax) = $plotterStrategy->plot_getYRange($PLOTTER->getTestsMeasures());
 $yMin = \max(1, $yMin - 1);
 $yMin = $graphics['plot.yrange.min'] ?? $yMin / $timeDiv;
 $yMax = $graphics['plot.yrange.max'] ?? $yMax / $timeDiv;
@@ -79,8 +79,8 @@ if ($plotLegend) {
 if ($nbQueries > 0 && ! ($graphics['plots.x.max'] > 0))
     $graphics['plots.x.max'] = $nbQueries;
 
-$getMeasure = function ($testData, $what, $time) {
-    return (int) (($testData[$what] ?? [])[$time] ?? 0);
+$getMeasure = function ($testMeasures, $what, $time) {
+    return (int) (($testMeasures[$what] ?? [])[$time] ?? 0);
 };
 $nbMeasures = 0;
 
@@ -234,8 +234,8 @@ foreach ($PLOTTER->getTestGroups() as $groupName => $tests) {
         }
     }
     foreach ($tests as $test) {
-        $testData = $PLOTTER->getTestData($test);
-        $nbAnswers[] = $testData['answers']['total'] ?? 0;
+        $testMeasures = $PLOTTER->getTestMeasures($test)->getMeasures();
+        $nbAnswers[] = $testMeasures['answers']['total'] ?? 0;
     }
 
     if (null !== ($f = $plotConfig['plot.title']))

@@ -17,6 +17,8 @@ final class Plot
 
     private array $graphics;
 
+    private array $plotConfig;
+
     function __construct(string $workingDir)
     {
         if (is_file($workingDir)) {
@@ -25,28 +27,16 @@ final class Plot
             ];
             $workingDir = \dirname($workingDir);
         }
+        $testFiles = [];
 
         if (is_dir($workingDir)) {
-            $dir = new RecursiveDirectoryIterator($workingDir, //
-            FilesystemIterator::KEY_AS_PATHNAME | //
-            FilesystemIterator::CURRENT_AS_FILEINFO | //
-            FilesystemIterator::FOLLOW_SYMLINKS); //
-
-            $ite = new RecursiveIteratorIterator($dir);
-            $ite->setMaxDepth(1);
-            $testFiles = [];
-
-            foreach ($ite as $file) {
-                $fname = $file->getFilename();
-                $testDir = \basename(\dirname($file->getRealPath()));
-
-                if (\preg_match('#^([^@][^/]*)\.csv$#', $fname, $matches))
-                    $testFiles[] = "$testDir/{$matches[1]}";
-            }
+            $tmp = \Measures::getTestsFromDirectory($workingDir);
+            $testFiles = \array_merge($testFiles, $tmp);
         } else
             throw new \Exception("Plot: can't handle '$workingDir'");
 
         $this->workingDir = \realpath($workingDir);
+        \natsort($testFiles);
 
         foreach ($testFiles as $ftest) {
             $dirName = \dirname($ftest);
@@ -66,6 +56,62 @@ final class Plot
     public function getData(): array
     {
         return $this->data;
+    }
+
+    public function getTestsMeasures(): array
+    {
+        return $this->data;
+    }
+
+    public function getTestMeasures(string $test): \Measures
+    {
+        return $this->data[$test];
+    }
+
+    public function getConfigFor(\Plotter\IPlotter $plotter, array $default = []): array
+    {
+        if (isset($this->PlotConfig))
+            return $this->PlotConfig;
+
+        $wd = getcwd();
+        $path_ex = explode(DIRECTORY_SEPARATOR, $wd);
+        $PARENT = [];
+        $conf = [];
+
+        for ($i = 1, $c = \count($path_ex); $i <= $c; $i ++) {
+            $path = \implode(DIRECTORY_SEPARATOR, \array_slice($path_ex, 0, $i));
+            $confFiles = [
+                "$path/full.php",
+                "$path/full_{$plotter->getId()}.php"
+            ];
+
+            foreach ($confFiles as $confFile) {
+
+                if (\is_file($confFile)) {
+                    $conf = \array_merge($conf, include $confFile);
+                    $PARENT = $conf;
+                }
+            }
+        }
+        return $this->PlotConfig = $conf + $default + [
+            'debug' => false,
+            'measures.forget' => 0,
+            'measures.sort' => null,
+            'plot.yrange' => 'global',
+            'plot.yrange.display' => false,
+            'plot.pattern.offset' => 0,
+            'plot.legend' => true,
+            'plot.legend.w' => null,
+            'plot.ytics.step' => 1,
+            'plot.ytics.nb' => 1,
+            'plot.xtic' => null, // function
+            'plot.title' => null, // function
+            'plot.format.y' => "%gs",
+            'multiplot.title' => true,
+            'queries' => null, // array,
+            'query.dat.file' => null, // function
+            'measure.div' => 1000
+        ];
     }
 
     // ========================================================================
@@ -175,7 +221,7 @@ final class Plot
     private function makeData(string $dirName, array $queriesName): array
     {
         $ret = [];
-        $measures = new Measures($dirName);
+        $measures = new \Measures($dirName);
 
         foreach ($queriesName as $qname)
             $ret["$dirName/$qname"] = $measures->loadMeasuresOf($qname);

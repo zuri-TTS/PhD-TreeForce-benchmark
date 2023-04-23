@@ -206,6 +206,9 @@ final class Graphics implements \ArrayAccess
                 if (! \Measures::isTimeMeasure($meas))
                     continue;
 
+                if (is_string($meas))
+                    $meas = \Measures::decodeStringTimeMeasure($meas);
+
                 foreach ($times as $t) {
                     $max = \max($max, $meas[$t]);
                     $min = \min($min, $meas[$t]);

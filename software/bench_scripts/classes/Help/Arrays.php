@@ -18,6 +18,23 @@ final class Arrays
         return $a[\array_key_first($a)];
     }
 
+    public static function prefixSubItemsWithKey(array $a, string $delimiter = '.')
+    {
+        $ret = [];
+
+        foreach ($a as $k => $item) {
+
+            if (\is_array($item))
+                foreach ($item as $kk => $subItem) {
+                    $ret["$k$delimiter$kk"] = $subItem;
+                }
+            else
+                $ret[$k] = $v;
+        }
+
+        return $ret;
+    }
+
     public static function jsonRecursiveCount(array $a)
     {
         $nb = 0;
@@ -162,5 +179,19 @@ final class Arrays
             if (! is_array($p) && ! empty($path))
                 return $default;
         }
+    }
+
+    public static function encode(array $a, string $delimiter = ","): string
+    {
+        $s = \implode($delimiter, $a);
+        return "[$s]";
+    }
+
+    public static function decode(string $s, string $delimiter = ","): array
+    {
+        if (! \str_starts_with($s, '[') || ! \str_ends_with($s, ']'))
+            $s = \substr($s, 1, - 1);
+
+        return \explode($delimiter, $s);
     }
 }
