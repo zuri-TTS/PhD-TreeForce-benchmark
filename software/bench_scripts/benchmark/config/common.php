@@ -28,9 +28,11 @@ return [
         'querying.timeout' => 0,
         'toNative.dots' => 'n',
         'rewritings.deduplicate' => 'n',
+        'rewritings.output.disjunctions' => 'y',
         'summary.prettyPrint' => 'n',
         'summary.filter.types' => 'y',
         'summary.filter.stringValuePrefix' => 0,
+        'disjunction.sequential' => true,
         'partition.id' => 'pid'
     ],
     'bench.measures' => [
