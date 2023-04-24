@@ -189,12 +189,6 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
         ]);
     }
 
-    if ($javaProperties['query.batches.nbThreads'] > 1 || $cmdArg['parallel'])
-        $sortMeasure = 'threads.time';
-    elseif ($cmdArg['cmd'] === 'summarize')
-        $sortMeasure = 'summary.creation.total';
-    else
-        $sortMeasure = 'stats.db.time';
 
     // <<< >>>
 
@@ -219,7 +213,6 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
         'summary' => $benchSummary,
         'toNative.summary' => $benchToNativeSummary,
         'test.existing' => $test_existing,
-        'bench.sort.measure' => $sortMeasure,
         'bench.output.dir' => $outDir,
         'bench.output.path' => $outputPath,
         'bench.output.pattern' => $outDirPattern,
@@ -228,7 +221,6 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
         'timeout.order.queries' => $cmdArg['timeout-order-queries']
     ]);
     $ret['bench.measures']['default']['nb'] = (int) $cmdArg['bench-measures-nb'];
-    $ret['bench.measures']['default']['forget'] = (int) $cmdArg['bench-measures-forget'];
 
     $ret['java.properties'] = $javaProperties;
 

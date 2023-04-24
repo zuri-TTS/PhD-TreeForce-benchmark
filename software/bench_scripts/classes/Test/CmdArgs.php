@@ -39,7 +39,6 @@ final class CmdArgs implements \ArrayAccess
         'sort-measure' => null,
         'timeout-order-queries' => null,
         'bench-measures-nb' => 1,
-        'bench-measures-forget' => 0
     ];
 
     // ========================================================================
