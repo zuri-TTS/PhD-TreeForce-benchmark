@@ -100,23 +100,19 @@ final class Measures
 
             foreach ($mfiles as $mf)
                 $measures[] = self::parseLinesOfMeasures(\file($mf));
-
-            $ret = clone $this;
-            $ret->computeNbRepetitions();
-            $ret->queryName = $queryName;
-            $ret->measures = $measures;
-            $ret->searchForProblems();
         } else {
             // TODO
             // csv test
             $fname = "$queryName.csv";
 
             if (is_file($fname))
-                $data = \array_merge_recursive(\CSVReader::read($fname), $this->loadBenchParams());
+                $measures = $this->loadCsv($fname);
             else
                 throw new ValueError("Can't handle `$fname`");
         }
         \wdPop();
+        $ret = $this->setMeasures($measures);
+        $ret->queryName = $queryName;
         return $ret;
     }
 
@@ -158,43 +154,45 @@ final class Measures
         $this->nbRepetitions = \max($values);
     }
 
-    public function columns(?string $sort_measureName = null): self
+    private static function sort(array $testMeasures, ?string $sort_measureName = null): array
     {
-        $testMeasures = $this->measures;
+        if (empty($sort_measureName))
+            return $testMeasures;
 
+        foreach ($testMeasures as $k => $measures)
+            foreach ($measures['measures'] as $km => $m)
+                $testMeasures[$k]['measures'][$km] = self::decodeStringTimeMeasure($m);
+
+        // Order tests measures
+        \usort($testMeasures, function ($a, $b) use ($sort_measureName) {
+            return $a['measures'][$sort_measureName]['r'] - $b['measures'][$sort_measureName]['r'];
+        });
+
+        foreach ($testMeasures as $k => $measures)
+            foreach ($measures['measures'] as $km => $m)
+                $testMeasures[$k]['measures'][$km] = self::encodeTimeMeasure($m);
+
+        return $testMeasures;
+    }
+
+    private function columns(array $testMeasures): array
+    {
         if (null === $testMeasures)
             return $this;
 
         $acc = [];
-
-        if (null != $sort_measureName) {
-            foreach ($testMeasures as $k => $measures)
-                foreach ($measures['measures'] as $km => $m)
-                    $testMeasures[$k]['measures'][$km] = self::decodeStringTimeMeasure($m);
-
-            // Order tests measures
-            \usort($testMeasures, function ($a, $b) use ($sort_measureName) {
-                return $a['measures'][$sort_measureName]['r'] - $b['measures'][$sort_measureName]['r'];
-            });
-
-            foreach ($testMeasures as $k => $measures)
-                foreach ($measures['measures'] as $km => $m)
-                    $testMeasures[$k]['measures'][$km] = self::encodeTimeMeasure($m);
-        }
 
         foreach ($testMeasures as $measures)
             foreach ($measures as $group => $groupMeasures)
                 foreach ($groupMeasures as $km => $m)
                     $acc[$group][$km][] = $m;
 
-        $ret = clone $this;
-        $ret->measures = $acc;
-        return $ret;
+        return $acc;
     }
 
     public const AVERAGE_CONFIG_DEFAULT = [
-        'sort_measureName' => null,
-        'forgetMinMax' => 1
+        'measures.sort' => null,
+        'measures.forget' => 0
     ];
 
     public function average(array $config = []): self
@@ -205,27 +203,46 @@ final class Measures
             return $this;
 
         $config += self::AVERAGE_CONFIG_DEFAULT;
-        \extract($config);
-        $nbTests = \count($this->measures);
+        $sort = $config['measures.sort'];
 
-        // TODO timeout
-        $columns = $this->columns($sort_measureName)->measures;
+        $measures = $this->measures;
+        if (! isset($sort)) {
+            $mfirst = \Help\Arrays::first($measures)['measures'];
+
+            if (isset($mfirst['threads.time']))
+                $sort = 'threads.time';
+            elseif (isset($mfirst['stats.db.time']))
+                $sort = 'stats.db.time';
+            elseif (isset($mfirst['summary.creation.total']))
+                $sort = 'summary.creation.total';
+        }
+        $measures = self::sort($measures, $sort);
+
+        if (isset($this->measures)) {
+            $forget = $config['measures.forget'];
+
+            if ($forget > 0) {
+                $measures = \array_slice($measures, $forget, - $forget);
+            }
+        }
+        $columns = self::columns($measures);
+        $nbColumns = \count($measures);
 
         foreach ($columns as $groupMeasures => $groupOfValues) {
             $measureGroup = $groupMeasures === 'measures';
 
             foreach ($groupOfValues as $groupValues => $values) {
 
-                if (($n = \count($values)) !== $nbTests)
-                    throw new \Exception("Error for measure $groupMeasures.$groupValues, bad number of values: $n/$nbTests");
+                if (($n = \count($values)) !== $nbColumns)
+                    throw new \Exception("Error for measure $groupMeasures.$groupValues, bad number of values: $n/$nbColumns");
 
                 if ($measureGroup) {
                     $v = \array_map("self::decodeStringTimeMeasure", $values);
                     $v = \array_reduce($v, "self::sumArrayTimeMeasures", self::emptyTimeMeasures());
-                    $v = \array_map(fn ($v) => $v / $nbTests, $v);
+                    $v = \array_map(fn ($v) => $v / $nbColumns, $v);
                     $v = self::encodeTimeMeasure($v);
                 } elseif (is_numeric($values[0]))
-                    $v = \array_sum($values) / $nbTests;
+                    $v = \array_sum($values) / $nbColumns;
                 else {
                     $unique = \array_unique($values);
 
@@ -252,6 +269,54 @@ final class Measures
             return $a['measures'][$sortMeasure]['r'] - $b['measures'][$sortMeasure]['r'];
         });
         return $measures;
+    }
+
+    private function loadCsv(string $fname): array
+    {
+        $file = new SplFileObject($fname, "r");
+        $file->setFlags(SPLFileObject::READ_CSV);
+
+        foreach ($file as $line) {
+            $c = \count($line);
+
+            if (empty($line[0]) && $c == 1) {
+                $groupName = null;
+            } elseif (! isset($groupName)) {
+                $groupName = $line[0];
+                $ignoreAvg = ($line[1] ?? "") === 'avg';
+            } else {
+                $colName = \array_shift($line);
+
+                if ($ignoreAvg)
+                    \array_shift($line);
+
+                $i = 0;
+                foreach ($line as $val)
+                    $retMeasures[$i ++][$groupName][$colName] = $val;
+            }
+        }
+
+        foreach ($retMeasures as $k => $measures) {
+            unset($retMeasures[$k]['bench']);
+
+            foreach ($measures as $groupName => $item) {
+
+                if (self::isArrayTimeMeasure($item)) {
+                    $retMeasures[$k]['measures'][$groupName] = self::encodeArrayTimeMeasure($item);
+                    unset($retMeasures[$k][$groupName]);
+                }
+            }
+        }
+        \usort($retMeasures, function ($a, $b) {
+            $ai = $a['test']['index'] ?? - 1;
+            $bi = $b['test']['index'] ?? - 1;
+            return $ai - $bi;
+        });
+
+        foreach ($retMeasures as $k => $measures)
+            unset($retMeasures[$k]['test']);
+
+        return $retMeasures;
     }
 
     private function loadBenchParams(): array
