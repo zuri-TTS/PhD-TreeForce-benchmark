@@ -1,7 +1,7 @@
 <?php
 $plotterStrategy = $PLOTTER->getStrategy();
 
-$plotConfig = $PLOTTER->plot_getConfig();
+$plotConfig = $PLOTTER->getConfig();
 // $testGroups = $PLOTTER->gettestGroups();
 // $csvFiles = \array_merge(...\array_values($testGroups));
 $nbPlots = $PLOTTER->getNbGroups();
@@ -64,7 +64,7 @@ if ($plotYLabelYOffset < 0) {
 $ystep = $graphics['plot.yrange.step'];
 $logscale = $graphics['logscale'];
 
-list ($yMin, $yMax) = $plotterStrategy->plot_getYRange($PLOTTER->getTestsMeasures());
+list ($yMin, $yMax) = $plotterStrategy->plot_getYRange($PLOT->getTestsMeasures());
 $yMin = \max(1, $yMin - 1);
 $yMin = $graphics['plot.yrange.min'] ?? $yMin / $timeDiv;
 $yMax = $graphics['plot.yrange.max'] ?? $yMax / $timeDiv;
@@ -234,7 +234,7 @@ foreach ($PLOTTER->getTestGroups() as $groupName => $tests) {
         }
     }
     foreach ($tests as $test) {
-        $testMeasures = $PLOTTER->getTestMeasures($test)->getMeasures();
+        $testMeasures = $PLOTTER->getTestMeasuresAverage($test)->getMeasures();
         $nbAnswers[] = $testMeasures['answers']['total'] ?? 0;
     }
 

@@ -37,11 +37,9 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $this;
     }
 
-    private $conf = null;
-
-    public function plot_getConfig(array $default = []): array
+    private function getConfig(array $default = []): array
     {
-        return $this->plotter->getPlot()->getConfigFor($this->plotter, $default);
+        return $this->plotter->getConfig($default);
     }
 
     // ========================================================================
@@ -83,7 +81,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
     private function toPlot()
     {
         $plotter = $this->getPlotter();
-        $plotConfig = $plotter->plot_getConfig();
+        $plotConfig = $this->getConfig();
         $toPlot = $plotConfig['toPlot'] ?? null;
 
         if (null === $toPlot)
@@ -185,62 +183,6 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $ret;
     }
 
-    private static function moreData(array $data, string $dirName): array
-    {
-        $delements = \Help\Plotter::extractDirNameElements($dirName);
-        $rules = $delements['rules'];
-
-        if (\preg_match("#^\((\d+\))#U", $rules, $matches))
-            $rulesNbQueries = (int) $matches[1];
-
-        $intended = $rulesNbQueries ?? - 1;
-        $cleaned = $intended >= 0 ? $intended - $data['queries']['total'] : - 1;
-
-        $data['rules'] = [
-            'queries.nb.intended' => $intended,
-            'queries.nb.cleaned' => $cleaned
-        ];
-        $data['filter.prefix']['total'] = (int) $delements['filter_prefix'];
-        $data['dir.elements'] = $delements;
-        return self::morePartitionsData($data);
-    }
-
-    private static function morePartitionsData(array $data): array
-    {
-        $nbReformulations = $data['queries']['total'];
-        $nbAnswers = $data['answers']['total'];
-        $nbPartitions = $data['partitions']['total'] ?? 1;
-
-        if (isset($data['partitions'])) {
-            $partitionsData = $data['partitions'];
-            $partitionsNbQueries = \Help\Arrays::decode($partitionsData['each.queries.total']);
-            $partitionsNbQueries = \array_filter($partitionsNbQueries); // Delete 0 queries values
-            $uniqueNbQueries = \array_unique($partitionsNbQueries);
-            $allPartitionsSameQueries = \count($uniqueNbQueries) == 1;
-
-            $nbPartitionsHavingQueries = //
-            $data['partitions']['used'] ?? //
-            $data['partitions.used']['total']; //
-
-            $data['partitions.infos']['all.sameQueries'] = $allPartitionsSameQueries;
-
-            if ($allPartitionsSameQueries)
-                $allQueries = $nbReformulations / $nbPartitionsHavingQueries;
-
-            $data['partitions.infos'] += [
-                'all.queries.nb' => $allQueries ?? $nbReformulations,
-                'used.queries.avg' => $nbReformulations / $nbPartitionsHavingQueries
-            ];
-        } else {
-            $data['partitions.infos'] = [
-                'all.sameQueries' => 1,
-                'all.queries.nb' => $nbReformulations,
-                'used.queries.avg' => $nbReformulations
-            ];
-        }
-        return $data;
-    }
-
     public function sortDataLines(array &$data): void
     {}
 
@@ -250,7 +192,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $test = $testMeasures->getTestName();
         $dirName = $testMeasures->getDirectoryName();
         $query = $testMeasures->getQueryName();
-        $plotConfig = $this->plot_getConfig();
+        $plotConfig = $this->getConfig();
 
         $makeXTics = $plotConfig['plot.xtic'] ?? [
             $this,
@@ -261,7 +203,6 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         $data = $testMeasures->getMeasures();
         $data = $data['measures'] + $data;
         unset($data['measures']);
-        $data = self::moreData($data, $dirName);
 
         $testData[$dirName] = $data;
 
@@ -370,12 +311,12 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         return $score;
     }
 
-    public static function getFun_makeXTic_numbers(?array $select = null)
+    public static function getFun_makeXTic_numbers()
     {
-        return fn ($a, $b, $c) => self::makeXTic_numbers($a, $b, $c, $select);
+        return fn ($a, $b, $c) => self::makeXTic_numbers($a, $b, $c);
     }
 
-    public static function makeXTic_numbers($testData, $query, $partitionsData, ?array $select = null)
+    public static function makeXTic_numbers($testData, $query, $partitionsData)
     {
         foreach ($testData as $dirName => $data)
             break;
@@ -397,8 +338,8 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
             $ret[] = "{/=9(µ)}$avg";
         }
 
-        if ($select['rules'] ?? false) {
-            $rules = $data['rules']['queries.nb.intended'];
+        if (isset($data['rules'])) {
+            $rules = $data['rules']['queries.nb.intended'] ?? $nbReformulations;
 
             if ($rules != $nbReformulations)
                 $ret[] = "\{$font\ /($rules)}";

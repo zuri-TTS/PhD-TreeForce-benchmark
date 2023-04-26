@@ -52,6 +52,20 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
     }
 
     // ========================================================================
+    private function makePartitionData(array $measures, array $elements)
+    {
+        return [
+            'partitions' => [
+                'total' => 1,
+                'used' => (int) ($measures['queries']['total'] > 0),
+                'hasAnswer' => (int) ($measures['answers']['total'] > 0)
+            ],
+            'partition' => [
+                'name' => $elements["partition"]
+            ]
+        ];
+    }
+
     private function prepareMeasures(string $queryName, array $tests): array
     {
         $staticParts = [
@@ -91,14 +105,7 @@ final class FullPartitioningPlotter extends AbstractFullPlotter
                 $items = $measures->getMeasuresFromRepetition($i);
                 unset($items['bench']);
 
-                $items['partitions'] = [
-                    'total' => 1,
-                    'used' => (int) ($items['queries']['total'] > 0),
-                    'hasAnswer' => (int) ($items['answers']['total'] > 0)
-                ];
-                $items['partition'] = [
-                    'name' => $elements["partition"]
-                ];
+                $items += $this->makePartitionData($items, $elements);
 
                 // Make `each` categories
                 foreach ($items as $groupName => $gmeasures) {

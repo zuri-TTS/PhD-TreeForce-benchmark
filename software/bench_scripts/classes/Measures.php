@@ -119,9 +119,14 @@ final class Measures
     public function setMeasures(array $measures): self
     {
         $ret = clone $this;
-        $ret->measures = array_values($measures);
-        $ret->nbRepetitions = \count($measures);
-        $ret->searchForProblems();
+
+        if (\is_array_list($measures)) {
+            $ret->measures = array_values($measures);
+            $ret->nbRepetitions = \count($measures);
+            $ret->searchForProblems();
+        } else {
+            $ret->measures = $measures;
+        }
         return $ret;
     }
 
@@ -198,60 +203,61 @@ final class Measures
     public function average(array $config = []): self
     {
         if (! empty($this->zeroQueriesMeasures))
-            return $this;
-        if (! empty($this->timeoutMeasures))
-            return $this;
+            $columns = $this->zeroQueriesMeasures;
+        elseif (! empty($this->timeoutMeasures))
+            $columns = $this->timeoutMeasures;
+        else {
+            $config += self::AVERAGE_CONFIG_DEFAULT;
+            $sort = $config['measures.sort'];
 
-        $config += self::AVERAGE_CONFIG_DEFAULT;
-        $sort = $config['measures.sort'];
+            $measures = $this->measures;
+            if (! isset($sort)) {
+                $mfirst = \Help\Arrays::first($measures)['measures'];
 
-        $measures = $this->measures;
-        if (! isset($sort)) {
-            $mfirst = \Help\Arrays::first($measures)['measures'];
-
-            if (isset($mfirst['threads.time']))
-                $sort = 'threads.time';
-            elseif (isset($mfirst['stats.db.time']))
-                $sort = 'stats.db.time';
-            elseif (isset($mfirst['summary.creation.total']))
-                $sort = 'summary.creation.total';
-        }
-        $measures = self::sort($measures, $sort);
-
-        if (isset($this->measures)) {
-            $forget = $config['measures.forget'];
-
-            if ($forget > 0) {
-                $measures = \array_slice($measures, $forget, - $forget);
+                if (isset($mfirst['threads.time']))
+                    $sort = 'threads.time';
+                elseif (isset($mfirst['stats.db.time']))
+                    $sort = 'stats.db.time';
+                elseif (isset($mfirst['summary.creation.total']))
+                    $sort = 'summary.creation.total';
             }
-        }
-        $columns = self::columns($measures);
-        $nbColumns = \count($measures);
+            $measures = self::sort($measures, $sort);
 
-        foreach ($columns as $groupMeasures => $groupOfValues) {
-            $measureGroup = $groupMeasures === 'measures';
+            if (isset($this->measures)) {
+                $forget = $config['measures.forget'];
 
-            foreach ($groupOfValues as $groupValues => $values) {
-
-                if (($n = \count($values)) !== $nbColumns)
-                    throw new \Exception("Error for measure $groupMeasures.$groupValues, bad number of values: $n/$nbColumns");
-
-                if ($measureGroup) {
-                    $v = \array_map("self::decodeStringTimeMeasure", $values);
-                    $v = \array_reduce($v, "self::sumArrayTimeMeasures", self::emptyTimeMeasures());
-                    $v = \array_map(fn ($v) => $v / $nbColumns, $v);
-                    $v = self::encodeTimeMeasure($v);
-                } elseif (is_numeric($values[0]))
-                    $v = \array_sum($values) / $nbColumns;
-                else {
-                    $unique = \array_unique($values);
-
-                    if (\count($unique) === 1)
-                        $v = \Help\Arrays::first($unique);
-                    else
-                        $v = \Help\Arrays::encode($values);
+                if ($forget > 0) {
+                    $measures = \array_slice($measures, $forget, - $forget);
                 }
-                $columns[$groupMeasures][$groupValues] = $v;
+            }
+            $columns = self::columns($measures);
+            $nbColumns = \count($measures);
+
+            foreach ($columns as $groupMeasures => $groupOfValues) {
+                $measureGroup = $groupMeasures === 'measures';
+
+                foreach ($groupOfValues as $groupValues => $values) {
+
+                    if (($n = \count($values)) !== $nbColumns)
+                        throw new \Exception("Error for measure $groupMeasures.$groupValues, bad number of values: $n/$nbColumns");
+
+                    if ($measureGroup) {
+                        $v = \array_map("self::decodeStringTimeMeasure", $values);
+                        $v = \array_reduce($v, "self::sumArrayTimeMeasures", self::emptyTimeMeasures());
+                        $v = \array_map(fn ($v) => $v / $nbColumns, $v);
+                        $v = self::encodeTimeMeasure($v);
+                    } elseif (is_numeric($values[0]))
+                        $v = \array_sum($values) / $nbColumns;
+                    else {
+                        $unique = \array_unique($values);
+
+                        if (\count($unique) === 1)
+                            $v = \Help\Arrays::first($unique);
+                        else
+                            $v = \Help\Arrays::encode($values);
+                    }
+                    $columns[$groupMeasures][$groupValues] = $v;
+                }
             }
         }
         $ret = clone $this;
@@ -554,7 +560,13 @@ final class Measures
 
     public static function encodeArrayTimeMeasure(array $timeMeasure): string
     {
-        return "r{$timeMeasure['r']}u{$timeMeasure['u']}s{$timeMeasure['s']}c{$timeMeasure['c']}";
+        $s = "";
+
+        foreach (self::TIME_MEASURE as $t) {
+            $i = \round($timeMeasure[$t], 3);
+            $s .= "$t$i";
+        }
+        return $s;
     }
 
     public static function decodeTimeMeasure($timeMeasures): array

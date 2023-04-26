@@ -4,6 +4,11 @@ namespace Plotter;
 final class FullParallelPartitioningPlotter extends AbstractFullPlotter
 {
 
+    public function __construct(\Plot $plot)
+    {
+        parent::__construct($plot);
+    }
+
     public function getId(): string
     {
         return 'partitioning_parallel';
@@ -17,11 +22,11 @@ final class FullParallelPartitioningPlotter extends AbstractFullPlotter
     public function plot(array $tests): void
     {
         // $this->cleanCurrentDir();
-        $this->writeCsv($tests);
+        $this->writeMeasures($tests);
     }
 
     // ========================================================================
-    private static function prepareMeasures(string $test): array
+    private function prepareMeasures(string $test): array
     {
         $selection = [
             'group',
@@ -29,56 +34,74 @@ final class FullParallelPartitioningPlotter extends AbstractFullPlotter
             'partitioning',
             'qualifiers'
         ];
-
-        $data = \Measures::loadTestMeasures($test);
+        $config = $this->getConfig();
+        $testsMeasures = $this->getTestMeasures($test)->getMeasures();
         $elements = \Help\Plotter::extractDirNameElements(\dirname($test));
         $partitionDataGroup = "{$elements['group']}[{$elements['qualifiers']}]/{$elements['partition']}";
         $newElements = \Help\Arrays::subSelect($elements, $selection);
-        $newData = [];
+        $each = [];
 
-        foreach ($data as $k => $items) {
+        foreach ($testsMeasures as $measures) {
+            $partitions = [];
 
-            // Is partition
-            if (\preg_match("#(.+)/(.+)$#", $k, $matches)) {
-                $partitioning = $matches[1];
-                $valGroup = $matches[2];
+            foreach ($measures as $mGroupName => $gmeasures) {
+                // Is partition
+                if (\preg_match("#(.+)/(.+)$#", $mGroupName, $matches)) {
+                    $partitions[] = $matches[1];
+                    $groupName = $matches[2];
 
-                // Physic
-                if (preg_match("#/(.+)$#U", $partitioning, $matches))
-                    $partition = $matches[1];
-                // Logic (Mongo::getcollectioname() . prefix)
-                else
-                    $partition = \explode('].', $partitioning, 2)[1];
+                    foreach ($gmeasures as $mname => $v)
+                        $each["each.$groupName.$mname"][] = $v;
+                } else {
+                    $newData[$mGroupName] = $gmeasures;
+                }
+            }
+            $partitions = \array_values(\array_unique($partitions));
+            $nbUsed = 0;
+            $hasAnswers = false;
 
-                $newElements['partition'] = $partition;
-                $newKey = \Help\Plotter::encodeDirNameElements($newElements, '') . "/$valGroup";
-                $newData[$newKey] = $items;
-            } else
-                $newData[$k] = $items;
+            foreach ($partitions as $partitionName) {
+
+                if ((int) $measures["$partitionName/queries"]['total'] > 0)
+                    $nbUsed ++;
+                if ((int) $measures["$partitionName/answers"]['total'] > 0)
+                    $hasAnswers = true;
+            }
+            $newData += [
+                'partitions' => [
+                    'total' => \count($partitions),
+                    'used' => $nbUsed,
+                    'hasAnswer' => $hasAnswers
+                ] + $each,
+                'partition' => [
+                    'name' => \array_map(fn ($e) => explode('.', $e)[1], $partitions)
+                ]
+            ];
+            $ret[] = $newData;
         }
-        $partitionsStats = FullPartitioningPlotter::extractPartitionsStats($newData);
-        return $newData + $partitionsStats;
+        return $ret;
     }
 
-    private static function writeCsv(array $tests)
+    private function writeMeasures(array $testGroups)
     {
-        foreach ($tests as $test) {
-
-            // if (! \is_file($test))
-            // continue;
-
-            $fname = \basename($test);
+        foreach ($testGroups as $test) {
             \wdPush("..");
-            $prepareMeasures = self::prepareMeasures($test);
+            $aggregationMeasures = $this->prepareMeasures($test);
             \wdPop();
-            $basePath = \basename(\dirname($test));
+            $query = \basename($test);
+            $basePath = \dirname($test);
             $basePath = \Help\Plotter::encodeDirNameElements(\Help\Plotter::extractDirNameElements($basePath), '[%s]');
 
             if (! \is_dir($basePath))
                 \mkdir($basePath);
 
-            $csvFile = "$basePath/$fname.csv";
-            \CSVReader::write($csvFile, $prepareMeasures);
+            $i = 1;
+            foreach ($aggregationMeasures as $measures) {
+                $fp = \fopen("$basePath/{$query}_measures-$i.txt", "w");
+                \Measures::writeAsIni($measures, $fp);
+                \fclose($fp);
+                $i ++;
+            }
         }
     }
 }

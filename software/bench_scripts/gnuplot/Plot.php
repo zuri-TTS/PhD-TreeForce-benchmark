@@ -53,11 +53,6 @@ final class Plot
         $this->dirToQueriesName = $groupByBase;
     }
 
-    public function getData(): array
-    {
-        return $this->data;
-    }
-
     public function getTestsMeasures(): array
     {
         return $this->data;
@@ -186,6 +181,7 @@ final class Plot
             foreach ($this->dirToQueriesName as $testDir => $queriesName) {
                 $this->data = \array_merge($this->data, $this->makeData($testDir, $queriesName));
             }
+
             foreach ($fullPlotters as $plotter) {
 
                 echo "\nPlotting Full ({$plotter->getID()}) with $nbFiles files\n";
@@ -223,9 +219,10 @@ final class Plot
         $ret = [];
         $measures = new \Measures($dirName);
 
-        foreach ($queriesName as $qname)
+        foreach ($queriesName as $qname) {
+            $m = $measures->loadMeasuresOf($qname);
             $ret["$dirName/$qname"] = $measures->loadMeasuresOf($qname);
-
+        }
         return $ret;
     }
 
