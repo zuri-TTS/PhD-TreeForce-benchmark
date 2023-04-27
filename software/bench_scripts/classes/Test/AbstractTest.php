@@ -14,7 +14,7 @@ abstract class AbstractTest
 
     protected \DBImport\IDBImport $dbImport;
 
-    private \XMLLoader $xmlLoader;
+    private \Data\IJsonLoader $jsonLoader;
 
     public abstract function execute();
 
@@ -28,7 +28,7 @@ abstract class AbstractTest
 
         $this->cmdParser = $cmdParser;
         $this->dbImport = \DBImports::get($cmdParser, $ds);
-        $this->xmlLoader = \XMLLoader::of($this->dbImport, $ds);
+        $this->jsonLoader = $ds->getJsonLoader();
     }
 
     public final function getCollectionsName(): array
@@ -41,17 +41,6 @@ abstract class AbstractTest
         return $this->dbImport->collectionsExists($this->getCollectionsName());
     }
 
-    public final function dropCollections(string $clean = "*.json"): void
-    {
-        if ($this->cmdParser['args']['write-all-partitions'])
-            $this->dbImport->dropDataset($this->ds);
-        else
-            $this->dbImport->dropCollections($this->getCollectionsName());
-
-        if (! empty($clean))
-            $this->xmlLoader->clean($clean);
-    }
-
     public final function loadIndex(string $indexName): void
     {
         foreach ($this->getCollectionsName() as $coll)
@@ -60,7 +49,7 @@ abstract class AbstractTest
 
     public final function loadCollections(): void
     {
-        $this->xmlLoader->convert();
+        $this->jsonLoader->generateJson();
 
         if ($this->cmdParser['args']['write-all-partitions'])
             $this->dbImport->importDataset($this->ds);

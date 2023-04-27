@@ -11,6 +11,7 @@ final class CmdArgs implements \ArrayAccess
     private array $parsed;
 
     private const cmdArgsDef = [
+        'debug' => true,
         'server.name' => 'localhost',
         'server.db' => 'treeforce',
         'server.collection' => null,
@@ -20,9 +21,11 @@ final class CmdArgs implements \ArrayAccess
         'cmd-display-output' => false,
         'write-all-partitions' => true,
         'skip-summary-check' => false,
+        'clean-ds' => false,
         'clean-db' => false,
-        'clean-db-json' => false,
+        'pre-clean-ds' => false,
         'pre-clean-db' => false,
+        'post-clean-ds' => false,
         'post-clean-db' => false,
         'summary' => 'label',
         'toNative_summary' => null, // Must be null for makeConfig()
@@ -38,7 +41,8 @@ final class CmdArgs implements \ArrayAccess
         'forget-results' => false,
         'sort-measure' => null,
         'timeout-order-queries' => null,
-        'bench-measures-nb' => 1,
+        'bench-measures-nb' => 1
+        // 'bench-measures-forget' => 0
     ];
 
     // ========================================================================

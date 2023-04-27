@@ -1,13 +1,7 @@
 <?php
 
-final class XMLLoader
+class XMLLoader extends \Data\AbstractJsonLoader
 {
-
-    private string $group;
-
-    private string $groupPath;
-
-    private array $dataSets;
 
     private array $path = [];
 
@@ -23,38 +17,30 @@ final class XMLLoader
 
     private bool $summarize;
 
-    private \DBImport\IDBImport $dbImport;
-
     private array $stats = [
         'documents.nb' => 0,
         'edges.nb' => 0
     ];
 
-    private \Data\ILoader $groupLoader;
+    private \Data\IXMLLoader $xmlLoader;
 
-    public function __construct(\DBImport\IDBImport $dbImport, array $dataSets)
+    public function __construct(array $dataSets, array $config)
     {
-        $groups = [];
-
-        foreach ($dataSets as $dataSet)
-            $groups[$group = $dataSet->group()] = null;
-
-        if (\count($groups) > 1)
-            throw new \Exception("Multiple groups given: " . \implode(',', $groups));
-
-        $basePath = \getBenchmarkBasePath();
-        $this->group = $group;
-        $this->groupPath = DataSets::getGroupPath($group);
-        $this->dataSets = $dataSets;
+        parent::__construct($dataSets, $config);
 
         $this->summarize = false;
-        $this->groupLoader = DataSets::getGroupLoader($this->group);
-        $this->dbImport = $dbImport;
     }
 
-    public static function of(\DBImport\IDBImport $dbImport, \DataSet ...$dataSets)
+    public static function create(\Data\IXMLLoader $jsonLoader, array $dataSets)
     {
-        return new self($dbImport, $dataSets);
+        $ret = new XMLLoader($dataSets, []);
+        $ret->xmlLoader = $jsonLoader;
+        return $ret;
+    }
+
+    public function getPartitioning(string $name = ''): \Data\IPartitioning
+    {
+        return $this->xmlLoader->getPartitioning($name);
     }
 
     // ========================================================================
@@ -80,28 +66,7 @@ final class XMLLoader
         return "{$dataSet->path()}/summary-$type.txt";
     }
 
-    public function getDataSet(): DataSet
-    {
-        return $this->dataSet;
-    }
-
     // ========================================================================
-    public function summarize(bool $summarize = true): self
-    {
-        // $this->summarize = $summarize;
-        return $this;
-    }
-
-    // ========================================================================
-    private function prepareDir(DataSet $dataSet)
-    {
-        $dataSetOutPath = $dataSet->path();
-
-        if (! \is_dir($dataSetOutPath)) {
-            \mkdir($dataSetOutPath, 0777, true);
-        }
-    }
-
     private function setPostProcesses()
     {
         $this->summary = [];
@@ -137,7 +102,7 @@ final class XMLLoader
             \wdPop();
 
             return [
-                'randomize' => $this->groupLoader->getLabelReplacerForDataSet($dataSet) ?? fn ($data) => $data,
+                'randomize' => $this->xmlLoader->getLabelReplacerForDataSet($dataSet) ?? fn ($data) => $data,
                 'simplify' => $dataSet->isSimplified(),
                 'path' => $path,
                 'dataset' => $dataSet,
@@ -164,11 +129,11 @@ final class XMLLoader
         }
 
         if ($readStats) {
-            $this->readStats($this->groupLoader->getXMLReader());
+            $this->readStats($this->xmlLoader->getXMLReader());
 
             foreach ($this->filesData as &$f) {
                 // reset randomizer
-                $f['randomize'] = $this->groupLoader->getLabelReplacerForDataSet($f['dataset']) ?? fn ($data) => $data;
+                $f['randomize'] = $this->xmlLoader->getLabelReplacerForDataSet($f['dataset']) ?? fn ($data) => $data;
                 $total = $f['nbDocuments'][0];
 
                 for ($i = 1, $c = \count($f['fp']); $i < $c; $i ++) {
@@ -180,7 +145,7 @@ final class XMLLoader
         }
     }
 
-    public function convert()
+    public function generateJson(): void
     {
         $this->setPostProcesses();
 
@@ -193,7 +158,7 @@ final class XMLLoader
         if (empty($this->filesData))
             return;
 
-        $this->read($this->groupLoader->getXMLReader());
+        $this->read($this->xmlLoader->getXMLReader());
 
         foreach ($this->filesData as $fd) {
             \touch("{$fd['path']}/end.json");
@@ -210,64 +175,24 @@ final class XMLLoader
     }
 
     // ========================================================================
-    public function load()
+    public function cleanFiles(int $level = self::CLEAN_ALL)
     {
-        $dataSets = $this->dataSets;
+        foreach ($this->dataSets as $ds) {
+            $basepath = $ds->groupPath();
 
-        foreach ($dataSets as $ds)
-            $this->dbImport->importDataSet($ds);
-    }
+            \wdPush($basepath);
+            if ($level & self::CLEAN_BASE_FILES) {
+                $this->xmlLoader->deleteXMLFile();
+            }
 
-    // ========================================================================
-    public function deleteXMLFile()
-    {
-        return $this->groupLoader->deleteXMLFile();
-    }
+            if ($level & self::CLEAN_JSON_FILES) {
+                $dir = $ds->directory();
 
-    public function dropEmpty()
-    {
-        foreach ($this->dataSets as $dataSet) {
-            echo "Trying to drop $dataSet: ";
-            echo self::rmDataSet($dataSet) ? 'Success' : '!!Failed!!';
-            echo "\n";
-        }
-    }
-
-    public function drop()
-    {
-        foreach ($this->dataSets as $dataSet) {
-            echo "Dropping $dataSet: ";
-            self::cleanDataSet($dataSet, "*");
-            echo self::rmDataSet($dataSet) ? 'Success' : '!!Failed!!';
-            echo "\n";
-        }
-    }
-
-    public function clean(string $globPattern = "*.json")
-    {
-        foreach ($this->dataSets as $dataSet) {
-            echo "Cleaning <$dataSet>\n";
-            self::cleanDataSet($dataSet, $globPattern);
-        }
-    }
-
-    // ========================================================================
-    private static function rmDataSet(DataSet $dataSet): bool
-    {
-        $dataSetOutPath = $dataSet->path();
-
-        if (! \is_dir($dataSetOutPath))
-            return true;
-
-        return @\rmdir($dataSetOutPath);
-    }
-
-    private static function cleanDataSet(DataSet $dataSet, string $pattern)
-    {
-        $dataSetOutPath = $dataSet->path();
-
-        if (\is_dir($dataSetOutPath)) {
-            $files = \wdOp($dataSetOutPath, fn () => self::cleanGlob($pattern));
+                if (\is_dir($dir)) {
+                    $files = \wdOp($dir, fn () => self::cleanGlob("*.json"));
+                }
+            }
+            \wdPop();
         }
     }
 
@@ -276,7 +201,7 @@ final class XMLLoader
         foreach (\glob($pattern) as $f) {
 
             if (\is_file($f)) {
-                echo "Delete $f\n";
+                // echo "Delete $f\n";
                 \unlink($f);
             }
         }
@@ -287,7 +212,7 @@ final class XMLLoader
     {
         $ret = [];
 
-        foreach ($this->groupLoader->getUnwindConfig() as $u) {
+        foreach ($this->xmlLoader->getUnwindConfig() as $u) {
             if (0 === \strpos($u, $path))
                 $ret[] = $u;
         }
@@ -505,7 +430,7 @@ final class XMLLoader
             throw new \Exception("Should never happens");
         if ($c === 1 && isset($list[0]) && \is_string($list[0])) {
 
-            if (! $this->groupLoader->isList($name))
+            if (! $this->xmlLoader->isList($name))
                 $list = $list[0];
         } else {
 
@@ -539,7 +464,7 @@ final class XMLLoader
             foreach ($e as &$se)
                 $this->doSimplifyObject($se);
 
-            if (! $this->groupLoader->isList($name)) {
+            if (! $this->xmlLoader->isList($name)) {
 
                 if ($c !== 1 || ! isset($val[0]))
                     throw new \Exception("Element '$name' cannot be a list; have:" . var_export($e, true));
@@ -723,7 +648,7 @@ final class XMLLoader
 
             foreach ($attr as $aname => $val) {
 
-                if ($this->groupLoader->getOut($name, $aname)) {
+                if ($this->xmlLoader->getOut($name, $aname)) {
                     $getOut["$name$aname"] = $val;
                     unset($attr[$aname]);
                 }
@@ -731,7 +656,7 @@ final class XMLLoader
         }
 
         if ($isEmpty);
-        elseif ($this->groupLoader->isText($name)) {
+        elseif ($this->xmlLoader->isText($name)) {
             $obj[][self::textKey] = $reader->readInnerXML();
             $reader->next();
             $nbText = 1;
@@ -804,7 +729,7 @@ final class XMLLoader
             $k = self::textKey;
             $stringVal = \array_pop($obj)[$k];
 
-            if ($this->groupLoader->isObject($name)) {
+            if ($this->xmlLoader->isObject($name)) {
                 $obj = $attr;
                 $obj[self::textKey] = $stringVal;
             } elseif (! empty($attr))
@@ -822,7 +747,7 @@ final class XMLLoader
                 if (! is_array($val))
                     continue;
 
-                if ($this->groupLoader->isMultipliable($name)) {
+                if ($this->xmlLoader->isMultipliable($name)) {
                     $c = \count($val);
 
                     if ($c > 1) {

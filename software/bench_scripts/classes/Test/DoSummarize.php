@@ -84,9 +84,10 @@ final class DoSummarize extends AbstractTest
         }
         $summaryName = \basename($summaryPath);
 
-        $xmlLoader = \XMLLoader::of($dbImport, $ds);
-        $xmlLoader->convert();
-        $xmlLoader->load();
+        \DataSets::getJsonLoader([
+            $ds
+        ])->generateJson();
+        $dbImport->importDataSet($ds);
         $doIt->execute();
         \clearstatcache();
     }

@@ -1,10 +1,8 @@
 <?php
 namespace Data;
 
-final class XMarkLoader implements ILoader
+final class XMarkLoader implements IXMLLoader
 {
-
-    private string $group;
 
     private \Args\ObjectArgs $oargs;
 
@@ -18,9 +16,9 @@ final class XMarkLoader implements ILoader
 
     public float $conf_xmark_factor;
 
-    public function __construct(string $group, array $config)
+    public function __construct(array $dataSets, array $config)
     {
-        $this->group = $group;
+        $this->group = \DataSets::groupOf($dataSets);
 
         $this->conf_program_name = 'xmark.gen';
         $this->conf_cc = "gcc '%bin/unix.c' -o '%bin/%program'";

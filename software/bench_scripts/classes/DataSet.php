@@ -3,7 +3,7 @@
 final class DataSet
 {
 
-    private \Data\ILoader $loader;
+    private \Data\IJsonLoader $loader;
 
     private string $group;
 
@@ -40,7 +40,9 @@ final class DataSet
         $ret->group = $group;
         $ret->rules = $rules;
         $ret->qualifiers = $qualifiers;
-        $ret->partitioning = $ret->getGroupLoader()->getPartitioning($partitioning);
+        $ret->partitioning = $ret->getJsonLoader($group, [
+            $ret
+        ])->getPartitioning($partitioning);
         $ret->processQualifiers($qualifiers);
 
         $ret->partitions = $ret->partitioning->getPartitionsOf($ret);
@@ -153,12 +155,14 @@ final class DataSet
         return $this->groupPath() . '/stats.php';
     }
 
-    public function getGroupLoader(): \Data\ILoader
+    public function getJsonLoader(): \Data\IJsonLoader
     {
         if (isset($this->loader))
             return $this->loader;
 
-        return $this->loader = DataSets::getGroupLoader($this->group);
+        return $this->loader = DataSets::getJsonLoader([
+            $this
+        ]);
     }
 
     public function getPartitioning(): \Data\IPartitioning
@@ -172,6 +176,36 @@ final class DataSet
     }
 
     // ========================================================================
+    public function drop()
+    {
+        $basepath = $this->groupPath();
+        \wdPush($basepath);
+        $dir = $this->directory();
+
+        if (\is_dir($dir))
+            \rrmdir($dir);
+
+        \wdPop();
+    }
+
+    public function dropEmpty()
+    {
+        $basepath = $this->groupPath();
+        \wdPush($basepath);
+        $dir = $this->directory();
+
+        if (\is_dir($dir))
+            \rmdir($dir);
+
+        \wdPop();
+    }
+
+    // ========================================================================
+    public function directory(): string
+    {
+        return DataSets::directoryOf($this);
+    }
+
     public function groupPath(): string
     {
         return DataSets::getGroupPath($this->group);

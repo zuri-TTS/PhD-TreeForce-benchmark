@@ -57,6 +57,18 @@ final class DataSets
         }
     }
 
+    public static function groupOf(array $datasets)
+    {
+        $groups = \array_map(fn ($ds) => $ds->group(), $datasets);
+        $groups = \array_unique($groups);
+
+        if (\count($groups) > 1) {
+            $s = \Help\Arrays::encode($groups);
+            throw new \Exception("Multiple dataset groups: $s");
+        }
+        return \Help\Arrays::first($groups);
+    }
+
     // ========================================================================
     public static function all($ids): array
     {
@@ -135,8 +147,9 @@ final class DataSets
         return self::getGroupPath($group) . '/config.php';
     }
 
-    public static function getGroupLoader(string $group): \Data\ILoader
+    public static function getJsonLoader(array $dataSets): \Data\IJsonLoader
     {
+        $group = $dataSets[0]->group();
         $config = self::getGroupConfig($group);
 
         if (! isset($config['loader']))
@@ -146,7 +159,12 @@ final class DataSets
 
         $loader = $config['loader'];
         unset($config['loader']);
-        return new $loader($group, $config);
+        $loader = new $loader($dataSets, $config);
+
+        if ($loader instanceof \Data\IXMLLoader)
+            $loader = XMLLoader::create($loader, $dataSets);
+
+        return $loader;
     }
 
     // ========================================================================
@@ -246,6 +264,12 @@ final class DataSets
         return $path;
     }
 
+    public static function directoryOf(DataSet $dataset, bool $baseDir = true): string
+    {
+        return ($baseDir ? self::dataSetDir . '/' : '') . //
+        self::_dataSetDirectory($dataset->rules(), $dataset->qualifiers());
+    }
+
     public static function idOf(DataSet $dataset): string
     {
         return self::_getId($dataset->group(), $dataset->getPartitioning(), $dataset->rules(), $dataset->qualifiers());
@@ -272,10 +296,16 @@ final class DataSets
         return self::getRulesBasePath($group) . "/$theRules";
     }
 
-    private static function _dataSetPath(string $group, string $theRules, array $qualifiers): string
+    private static function _dataSetDirectory(string $theRules, array $qualifiers): string
     {
         $q = self::getQualifiersString($qualifiers);
-        return self::getDataSetsBasePath($group) . "/$theRules$q";
+        return "$theRules$q";
+    }
+
+    private static function _dataSetPath(string $group, string $theRules, array $qualifiers): string
+    {
+        $dirname = self::_dataSetDirectory($theRules, $qualifiers);
+        return self::getDataSetsBasePath($group) . "/$dirname";
     }
 
     private static function _getId(string $group, \Data\IPartitioning $partitioning, string $theRules, array $qualifiers): string

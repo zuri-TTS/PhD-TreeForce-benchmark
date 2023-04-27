@@ -20,7 +20,9 @@ final class OneTest extends AbstractTest
 
     private bool $displayHeader = true;
 
-    private string $cleanDBGlob;
+    private int $preCleanDataSet = 0;
+
+    private int $postCleanDataSet = 0;
 
     private array $javaProperties;
 
@@ -32,7 +34,21 @@ final class OneTest extends AbstractTest
         $javaProperties = $cmdParser['javaProperties'];
 
         $this->doonce = $args['doonce'];
-        $this->cleanDBGlob = $args['clean-db-json'] ? '*.json' : '';
+
+        if ($args['clean-ds'] === true)
+            $args['pre-clean-ds'] = $args['post-clean-ds'] = true;
+        elseif ($args['clean-ds'])
+            $args['pre-clean-ds'] = $args['post-clean-ds'] = $args['clean-ds'];
+
+        if ($args['pre-clean-ds'] === true)
+            $this->preCleanDataSet = \Data\IJsonLoader::CLEAN_ALL;
+        elseif ($args['pre-clean-ds'])
+            $this->preCleanDataSet = $args['pre-clean-ds'];
+
+        if ($args['post-clean-ds'] === true)
+            $this->postCleanDataSet = \Data\IJsonLoader::CLEAN_ALL;
+        elseif ($args['post-clean-ds'])
+            $this->postCleanDataSet = $args['post-clean-ds'];
 
         if (\in_array($args['cmd'], [
             'partition'
@@ -275,7 +291,10 @@ final class OneTest extends AbstractTest
         $args = $this->cmdParser['args'];
 
         if ($args['pre-clean-db'] || $args['clean-db'])
-            $this->dropCollections($this->cleanDBGlob);
+            $this->dbImport->dropDataset($this->ds);
+
+        if ($this->preCleanDataSet)
+            $this->ds->getJsonLoader()->cleanFiles($this->preCleanDataSet);
     }
 
     private function postCleanDb()
@@ -283,7 +302,10 @@ final class OneTest extends AbstractTest
         $args = $this->cmdParser['args'];
 
         if ($args['post-clean-db'] || $args['clean-db'])
-            $this->dropCollections($this->cleanDBGlob);
+            $this->dbImport->dropDataset($this->ds);
+
+        if ($this->postCleanDataSet)
+            $this->ds->getJsonLoader()->cleanFiles($this->postCleanDataSet);
     }
 
     private function postProcess()

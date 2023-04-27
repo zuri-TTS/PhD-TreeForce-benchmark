@@ -1,7 +1,7 @@
 <?php
 namespace Data;
 
-final class DBLPLoader implements ILoader
+final class DBLPLoader implements IXMLLoader
 {
 
     private const repo = "https://dblp.org/xml/release/";
@@ -18,9 +18,9 @@ final class DBLPLoader implements ILoader
 
     public string $conf_dtd;
 
-    public function __construct(string $group, array $config)
+    public function __construct(array $dataSets, array $config)
     {
-        $this->group = $group;
+        $this->group = \DataSets::groupOf($dataSets);
 
         $oa = $this->oargs = (new \Args\ObjectArgs($this))-> //
         setPrefix('conf_')-> //
@@ -47,7 +47,7 @@ final class DBLPLoader implements ILoader
         ]
     ];
 
-    function getPartitioning(string $name = ''): IPartitioning
+    public function getPartitioning(string $name = ''): IPartitioning
     {
         return Loaders::getPartitioningWithLogical($name, self::partitions, 'dblp');
     }
@@ -181,7 +181,7 @@ final class DBLPLoader implements ILoader
         \wdPush(\DataSets::getGroupPath($this->group));
         $xmlPath = "$this->conf_xml.xml";
 
-        $this->downloadFile("compress.zlib://" . self::repo . "$this->conf_xml.xml.gz", $xmlPath);
+        $this->downloadFile("compress.zlib://" . self::repo . "$xmlPath.gz", $xmlPath);
         $this->downloadFile(self::repo . "$this->conf_dtd.dtd", "$this->conf_dtd.dtd");
         $reader = \XMLReader::open($xmlPath);
         $reader->setParserProperty(\XMLReader::LOADDTD, true);
@@ -199,7 +199,7 @@ final class DBLPLoader implements ILoader
             echo "Downloading $from into $to\n";
 
             if (! \copy($from, $to)) {
-                \unlink($to);
+                @\unlink($to);
                 throw new \Exception("An error occured");
             }
         }

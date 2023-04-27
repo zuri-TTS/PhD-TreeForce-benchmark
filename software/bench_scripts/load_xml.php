@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/classes/autoload.php';
 include_once __DIR__ . '/common/functions.php';
@@ -10,16 +9,13 @@ $cmdArgsDef = [
     'cmd-display-output' => false,
     'drop-empty' => false,
     'drop' => false,
-    'clean' => false,
     'generate' => true,
-    'summarize' => true,
+    // 'summarize' => true,
     'load' => false,
-    'pre-clean' => false,
+    'pre-clean-ds' => false,
     'pre-clean-db' => false,
     'pre-clean-all' => false,
-    'post-clean' => false,
-    'post-clean-xml' => false,
-    'post-clean-all' => false,
+    'post-clean-ds' => false,
     'simplify_object_useConfig' => true
 ];
 
@@ -41,42 +37,44 @@ while (! empty($argv)) {
     foreach ($dataSets as $dataSet) {
         $group = $dataSet->group();
         $qualifiers = $dataSet->qualifiersString();
-        $toProcess["$group"][] = $dataSet;
+        $toProcess[$group][] = $dataSet;
     }
     $dbImport = \DBImports::get($cmdParser);
 
     foreach ($toProcess as $dataSets) {
         $qualifiers = $dataSets[0]->qualifiers();
-        $converter = (new \XMLLoader($dbImport, $dataSets))-> //
-        summarize($cmdParsed['summarize']);
+        $jsonLoader = DataSets::getJsonLoader($dataSets);
+
+        $group = DataSets::groupOf($dataSets);
+        $basepath = DataSets::getGroupPath($group);
+
+        \wdPush($basepath);
 
         if ($cmdParsed['pre-clean-db'] || $cmdParsed['pre-clean-all'])
-            foreach ($dataSets as $dataSet)
-                $dbImport->dropCollections($dataSet->getCollections());
+            \array_walk($dataSets, fn ($ds) => $dbImport->dropCollections($ds->getCollections()));
 
-        if ($cmdParsed['pre-clean'] || $cmdParsed['pre-clean-all'])
-            $converter->clean();
-
-        if (false !== $cmdParsed['clean']) {
-
-            if ($cmdParsed['clean'] === true)
-                $converter->clean();
-            else
-                $converter->clean($cmdParsed['clean']);
-        } elseif ($cmdParsed['drop'])
-            $converter->drop();
+        if ($cmdParsed['drop'])
+            \array_walk($dataSets, fn ($ds) => $ds->drop());
         elseif ($cmdParsed['drop-empty'])
-            $converter->dropEmpty();
-        elseif ($cmdParsed['generate'])
-            $converter->convert();
+            \array_walk($dataSets, fn ($ds) => $ds->dropEmpty());
+        else {
 
-        if ($cmdParsed['load'])
-            $converter->load();
+            if ($cmdParsed['pre-clean-all'] || $cmdParsed['pre-clean-ds'] === true)
+                $jsonLoader->cleanFiles();
+            elseif ($cmdParsed['pre-clean-ds'])
+                $jsonLoader->cleanFiles((int) $cmdParsed['pre-clean-ds']);
 
-        if ($cmdParsed['post-clean'] || $cmdParsed['post-clean-all'])
-            $converter->clean();
+            if ($cmdParsed['generate'])
+                $jsonLoader->generateJson();
 
-        if ($cmdParsed['post-clean-xml'] || $cmdParsed['post-clean-all'])
-            $converter->deleteXMLFile();
+            if ($cmdParsed['load'])
+                \array_walk($dataSets, fn ($ds) => $dbImport->importDataSet($ds));
+
+            if ($cmdParsed['post-clean-ds'] === true)
+                $jsonLoader->cleanFiles();
+            elseif ($cmdParsed['post-clean-ds'])
+                $jsonLoader->cleanFiles((int) $cmdParsed['post-clean-ds']);
+        }
+        \wdPop();
     }
 }

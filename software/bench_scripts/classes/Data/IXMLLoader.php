@@ -1,10 +1,10 @@
 <?php
 namespace Data;
 
-interface ILoader
+interface IXMLLoader
 {
 
-    function __construct(string $group, array $config);
+    function __construct(array $dataSets, array $config);
 
     function getUnwindConfig(): array;
 
