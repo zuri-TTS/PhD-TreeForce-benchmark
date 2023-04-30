@@ -21,8 +21,6 @@ final class DataSet
 
     private \Data\IPartitioning $partitioning;
 
-    private array $partitions;
-
     private string $locationId = '';
 
     private array $stats;
@@ -52,12 +50,9 @@ final class DataSet
         $ret->pidKey = $matches[3] ?? 'pid';
         $ret->rules = $rules;
         $ret->qualifiers = $qualifiers;
-        $ret->partitioning = $ret->getJsonLoader($ret)
-            ->getPartitioningBuilderFor($ret)
-            ->load();
+
         $ret->processQualifiers($qualifiers);
 
-        $ret->partitions = $ret->partitioning->getPartitions();
         return $ret;
     }
 
@@ -192,12 +187,17 @@ final class DataSet
 
     public function getPartitioning(): \Data\IPartitioning
     {
-        return $this->partitioning;
+        if (isset($this->partitioning))
+            return $this->partitioning;
+
+        return $this->partitioning = $this->getJsonLoader()
+            ->getPartitioningBuilderFor($this)
+            ->load();
     }
 
     public function getPartitions(): array
     {
-        return $this->partitions;
+        return $this->getPartitioning()->getPartitions();
     }
 
     // ========================================================================

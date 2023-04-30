@@ -58,7 +58,7 @@ abstract class AbstractJsonLoader implements IJsonLoader
         if (\preg_match('/^(L)?L(\d+)$/', $pname, $matches)) {
             $isLogic = $matches[1] === 'L';
             $depth = $matches[2];
-            return LambdaPartitioning::getBuilder($depth, $ds, $ds->pidKey());
+            return LambdaPartitioning::getBuilder($depth, $ds);
         }
         throw new \ErrorException("Can't handle dataset $ds");
     }
@@ -84,6 +84,8 @@ abstract class AbstractJsonLoader implements IJsonLoader
 
         if (empty($datasets))
             return;
+
+        printf("Generate json for %s\n", \Help\Arrays::encode($datasets));
 
         foreach ($this->getDocumentStream($this->groupPath) as $doc) {
 

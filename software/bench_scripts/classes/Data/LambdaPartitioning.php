@@ -30,9 +30,9 @@ final class LambdaPartitioning implements IPartitioning
     }
 
     // ========================================================================
-    public static function getBuilder(int $depth, \DataSet $dataset, string $pidKey): IPartitioningBuilder
+    public static function getBuilder(int $depth, \DataSet $dataset): IPartitioningBuilder
     {
-        return new class($depth, $dataset, $pidKey) implements IPartitioningBuilder {
+        return new class($depth, $dataset) implements IPartitioningBuilder {
 
             private const SAVE_FILE = 'partition.php';
 
@@ -40,13 +40,12 @@ final class LambdaPartitioning implements IPartitioning
 
             private \DataSet $dataset;
 
-            private string $pidKey;
+            private IJsonLoader $jsonloader;
 
-            public function __construct(int $depth, \DataSet $dataset, string $pidKey)
+            public function __construct(int $depth, \DataSet $dataset)
             {
                 $this->depth = $depth;
                 $this->dataset = $dataset;
-                $this->pidKey = $pidKey;
             }
 
             public function getDataSet(): \DataSet
@@ -67,14 +66,17 @@ final class LambdaPartitioning implements IPartitioning
                 return new LambdaPartitioning($this->dataset, $this->partitions);
             }
 
-            public function load(): IPartitioning
+            public function load(): ?IPartitioning
             {
                 $file = $this->dataset->path() . '/' . self::SAVE_FILE;
 
                 if (! \is_file($file))
-                    return SimplePartitioning::empty($this->dataset);
+                    $this->dataset->getJsonloader()->generateJson();
 
-                return new LambdaPartitioning($this->dataset, include $file);
+                if (! \is_file($file))
+                    throw new \ErrorException("Can't find the file `$file`");
+
+                return new LambdaPartitioning($this->dataset, include $file, $this->dataset);
             }
 
             private int $pid = 1;
