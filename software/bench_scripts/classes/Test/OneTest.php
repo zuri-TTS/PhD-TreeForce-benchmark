@@ -20,6 +20,10 @@ final class OneTest extends AbstractTest
 
     private bool $displayHeader = true;
 
+    private bool $enablePreClean;
+
+    private bool $enablePostClean;
+
     private int $preCleanDataSet = 0;
 
     private int $postCleanDataSet = 0;
@@ -35,7 +39,10 @@ final class OneTest extends AbstractTest
 
         $this->doonce = $args['doonce'];
 
-        if (false) {
+        {
+            $this->enablePreClean = $args['pre-clean-enable'] ?? true;
+            $this->enablePostClean = $args['post-clean-enable'] ?? true;
+
             if ($args['clean-ds'] === true)
                 $args['pre-clean-ds'] = $args['post-clean-ds'] = true;
             elseif ($args['clean-ds'])
@@ -51,6 +58,7 @@ final class OneTest extends AbstractTest
             elseif ($args['post-clean-ds'])
                 $this->postCleanDataSet = $args['post-clean-ds'];
         }
+
         if (\in_array($args['cmd'], [
             'partition'
         ])) {
@@ -291,27 +299,29 @@ final class OneTest extends AbstractTest
 
     private function preCleanDb()
     {
+        if (! $this->enablePreClean)
+            return;
         $args = $this->cmdParser['args'];
 
         if ($args['pre-clean-db'] || $args['clean-db']) {
             $this->dbImport->dropDataset($this->ds);
 
-            // if ($this->preCleanDataSet)
-            // $this->ds->getJsonLoader()->cleanFiles($this->preCleanDataSet);
-            $this->ds->getJsonLoader()->cleanFiles(\Data\IJsonLoader::CLEAN_JSON_FILES);
+            if ($this->preCleanDataSet)
+                $this->ds->getJsonLoader()->cleanFiles($this->preCleanDataSet);
         }
     }
 
     private function postCleanDb()
     {
+        if (! $this->enablePostClean)
+            return;
         $args = $this->cmdParser['args'];
 
         if ($args['post-clean-db'] || $args['clean-db']) {
             $this->dbImport->dropDataset($this->ds);
 
-            // if ($this->postCleanDataSet)
-            // $this->ds->getJsonLoader()->cleanFiles($this->postCleanDataSet);
-            $this->ds->getJsonLoader()->cleanFiles(\Data\IJsonLoader::CLEAN_JSON_FILES);
+            if ($this->postCleanDataSet)
+                $this->ds->getJsonLoader()->cleanFiles($this->postCleanDataSet);
         }
     }
 
