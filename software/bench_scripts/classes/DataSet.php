@@ -13,6 +13,8 @@ final class DataSet
 
     private string $rules;
 
+    private string $pidKey;
+
     private string $queriesId = '';
 
     private string $collectionsId = '';
@@ -38,18 +40,20 @@ final class DataSet
 
     public static function create(string $full_group, string $rules, array $qualifiers): DataSet
     {
-        $gparts = \explode('.', $full_group, 2);
+        \preg_match('/^(.+)(?:\.(.+)(?:-(.+))?)?$/U', $full_group, $matches);
 
         $qualifiers = \array_unique($qualifiers);
         \sort($qualifiers);
+
         $ret = new DataSet();
         $ret->full_group = $full_group;
-        $ret->group = $gparts[0];
-        $ret->group_partitioning = $gparts[1] ?? '';
+        $ret->group = $matches[1];
+        $ret->group_partitioning = $matches[2] ?? '';
+        $ret->pidKey = $matches[3] ?? 'pid';
         $ret->rules = $rules;
         $ret->qualifiers = $qualifiers;
         $ret->partitioning = $ret->getJsonLoader($ret)
-        ->getPartitioningBuilderFor($ret)
+            ->getPartitioningBuilderFor($ret)
             ->load();
         $ret->processQualifiers($qualifiers);
 
@@ -99,7 +103,7 @@ final class DataSet
     {
         return DataSets::idOf($this);
     }
-    
+
     public function fullGroup(): string
     {
         return $this->full_group;
@@ -109,7 +113,7 @@ final class DataSet
     {
         return $this->group;
     }
-    
+
     public function group_partitioning(): string
     {
         return $this->group_partitioning;
@@ -123,6 +127,11 @@ final class DataSet
     public function qualifiers(): array
     {
         return $this->qualifiers;
+    }
+
+    public function pidKey(): string
+    {
+        return $this->pidKey;
     }
 
     public function qualifiersString(string $default = ''): string

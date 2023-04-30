@@ -32,8 +32,7 @@ return [
         'summary.prettyPrint' => 'n',
         'summary.filter.types' => 'y',
         'summary.filter.stringValuePrefix' => 0,
-        'disjunction.sequential' => true,
-        'partition.id' => 'pid'
+        'disjunction.sequential' => true
     ],
     'bench.measures' => [
         'default' => [
@@ -55,7 +54,7 @@ return [
         $hasPartitioning = \count($partitioning->getPartitions()) > 1;
         $j = $cmdParser['javaProperties'];
 
-        $pid = $hasPartitioning ? "-{$j['partition.id']}" : '';
+        $pid = $hasPartitioning ? "-{$dataSet->pidKey()}" : '';
         $ds = $dataSet->group();
 
         if ($hasPartitioning)
@@ -103,7 +102,7 @@ return [
             'summary' => $cmdArg['summary'],
             'toNative' => $cmdArg['toNative_summary'],
             'parallel' => $cmdArg['parallel'],
-            'partition_id' => $javaProperties['partition.id'],
+            'partition_id' => $dataSet->pidKey(),
             'filter_types' => $javaProperties['summary.filter.types'] !== 'n',
             'filter_prefix' => $javaProperties['summary.filter.stringValuePrefix']
         ];

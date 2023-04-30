@@ -32,7 +32,7 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, array $part
     } elseif (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
-    $partitionID = $javaProperties['partition.id'];
+    $partitionID = $dataSet->pidKey();
     $filterStrPrefix = $javaProperties['summary.filter.stringValuePrefix'];
 
     $outputDirGenerator = $common['bench.output.dir.generator'];
@@ -183,7 +183,6 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, array $part
     if (isset($javaPartition)) {
         $pattern = \Data\AbstractPartition::filePattern($partitionID);
         $javaProperties = \array_merge($javaProperties, [
-            'partition.id' => $partitionID,
             'partition' => $javaPartition,
             'partition.mode' => 'prefix',
             'partition.output.pattern' => "\${dataset.baseDir}/$pattern"

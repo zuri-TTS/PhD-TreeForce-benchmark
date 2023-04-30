@@ -30,23 +30,23 @@ final class LambdaPartitioning implements IPartitioning
     }
 
     // ========================================================================
-    public static function getBuilder(int $depth, \DataSet $dataset, bool $isLogical): IPartitioningBuilder
+    public static function getBuilder(int $depth, \DataSet $dataset, string $pidKey): IPartitioningBuilder
     {
-        return new class($depth, $dataset, $isLogical) implements IPartitioningBuilder {
+        return new class($depth, $dataset, $pidKey) implements IPartitioningBuilder {
 
             private const SAVE_FILE = 'partition.php';
-
-            private bool $isLogical;
 
             private int $depth;
 
             private \DataSet $dataset;
 
-            public function __construct(int $depth, \DataSet $dataset, bool $isLogical)
+            private string $pidKey;
+
+            public function __construct(int $depth, \DataSet $dataset, string $pidKey)
             {
                 $this->depth = $depth;
                 $this->dataset = $dataset;
-                $this->isLogical = $isLogical;
+                $this->pidKey = $pidKey;
             }
 
             public function getDataSet(): \DataSet

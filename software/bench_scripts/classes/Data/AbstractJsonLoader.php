@@ -58,7 +58,7 @@ abstract class AbstractJsonLoader implements IJsonLoader
         if (\preg_match('/^(L)?L(\d+)$/', $pname, $matches)) {
             $isLogic = $matches[1] === 'L';
             $depth = $matches[2];
-            return LambdaPartitioning::getBuilder($depth, $ds, $isLogic);
+            return LambdaPartitioning::getBuilder($depth, $ds, $ds->pidKey());
         }
         throw new \ErrorException("Can't handle dataset $ds");
     }
@@ -94,8 +94,7 @@ abstract class AbstractJsonLoader implements IJsonLoader
                 $this->postProcessDocument($dsdoc, $ds);
                 $partition = $pb->getPartitionFor($dsdoc, $pb);
 
-                // TODO: dynamic pid key according to the cli parameters
-                $dsdoc['pid'] = $partition->getPID();
+                $dsdoc[$ds->pidKey()] = $partition->getPID();
                 $this->lastProcessDocument($dsdoc, $ds);
                 $file = $partition->getId();
 

@@ -4,68 +4,11 @@ namespace Data;
 final class SimplePartitioning
 {
 
-    // private function __construct(string $id, string $json, ?ILogicalPartitioningFactory $logicalPFactory = null)
-    // {
-    // $this->id = $id;
-    // $this->json = $json;
-    // $this->logicalPFactory = $logicalPFactory;
-    // }
+    private function __construct()
+    {
+        throw new \AssertionError();
+    }
 
-    // function getPartitionFor(array $document): IPartition
-    // {}
-
-    // private function getPartitionsOf(\DataSet $ds): array
-    // {
-    // $partition = new class($ds, $this->json, $this->logicalPFactory) extends PhysicalPartition {
-
-    // private string $cname;
-
-    // private ?IPartitioning $logical;
-
-    // function __construct(\DataSet $ds, string $json, ?ILogicalPartitioningFactory $logical)
-    // {
-    // parent::__construct('', $json);
-    // $this->cname = \DBImports::getCollectionName($ds);
-    // $this->logicalPFactory = $logical;
-    // }
-
-    // function getCollectionName(): string
-    // {
-    // return $this->cname;
-    // }
-
-    // function getLogicalPartitioning(): ?IPartitioning
-    // {
-    // if (null === $this->logicalPFactory)
-    // return null;
-
-    // return $this->logicalPFactory->create($this);
-    // }
-
-    // function contains(array $data): bool
-    // {
-    // return true;
-    // }
-    // };
-    // return [
-    // $partition
-    // ];
-    // }
-
-    // public function getID(): string
-    // {
-    // return $this->id;
-    // }
-
-    // public function getBaseDir(): string
-    // {
-    // return '';
-    // }
-
-    // public static function create(string $id, ?string $json = null, ?ILogicalPartitioningFactory $logicalFactory = null): IPartitioning
-    // {
-    // return new NoPartitioning($id, $json ?? "$id.json", $logicalFactory);
-    // }
     public static function simplePartition(\DataSet $ds): IPartition
     {
         return new class($ds->group(), IPartition::NO_PID) extends AbstractPartition {};

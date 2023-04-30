@@ -99,6 +99,9 @@ final class Plotter
             $pid = $elements['partition'] ?? '';
             $coll .= empty($pid) ? '' : ".$pid";
         }
+        if (! empty($coll) && ($pid = $elements['partition_id'] ?? null) && $pid !== 'pid')
+            $coll .= "-$pid";
+
         $outDir = "[$group$coll][$theRules][$qualifiers]";
         $outDir .= '%s';
 
@@ -111,13 +114,12 @@ final class Plotter
             $outDir .= '[filter-types]';
         if ($i = $elements['filter_prefix'] ?? 0)
             $outDir .= "[filter-prefix-$i]";
-        if (! empty($coll) && ($pid = $elements['partition_id'] ?? null) && $pid !== '_id')
-            $outDir .= "[pid-$pid]";
         if ($summary = $elements['toNative'] ?? null)
             $outDir .= "[toNative-{$elements['toNative']}]";
 
         if (null !== $replacement)
             $outDir = \sprintf($outDir, $replacement);
+
         return $outDir;
     }
 
@@ -140,12 +142,13 @@ final class Plotter
             'time' => null
         ];
 
-        \preg_match("#^\[((.+)(?:\.(.+))?)\]\[(.*)\]\[(.*)\]#U", $dirName, $matches);
+        \preg_match("#^\[((.+)(?:\.(.+)(?:-(.+))?)?)\]\[(.*)\]\[(.*)\]#U", $dirName, $matches);
         $ret['full_group'] = $matches[1] ?? null;
         $ret['group'] = $matches[2] ?? null;
         $ret['full_partition'] = $matches[3] ?? null;
-        $ret['rules'] = $matches[4] ?? null;
-        $ret['qualifiers'] = $matches[5] ?? null;
+        $ret['partition_id'] = $matches[4] ?? null;
+        $ret['rules'] = $matches[5] ?? null;
+        $ret['qualifiers'] = $matches[6] ?? null;
         $ret['full_pattern'] = \preg_replace('#\[(\d\d\d\d-\d\d-\d\d.+)\]#U', '}[%s]', $dirName);
 
         if (\preg_match('#\[(\d\d\d\d-\d\d-\d\d.+)\]#U', $dirName, $matches))
@@ -160,9 +163,6 @@ final class Plotter
         ];
         if (\preg_match("#\[filter-types\]#U", $dirName, $matches))
             $ret['filter_types'] = $matches[1] ?? null;
-
-        if (\preg_match("#\[pid-(.+)\]#U", $dirName, $matches))
-            $ret['partition_id'] = $matches[1] ?? null;
 
         if (\preg_match("#\[summary-(.+)\]#U", $dirName, $matches))
             $ret['summary'] = $matches[1] ?? null;
