@@ -1,6 +1,6 @@
 <?php
 
-function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions, \Test\CmdArgs &$cmdParser) //
+function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, array $partitions, \Test\CmdArgs &$cmdParser) //
 {
     $cmdArg = &$cmdParser['args'];
     $javaProperties = $cmdParser['javaProperties'];
@@ -63,7 +63,7 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
     if ($cmdArg['parallel']) {
 
         if (! \is_array($partitions))
-            throw new \Exception("In parallel mode \$collections must be an array; have " . print_r($partitions, true));
+            throw new \Exception("In parallel mode \$partitions must be an array; have " . print_r($partitions, true));
 
         $cprefix = "";
         $javaCollection = [];
@@ -78,7 +78,7 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
             $partID = $partition->getID();
             $cprefix = empty($partID) ? '' : "$partID-";
 
-            $javaCollection[] = $partition->getCollectionName();
+            $javaCollection[] = \Data\Partitions::getCollectionName($dataSet, $partition);
 
             if ($noSummary) {
                 $javaSummary[] = $benchSummary[] = '';
@@ -104,19 +104,20 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, $partitions
             $partitions = \array_shift($partitions);
 
         if (! $partitions instanceof \Data\IPartition)
-            throw new \Exception("In sequential mode \$collections must be a \Data\IPartition; have " . print_r($partitions, true));
+            throw new \Exception("In sequential mode \$collections must be a \Data\IPartition; have " . gettype($partitions));
 
         $partition = $partitions;
         $benchPartition = [];
 
-        if ($partition->isLogical()) {
+        if (false && $partition->isLogical()) {
             $javaPartition = $fpartition($partition);
             $benchPartition = $partition;
         }
-
         $partID = $partition->getID();
+
         $cprefix = empty($partID) ? '' : "$partID-";
-        $javaCollection = $partition->getCollectionName();
+
+        $javaCollection = \Data\Partitions::getCollectionName($dataSet, $partition);
 
         if (empty($cmdArg['summary'])) {
             $javaSummary = '';

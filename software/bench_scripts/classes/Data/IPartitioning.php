@@ -4,9 +4,9 @@ namespace Data;
 interface IPartitioning
 {
 
+    function getDataSet(): \DataSet;
+
+    function getPartitions(): array;
+
     function getID(): string;
-
-    function getBaseDir(): string;
-
-    function getPartitionsOf(\DataSet $ds): array;
 }

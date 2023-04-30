@@ -32,7 +32,6 @@ while (! empty($argv)) {
     $cmdExpansions = $cmdParser->expand();
     $cmdExpansions_nb = \count($cmdExpansions);
 
-    $errors = [];
     $cmdGroupExpansions = [
         0 => [], // normal
         1 => [] // parallel
@@ -46,18 +45,21 @@ while (! empty($argv)) {
     foreach ($dataSets as $dataSet) {
         $ppreCleanDB = $preCleanDB;
         $cmdExpansions_i = 0;
-        $dsPartitions = $dataSet->getPartitions();
-        $partitions = [];
+        // $dsPartitions = $dataSet->getPartitions();
 
-        foreach ($dsPartitions as $subPartitions) {
-            $logicalPartitioning = $subPartitions->getLogicalPartitioning();
+        if (false) {
+            foreach ($dsPartitions as $subPartitions) {
+                $logicalPartitioning = $subPartitions->getLogicalPartitioning();
 
-            // $subPartitions is one PhysicalPartition
-            if ($logicalPartitioning === null)
-                $partitions[] = $subPartitions;
-            else
-                $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
-        }
+                // $subPartitions is one PhysicalPartition
+                if ($logicalPartitioning === null)
+                    $partitions[] = $subPartitions;
+                else
+                    $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
+            }
+        } else
+            $partitions = $dataSet->getPartitions();
+
         $skipped = null;
 
         // parallel tests
@@ -79,7 +81,6 @@ while (! empty($argv)) {
                 $test = new $testClass($dataSet, clone $cmdFinalParser, ...$partitions);
                 $test->execute();
                 $test->reportErrors();
-                $errors = \array_merge($errors, $test->getErrors());
 
                 if (! isset($skipped) || $skipped) {
                     $skipped = $cmdFinalParser['skipped'] ?? false;
@@ -111,7 +112,6 @@ while (! empty($argv)) {
                     $test = new $testClass($dataSet, clone $cmdFinalParser, $partition);
                     $test->execute();
                     $test->reportErrors();
-                    $errors = \array_merge($errors, $test->getErrors());
 
                     if (! isset($skipped) || $skipped) {
                         $skipped = $cmdFinalParser['skipped'] ?? false;
@@ -123,6 +123,4 @@ while (! empty($argv)) {
             }
         }
     }
-    if (! empty($errors))
-        $test->reportErrors($errors);
 }

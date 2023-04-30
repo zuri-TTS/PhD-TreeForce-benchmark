@@ -74,17 +74,17 @@ abstract class AbstractDBImport implements IDBImport
         $loading = \array_combine($collections, \array_fill(0, \count($collections), false));
 
         foreach ($partitions as $partition) {
-            $collectionName = $partition->getCollectionName();
+            $collectionName = \Data\Partitions::getCollectionName($dataSet, $partition);
 
             if (isset($ignoreCollections[$collectionName]));
             elseif (! $loading[$collectionName] && self::collectionExists($collectionName))
-                echo "$collectionName: already exists\n";
+            // echo "$collectionName: already exists\n";
+            ;
             else {
                 {
                     \wdPush($dataSet->path());
 
-                    $collectionName = $partition->getCollectionName();
-                    $jsonFile = $partition->getJsonFile();
+                    $jsonFile = "{$partition->getID()}.json";
                     echo "$jsonFile in collection: $collectionName\n";
 
                     if (! \is_file($jsonFile))

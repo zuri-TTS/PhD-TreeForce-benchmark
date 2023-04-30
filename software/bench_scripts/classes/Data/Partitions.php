@@ -9,14 +9,15 @@ final class Partitions
         throw new \Error();
     }
 
-    public static function getCollectionsOf(array $partitions)
+    public static function getCollectionName(\DataSet $ds, \Data\IPartition $p)
     {
-        $ret = [];
+        $first = "{$ds->fullGroup()}_{$ds->rules()}" . \DataSets::getQualifiersString($ds->qualifiers());
+        $g = $ds->group_partitioning();
 
-        foreach ($partitions as $p) {
-            $ret[] = $p->getCollectionName();
-        }
-        return $ret;
+        if (\Help\Strings::empty($g) || $g === $ds->group())
+            return $first;
+
+        return "$first.{$p->getId()}";
     }
 
     public static function selectPartitionsWithID(array $partitions, array $IDs): array
@@ -57,6 +58,11 @@ final class Partitions
             function getID(): string
             {
                 return '';
+            }
+
+            function getPID(): int
+            {
+                return IPartition::NO_PID;
             }
 
             function getPrefix(): string

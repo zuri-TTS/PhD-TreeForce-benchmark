@@ -27,7 +27,9 @@ final class DataSets
 
     public static function allCollections(DataSet $ds, $ids = null): array
     {
-        return \Help\Thing::allThings(fn () => \Data\Partitions::getCollectionsOf($ds->getPartitions()), $ids);
+        return \Help\Thing::allThings(function () use ($ds) {
+            return \array_map(fn ($p) => \Data\Partitions::getCollectionName($ds, $p), $ds->getPartitions());
+        }, $ids);
     }
 
     // ========================================================================
@@ -76,7 +78,6 @@ final class DataSets
             $ids = (array) $ids;
         if (empty($ids))
             $ids = (array) '';
-
         return \array_map_merge(function ($k) {
 
             if ($k instanceof DataSet)
@@ -108,8 +109,8 @@ final class DataSets
 
         $ret = [];
 
-        foreach ($groups as $group) {
-            list ($group, $partition) = \explode('.', $group, 2) + \array_fill(0, 2, '');
+        foreach ($groups as $full_group) {
+            list ($group, $partition) = \explode('.', $full_group, 2) + \array_fill(0, 2, '');
 
             $eRulesSets = self::allRules($group, $rules);
 
@@ -118,7 +119,7 @@ final class DataSets
 
             foreach ($eRulesSets as $rulesSet) {
                 foreach ($qualifierss as $q) {
-                    $ret[] = DataSet::create($group, $partition, $rulesSet, $q)-> //
+                    $ret[] = DataSet::create($full_group, $rulesSet, $q)-> //
                     setQueriesId($queries)-> //
                     setCollectionsId($collsIDs);
                 }
@@ -147,9 +148,9 @@ final class DataSets
         return self::getGroupPath($group) . '/config.php';
     }
 
-    public static function getJsonLoader(array $dataSets): \Data\IJsonLoader
+    public static function getJsonLoader(\DataSet ...$ds): \Data\IJsonLoader
     {
-        $group = $dataSets[0]->group();
+        $group = $ds[0]->group();
         $config = self::getGroupConfig($group);
 
         if (! isset($config['loader']))
@@ -159,10 +160,10 @@ final class DataSets
 
         $loader = $config['loader'];
         unset($config['loader']);
-        $loader = new $loader($dataSets, $config);
+        $loader = new $loader($ds, $config);
 
         if ($loader instanceof \Data\IXMLLoader)
-            $loader = XMLLoader::create($loader, $dataSets);
+            $loader = XMLLoader::create($loader, $ds);
 
         return $loader;
     }
@@ -256,7 +257,7 @@ final class DataSets
     {
         $path = self::_dataSetPath($dataset->group(), $dataset->rules(), $dataset->qualifiers());
 
-        $partitioning = $dataset->getPartitioning()->getBaseDir();
+        $partitioning = $dataset->group_partitioning();
 
         if (! empty($partitioning))
             $path .= "/$partitioning";
@@ -272,7 +273,7 @@ final class DataSets
 
     public static function idOf(DataSet $dataset): string
     {
-        return self::_getId($dataset->group(), $dataset->getPartitioning(), $dataset->rules(), $dataset->qualifiers());
+        return self::_getId($dataset->group(), $dataset->group_partitioning(), $dataset->rules(), $dataset->qualifiers());
     }
 
     public static function getQualifiersString(array $qualifiers): string
@@ -308,16 +309,16 @@ final class DataSets
         return self::getDataSetsBasePath($group) . "/$dirname";
     }
 
-    private static function _getId(string $group, \Data\IPartitioning $partitioning, string $theRules, array $qualifiers): string
+    private static function _getId(string $group, string $gpartitioning, string $theRules, array $qualifiers): string
     {
-        $pid = $partitioning->getID();
-
-        if (! empty($pid))
-            $pid = ".$pid";
+        if (! \Help\Strings::empty($gpartitioning))
+            $pid = ".$gpartitioning";
+        else
+            $pid = '';
 
         $q = self::getQualifiersString($qualifiers);
 
-        if (! empty($theRules))
+        if (! \Help\Strings::empty($theRules))
             return "$group$pid/$theRules$q";
 
         return "$group$q";

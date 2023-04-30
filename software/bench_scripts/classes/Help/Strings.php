@@ -10,6 +10,11 @@ final class Strings
     }
 
     // ========================================================================
+    public static function empty(string $s)
+    {
+        return \strlen($s) == 0;
+    }
+
     public static function append(string $delimiter, ...$s)
     {
         $ret = \array_shift($s);

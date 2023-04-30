@@ -18,6 +18,31 @@ final class Arrays
         return $a[\array_key_first($a)];
     }
 
+    public static function getDepthKeys(array $a, int $depth)
+    {
+        $ret = [];
+        $toProcess = [
+            $a
+        ];
+        $nextToProcess = [];
+
+        while ($depth && ! empty($toProcess)) {
+            $currentDepth = [];
+
+            while (null !== ($a = \array_pop($toProcess))) {
+                $currentDepth = \array_merge($currentDepth, \array_keys($a));
+                $nextToProcess = \array_filter($a, '\is_array');
+            }
+            $currentDepth = \array_unique($currentDepth);
+            \sort($currentDepth);
+            $ret[] = $currentDepth;
+            $toProcess = $nextToProcess;
+            $nextToProcess = [];
+            $depth --;
+        }
+        return $ret;
+    }
+
     public static function prefixSubItemsWithKey(array $a, string $delimiter = '.')
     {
         $ret = [];

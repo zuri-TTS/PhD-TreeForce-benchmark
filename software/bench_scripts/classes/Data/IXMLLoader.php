@@ -23,6 +23,4 @@ interface IXMLLoader
     function deleteXMLFile(): bool;
 
     function getLabelReplacerForDataSet(\DataSet $dataSet): ?callable;
-
-    function getPartitioning(string $name): IPartitioning;
 }

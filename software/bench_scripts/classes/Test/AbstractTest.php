@@ -33,7 +33,7 @@ abstract class AbstractTest
 
     public final function getCollectionsName(): array
     {
-        return \array_unique(\array_map(fn ($p) => $p->getCollectionName(), $this->partitions));
+        return \array_unique(\array_map(fn ($p) => \Data\Partitions::getCollectionName($this->ds, $p), $this->partitions));
     }
 
     public final function collectionsExists(): bool

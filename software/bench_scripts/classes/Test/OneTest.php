@@ -35,21 +35,22 @@ final class OneTest extends AbstractTest
 
         $this->doonce = $args['doonce'];
 
-        if ($args['clean-ds'] === true)
-            $args['pre-clean-ds'] = $args['post-clean-ds'] = true;
-        elseif ($args['clean-ds'])
-            $args['pre-clean-ds'] = $args['post-clean-ds'] = $args['clean-ds'];
+        if (false) {
+            if ($args['clean-ds'] === true)
+                $args['pre-clean-ds'] = $args['post-clean-ds'] = true;
+            elseif ($args['clean-ds'])
+                $args['pre-clean-ds'] = $args['post-clean-ds'] = $args['clean-ds'];
 
-        if ($args['pre-clean-ds'] === true)
-            $this->preCleanDataSet = \Data\IJsonLoader::CLEAN_ALL;
-        elseif ($args['pre-clean-ds'])
-            $this->preCleanDataSet = $args['pre-clean-ds'];
+            if ($args['pre-clean-ds'] === true)
+                $this->preCleanDataSet = \Data\IJsonLoader::CLEAN_JSON_FILES;
+            elseif ($args['pre-clean-ds'])
+                $this->preCleanDataSet = $args['pre-clean-ds'];
 
-        if ($args['post-clean-ds'] === true)
-            $this->postCleanDataSet = \Data\IJsonLoader::CLEAN_ALL;
-        elseif ($args['post-clean-ds'])
-            $this->postCleanDataSet = $args['post-clean-ds'];
-
+            if ($args['post-clean-ds'] === true)
+                $this->postCleanDataSet = \Data\IJsonLoader::CLEAN_JSON_FILES;
+            elseif ($args['post-clean-ds'])
+                $this->postCleanDataSet = $args['post-clean-ds'];
+        }
         if (\in_array($args['cmd'], [
             'partition'
         ])) {
@@ -62,7 +63,8 @@ final class OneTest extends AbstractTest
         ])) {
             $this->needSummary = true;
             $this->needNativeSummary = true;
-            $this->needPartition = $partitions[0]->isLogical();
+            $this->needPartition = false;
+            // $this->needPartition = $partitions[0]->isLogical();
         }
 
         if (\in_array($args['cmd'], [
@@ -152,7 +154,8 @@ final class OneTest extends AbstractTest
     {
         $args = $this->cmdParser['args'];
         $testConfig = $this->testConfig;
-        $partition = $this->partitions[0];
+        // $partition = $this->partitions[0];
+        $partitions = $this->partitions;
 
         if ($this->needDatabase) {
             $this->preCleanDb();
@@ -170,16 +173,16 @@ final class OneTest extends AbstractTest
                 throw new \Exception("The collection treeforce.$this->ds must exists in the database");
 
             // Load the index
-            if ($args['cmd'] === 'querying' && $partition->isLogical()) {
-                $partitionId = $this->javaProperties['partition.id'];
-                $this->loadIndex($partitionId);
-            }
+            // if ($args['cmd'] === 'querying' && $partition->isLogical()) {
+            // $partitionId = $this->javaProperties['partition.id'];
+            // $this->loadIndex($partitionId);
+            // }
         }
         { // Summaries check
-            if ($args['cmd'] === 'partition' && $partition->isLogical())
-                $partitions = \ensureArray($partition->getPhysicalParent());
-            else
-                $partitions = \ensureArray($this->partitions);
+          // if ($args['cmd'] === 'partition' && $partition->isLogical())
+          // $partitions = \ensureArray($partition->getPhysicalParent());
+          // else
+          // $partitions = \ensureArray($this->partitions);
 
             if ($this->needNativeSummary) {
                 $this->ensurePartitionsSummary($args['toNative_summary'], $partitions, 0);
@@ -290,22 +293,26 @@ final class OneTest extends AbstractTest
     {
         $args = $this->cmdParser['args'];
 
-        if ($args['pre-clean-db'] || $args['clean-db'])
+        if ($args['pre-clean-db'] || $args['clean-db']) {
             $this->dbImport->dropDataset($this->ds);
 
-        if ($this->preCleanDataSet)
-            $this->ds->getJsonLoader()->cleanFiles($this->preCleanDataSet);
+            // if ($this->preCleanDataSet)
+            // $this->ds->getJsonLoader()->cleanFiles($this->preCleanDataSet);
+            $this->ds->getJsonLoader()->cleanFiles(\Data\IJsonLoader::CLEAN_JSON_FILES);
+        }
     }
 
     private function postCleanDb()
     {
         $args = $this->cmdParser['args'];
 
-        if ($args['post-clean-db'] || $args['clean-db'])
+        if ($args['post-clean-db'] || $args['clean-db']) {
             $this->dbImport->dropDataset($this->ds);
 
-        if ($this->postCleanDataSet)
-            $this->ds->getJsonLoader()->cleanFiles($this->postCleanDataSet);
+            // if ($this->postCleanDataSet)
+            // $this->ds->getJsonLoader()->cleanFiles($this->postCleanDataSet);
+            $this->ds->getJsonLoader()->cleanFiles(\Data\IJsonLoader::CLEAN_JSON_FILES);
+        }
     }
 
     private function postProcess()

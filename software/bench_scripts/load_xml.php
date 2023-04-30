@@ -43,10 +43,14 @@ while (! empty($argv)) {
 
     foreach ($toProcess as $dataSets) {
         $qualifiers = $dataSets[0]->qualifiers();
-        $jsonLoader = DataSets::getJsonLoader($dataSets);
 
         $group = DataSets::groupOf($dataSets);
         $basepath = DataSets::getGroupPath($group);
+
+        $fclean = function ($datasets, int $mode = \Data\IJsonLoader::CLEAN_ALL) {
+            foreach ($datasets as $ds)
+                $ds->getJsonLoader()->cleanFiles($mode);
+        };
 
         \wdPush($basepath);
 
@@ -60,20 +64,21 @@ while (! empty($argv)) {
         else {
 
             if ($cmdParsed['pre-clean-all'] || $cmdParsed['pre-clean-ds'] === true)
-                $jsonLoader->cleanFiles();
+                $fclean($dataSets);
             elseif ($cmdParsed['pre-clean-ds'])
-                $jsonLoader->cleanFiles((int) $cmdParsed['pre-clean-ds']);
+                $fclean($dataSets, (int) $cmdParsed['pre-clean-ds']);
 
-            if ($cmdParsed['generate'])
+            if ($cmdParsed['generate']) {
+                $jsonLoader = DataSets::getJsonLoader(...$dataSets);
                 $jsonLoader->generateJson();
-
+            }
             if ($cmdParsed['load'])
                 \array_walk($dataSets, fn ($ds) => $dbImport->importDataSet($ds));
 
             if ($cmdParsed['post-clean-ds'] === true)
-                $jsonLoader->cleanFiles();
+                $fclean($dataSets);
             elseif ($cmdParsed['post-clean-ds'])
-                $jsonLoader->cleanFiles((int) $cmdParsed['post-clean-ds']);
+                $fclean($dataSets, (int) $cmdParsed['post-clean-ds']);
         }
         \wdPop();
     }

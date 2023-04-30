@@ -51,7 +51,8 @@ return [
 
         $args = $cmdParser['args'];
         $partitioning = $dataSet->getPartitioning();
-        $hasPartitioning = ! ($partitioning instanceof \Data\NoPartitioning);
+
+        $hasPartitioning = \count($partitioning->getPartitions()) > 1;
         $j = $cmdParser['javaProperties'];
 
         $pid = $hasPartitioning ? "-{$j['partition.id']}" : '';
@@ -88,10 +89,15 @@ return [
             $native = $cmdArg['native'] ?? '';
         }
 
+        if ($dataSet->group_partitioning() === '')
+            $partid = '';
+        else
+            $partid = $partition->getID();
+
         $elements = [
             'group' => $group,
-            'partitioning' => $dataSet->getPartitioning()->getID(),
-            'partition' => $partition->getID(),
+            'partitioning' => $dataSet->group_partitioning(),
+            'partition' => $partid,
             'rules' => $theRules,
             'qualifiers' => $qualifiers,
             'summary' => $cmdArg['summary'],

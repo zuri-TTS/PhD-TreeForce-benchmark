@@ -15,7 +15,7 @@ interface IJsonLoader
 
     function generateJson(): void;
 
-    function getPartitioning(string $name = ''): IPartitioning;
+    function getPartitioningBuilderFor(\DataSet $ds): IPartitioningBuilder;
 
     function cleanFiles(int $level = self::CLEAN_ALL);
 }

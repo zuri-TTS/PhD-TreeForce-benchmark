@@ -4,9 +4,9 @@ namespace Data;
 interface IPartition
 {
 
+    public const NO_PID = - 1;
+
     function getID(): string;
 
-    function contains(array $data): bool;
-
-    function isLogical(): bool;
+    function getPID(): int;
 }

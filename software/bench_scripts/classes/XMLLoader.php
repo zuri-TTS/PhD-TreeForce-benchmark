@@ -1,41 +1,43 @@
 <?php
 
-class XMLLoader extends \Data\AbstractJsonLoader
+class XMLLoader extends \Data\AbstractJsonLoader implements \Data\IJsonLoader
 {
-
-    private array $path = [];
-
-    private array $files;
-
-    private array $filesData;
-
-    private array $dataSets_exists;
-
-    private array $summary;
-
-    private int $summaryDepth;
-
-    private bool $summarize;
 
     private array $stats = [
         'documents.nb' => 0,
         'edges.nb' => 0
     ];
 
+    private array $pdata = [];
+
     private \Data\IXMLLoader $xmlLoader;
 
-    public function __construct(array $dataSets, array $config)
+    public function __construct(array $dataSets, array $config, ?\Data\IXMLLoader $xmlLoader = null)
     {
         parent::__construct($dataSets, $config);
+        $this->xmlLoader = $xmlLoader;
 
-        $this->summarize = false;
+        foreach ($dataSets as $ds) {
+            $rand = $this->xmlLoader->getLabelReplacerForDataSet($ds);
+
+            if ($ds->isSimplified()) {
+
+                if ($rand)
+                    $call = fn ($doc) => $rand($this->doSimplifyObject($doc));
+                else
+                    $call = fn ($doc) => $this->doSimplifyObject($doc);
+            } elseif ($rand)
+                $call = $rand;
+            else
+                $call = fn ($doc) => $doc;
+
+            $this->pdata[$ds->id()] = $call;
+        }
     }
 
-    public static function create(\Data\IXMLLoader $jsonLoader, array $dataSets)
+    public static function create(\Data\IXMLLoader $xmlLoader, array $dataSets)
     {
-        $ret = new XMLLoader($dataSets, []);
-        $ret->xmlLoader = $jsonLoader;
-        return $ret;
+        return new XMLLoader($dataSets, [], $xmlLoader);
     }
 
     public function getPartitioning(string $name = ''): \Data\IPartitioning
@@ -44,134 +46,36 @@ class XMLLoader extends \Data\AbstractJsonLoader
     }
 
     // ========================================================================
-    private function summaryExists(DataSet $dataSet)
+    private int $nb;
+
+    protected function postProcessDocument(array &$doc, \DataSet $ds): void
     {
-        foreach ($this->summaryPaths($dataSet) as $p) {
-            if (! \is_file($p))
-                return false;
-        }
-        return true;
+        $doc = $this->pdata[$ds->id()]($doc);
+//         $this->stats['edges.nb'] += \Help\Arrays::jsonRecursiveCount($doc);
     }
 
-    private function summaryPaths(DataSet $dataSet): array
+    protected function lastProcessDocument(array &$doc, \DataSet $ds): void
     {
-        return [
-            $this->summaryPath($dataSet, 'key'),
-            $this->summaryPath($dataSet, 'key-type')
+        $doc['_id'] = ++ $this->nb;
+    }
+
+    protected function getDocumentStream(string $dsgroupPath)
+    {
+        $this->nb = 0;
+        $nbEdges = 0;
+
+        \wdPush($dsgroupPath);
+        $reader = $this->xmlLoader->getXMLReader();
+
+        foreach ($this->read($reader) as $doc) {
+            yield $doc;
+        }
+        $reader->close();
+        \wdPop();
+        $stats = [
+            'documents.nb' => $this->nb
         ];
-    }
-
-    private function summaryPath(DataSet $dataSet, string $type)
-    {
-        return "{$dataSet->path()}/summary-$type.txt";
-    }
-
-    // ========================================================================
-    private function setPostProcesses()
-    {
-        $this->summary = [];
-        $this->summaryDepth = 0;
-        $rules = \array_map(fn ($d) => $d->rules(), $this->dataSets);
-
-        $filesData = \array_map(function ($dataSet) {
-            $this->prepareDir($dataSet);
-            $path = $dataSet->path();
-
-            $rulesFiles = $dataSet->rulesFilesPath();
-            $exists = \is_file("$path/end.json");
-
-            if ($exists && (! $this->summarize || $this->summaryExists($dataSet)))
-                return $dataSet;
-
-            $i = 0;
-            $partition_i = new SplObjectStorage();
-            $fp = [];
-            $nb_a = [];
-            $i_a = [];
-            \wdPush($dataSet->path());
-            $pp = [];
-
-            foreach ($dataSet->getPartitions() as $partition) {
-                $jsonFile = $partition->getJsonFile();
-                $partition_i[$partition] = $i ++;
-                $fp[] = \fopen($jsonFile, 'w');
-                $nb_a[] = 0;
-                $i_a[] = 0;
-                $pp[] = $partition->getID();
-            }
-            \wdPop();
-
-            return [
-                'randomize' => $this->xmlLoader->getLabelReplacerForDataSet($dataSet) ?? fn ($data) => $data,
-                'simplify' => $dataSet->isSimplified(),
-                'path' => $path,
-                'dataset' => $dataSet,
-                'pindex' => $partition_i,
-                'fp' => $fp,
-                'nbDocuments' => $nb_a,
-                'offsets' => $i_a,
-                'partitions' => $pp
-            ];
-        }, $this->dataSets);
-
-        list ($this->filesData, $this->dataSets_exists) = \array_partition($filesData, '\is_array');
-        $readStats = false;
-
-        foreach ($this->filesData as $f) {
-
-            $this->summary[$f['dataset']->id()] = [];
-
-            if (! \is_dir($f['path']))
-                \mkdir($f['path']);
-
-            if (\count($f['fp']) > 1)
-                $readStats = true;
-        }
-
-        if ($readStats) {
-            $this->readStats($this->xmlLoader->getXMLReader());
-
-            foreach ($this->filesData as &$f) {
-                // reset randomizer
-                $f['randomize'] = $this->xmlLoader->getLabelReplacerForDataSet($f['dataset']) ?? fn ($data) => $data;
-                $total = $f['nbDocuments'][0];
-
-                for ($i = 1, $c = \count($f['fp']); $i < $c; $i ++) {
-
-                    $f['offsets'][$i] = $total;
-                    $total += $f['nbDocuments'][$i];
-                }
-            }
-        }
-    }
-
-    public function generateJson(): void
-    {
-        $this->setPostProcesses();
-
-        echo "Generating json:\n";
-        $datasets_exists = \array_map(fn ($d) => (string) $d, $this->dataSets_exists);
-
-        foreach ($this->dataSets as $d) {
-            echo "$d", \in_array((string) $d, $datasets_exists) ? ' (Exists)' : '', "\n";
-        }
-        if (empty($this->filesData))
-            return;
-
-        $this->read($this->xmlLoader->getXMLReader());
-
-        foreach ($this->filesData as $fd) {
-            \touch("{$fd['path']}/end.json");
-
-            foreach ($fd['fp'] as $f)
-                \fclose($f);
-
-            if ($this->summarize) {
-                \ksort($this->summary[$fd['dataset']->id()]);
-                $this->writeSummary($fd['dataset']);
-            }
-        }
-        \printPHPFile("$this->groupPath/stats.php", $this->stats);
+        \printPHPFile("$dsgroupPath/stats.php", $stats);
     }
 
     // ========================================================================
@@ -186,24 +90,13 @@ class XMLLoader extends \Data\AbstractJsonLoader
             }
 
             if ($level & self::CLEAN_JSON_FILES) {
-                $dir = $ds->directory();
+                $dir = $ds->path();
 
                 if (\is_dir($dir)) {
-                    $files = \wdOp($dir, fn () => self::cleanGlob("*.json"));
+                    $files = \wdOp($dir, fn () => \Help\Files::globClean("*.json"));
                 }
             }
             \wdPop();
-        }
-    }
-
-    private static function cleanGlob(string $pattern): void
-    {
-        foreach (\glob($pattern) as $f) {
-
-            if (\is_file($f)) {
-                // echo "Delete $f\n";
-                \unlink($f);
-            }
         }
     }
 
@@ -219,106 +112,99 @@ class XMLLoader extends \Data\AbstractJsonLoader
         return \count($ret) === 1 ? $ret[0] : null;
     }
 
-    private bool $readStats = false;
-
-    private function readStats(XMLReader $reader): void
+    private function read(XMLReader $reader)
     {
-        $this->readStats = true;
-        $this->read($reader);
-        $this->readStats = false;
-    }
-
-    private function read(XMLReader $reader): void
-    {
-        $path = &$this->path;
+        $stack = [
+            0
+        ];
+        $pathstack = [];
         $path = [];
-        $rules = \array_keys($this->filesData);
 
-        \wdPush($this->groupPath);
-        while ($reader->read()) {
-            switch ($reader->nodeType) {
-                case XMLReader::TEXT:
-                    break;
-                case XMLReader::ELEMENT:
-                    $path[] = $reader->name;
-                    $paths = \implode('.', $path);
-                    $u = $this->reachUnwind($paths);
+        while (null !== ($state = \array_pop($stack))) {
 
-                    if (null === $u)
-                        break;
+            if ($state === 0) {
 
-                    if ($this->readStats)
-                        echo "Stats for $u\n";
-                    else
-                        echo "Unwinding $u\n";
+                while ($reader->read()) {
 
-                    $reader->read();
-                    $u_a = explode('.', $u);
-                    $this->unwind($reader, $u_a);
-                    break;
-                case XMLReader::END_ELEMENT:
-                    \array_pop($path);
-                    break;
-                default:
-            }
+                    switch ($reader->nodeType) {
+                        case XMLReader::TEXT:
+                            break;
+                        case XMLReader::ELEMENT:
+                            $path[] = $reader->name;
+                            $paths = \implode('.', $path);
+                            $u = $this->reachUnwind($paths);
+
+                            if (null === $u)
+                                break;
+
+                            echo "Unwinding $u\n";
+
+                            $reader->read();
+                            $unwind = explode('.', $u);
+                            \array_push($stack, 0);
+                            \array_push($stack, 10);
+                            \array_push($pathstack, $path);
+                            break 2;
+                        case XMLReader::END_ELEMENT:
+                            \array_pop($path);
+                            break;
+                        default:
+                    }
+                }
+            } // unwind
+            elseif ($state === 10) {
+                $path = \array_pop($pathstack);
+                $keyPattern = $unwind[\count($path)];
+
+                if ('$' === $keyPattern)
+                    \array_push($stack, 20);
+                elseif ('*' === $keyPattern)
+                    \array_push($stack, 30);
+                else
+                    throw new \ErrorException("Can't handle $keyPattern");
+            } // unwindUndefined
+            elseif ($state === 20) {
+
+                while ($reader->next()) {
+                    switch ($reader->nodeType) {
+                        case XMLReader::TEXT:
+                            break;
+                        case XMLReader::ELEMENT:
+                            $path[] = $reader->name;
+                            $reader->read();
+                            \array_push($stack, 20);
+                            \array_push($stack, 10);
+                            \array_push($pathstack, $path);
+                            break 2;
+                        case XMLReader::END_ELEMENT:
+                            \array_pop($path);
+                            break 2;
+                        default:
+                    }
+                }
+            } // unwindEach
+            elseif ($state === 30) {
+
+                while ($reader->next()) {
+                    switch ($reader->nodeType) {
+                        case XMLReader::TEXT:
+                            break;
+                        case XMLReader::ELEMENT:
+                            $this->path = $path;
+                            yield self::makeDocument($reader);
+                            break;
+                        case XMLReader::END_ELEMENT:
+                            \array_pop($path);
+                            break 2;
+                        default:
+                    }
+                }
+            } else
+                throw new \ErrorException();
         }
-        \wdPop();
     }
 
-    private function unwind(XMLReader $reader, array $unwind)
-    {
-        $path = &$this->path;
-        $keyPattern = $unwind[\count($path)];
-
-        if ('$' === $keyPattern)
-            $this->unwindUndefined($reader, $unwind);
-        elseif ('*' === $keyPattern)
-            $this->unwindEach($reader, $unwind);
-        else {
-            fwrite(STDERR, "Can't handle $keyPattern");
-            exit(1);
-        }
-    }
-
-    private function unwindUndefined(XMLReader $reader, array $unwind)
-    {
-        $path = &$this->path;
-        while ($reader->next()) {
-            switch ($reader->nodeType) {
-                case XMLReader::TEXT:
-                    break;
-                case XMLReader::ELEMENT:
-                    $path[] = $reader->name;
-                    $reader->read();
-                    $this->unwind($reader, $unwind);
-                    break;
-                case XMLReader::END_ELEMENT:
-                    \array_pop($path);
-                    return;
-                default:
-            }
-        }
-    }
-
-    private function unwindEach(XMLReader $reader, array $unwind)
-    {
-        $path = &$this->path;
-        while ($reader->next()) {
-            switch ($reader->nodeType) {
-                case XMLReader::TEXT:
-                    break;
-                case XMLReader::ELEMENT:
-                    self::writeJson($reader);
-                    break;
-                case XMLReader::END_ELEMENT:
-                    \array_pop($path);
-                    return;
-                default:
-            }
-        }
-    }
-
-    private function writeJson(XMLReader $reader)
+    private function makeDocument(XMLReader $reader): array
     {
         $destVal = $getOut = [];
 
@@ -329,6 +215,7 @@ class XMLLoader extends \Data\AbstractJsonLoader
             $name => $destVal
         ]);
         $this->doSimplifyText($data);
+        return $data;
         $this->stats['documents.nb'] ++;
         $dataSimple = null;
 
@@ -355,13 +242,6 @@ class XMLLoader extends \Data\AbstractJsonLoader
 
             $this->stats['edges.nb'] += \Help\Arrays::jsonRecursiveCount($data2);
         }
-    }
-
-    private function updateStats(array $data, array &$fileData): void
-    {
-        $partition = \Data\Partitions::getPartitionForData($fileData['dataset']->getPartitions(), $data);
-        $i = $fileData['pindex'][$partition];
-        $fileData['nbDocuments'][$i] ++;
     }
 
     private function writeFinal(array $data, array &$fileData): void
@@ -442,7 +322,13 @@ class XMLLoader extends \Data\AbstractJsonLoader
         }
     }
 
-    private function doSimplifyObject(&$keys): void
+    private function doSimplifyObject(array $doc): array
+    {
+        $this->doSimplifyObject_($doc);
+        return $doc;
+    }
+
+    private function doSimplifyObject_(&$keys): void
     {
         if (! \is_array($keys))
             return;
@@ -462,7 +348,7 @@ class XMLLoader extends \Data\AbstractJsonLoader
                 throw new \Exception("Should never happens");
 
             foreach ($e as &$se)
-                $this->doSimplifyObject($se);
+                $this->doSimplifyObject_($se);
 
             if (! $this->xmlLoader->isList($name)) {
 
@@ -485,83 +371,6 @@ class XMLLoader extends \Data\AbstractJsonLoader
         }
         $p = $val;
         return $ret;
-    }
-
-    private function addToSummary(DataSet $dataSet, array $data)
-    {
-        throw new \Exception(__FUNCTION__ . "To review (with all summary stuff)!");
-        $depth = 0;
-        $keys = [];
-        $toProcess = [
-            $data
-        ];
-        $summary = &$this->summary[$dataSet->id()];
-
-        while (! empty($toProcess)) {
-            $nextToProcess = [];
-            $incDepth = 0;
-
-            foreach ($toProcess as $array) {
-
-                if (! $incDepth && ! \array_is_list($array))
-                    $incDepth = 1;
-
-                foreach ($array as $label => $val) {
-                    $type = [];
-                    $cdepth = $depth;
-
-                    if (\is_array($val)) {
-                        $nextToProcess[] = $val;
-
-                        if (\array_is_list($val))
-                            $c = \count($val);
-                        else
-                            $c = 1;
-                    } else {
-                        $c = 0;
-                        $type[] = 'LEAF';
-                    }
-
-                    if ($c == 1)
-                        $type[] = 'OBJECT';
-                    elseif ($c > 1) {
-                        $type[] = 'MULTIPLE';
-                        $obj = $leaf = false;
-
-                        foreach ($val as $sub) {
-
-                            if (\is_array($sub)) {
-                                if ($obj)
-                                    continue;
-                                $obj = true;
-                                $type[] = 'OBJECT';
-                            } elseif (! $leaf) {
-                                $leaf = true;
-                                $type[] = 'LEAF';
-                            }
-                            if ($leaf && $obj)
-                                break;
-                        }
-                    }
-
-                    if (\is_string($label)) {
-
-                        if (! isset($summary[$label]))
-                            $summary[$label] = [];
-
-                        $stypes = &$summary[$label];
-
-                        foreach ($type as $t) {
-                            if (! \in_array($t, $stypes))
-                                $stypes[] = $t;
-                        }
-                    }
-                }
-            }
-            $depth += $incDepth;
-            $toProcess = $nextToProcess;
-        }
-        $this->summaryDepth = \max($this->summaryDepth, $depth);
     }
 
     private function writeSummary(DataSet $dataSet)

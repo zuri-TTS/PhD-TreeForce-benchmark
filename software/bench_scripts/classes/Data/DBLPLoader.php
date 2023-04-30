@@ -34,24 +34,6 @@ final class DBLPLoader implements IXMLLoader
         $this->closeXMLReader();
     }
 
-    private const partitions = [
-        'colls' => [
-            'article' => 'dblp.article',
-            'book' => 'dblp.book',
-            'incollection' => 'dblp.incollection',
-            'inproceedings' => 'dblp.inproceedings',
-            'mastersthesis' => 'dblp.mastersthesis',
-            'phdthesis' => 'dblp.phdthesis',
-            'proceedings' => 'dblp.proceedings',
-            'www' => 'dblp.www'
-        ]
-    ];
-
-    public function getPartitioning(string $name = ''): IPartitioning
-    {
-        return Loaders::getPartitioningWithLogical($name, self::partitions, 'dblp');
-    }
-
     private const unwind = [
         'dblp.*'
     ];

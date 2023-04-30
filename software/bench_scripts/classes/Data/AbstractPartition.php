@@ -6,14 +6,22 @@ abstract class AbstractPartition implements IPartition
 
     private string $id;
 
-    protected function __construct(string $id)
+    private int $pid;
+
+    public function __construct(string $id, int $pid)
     {
         $this->id = $id;
+        $this->pid = $pid;
     }
 
     public function getID(): string
     {
         return $this->id;
+    }
+
+    public function getPID(): int
+    {
+        return $this->pid;
     }
 
     public static final function filePattern(string $id): string

@@ -16,6 +16,8 @@ final class XMarkLoader implements IXMLLoader
 
     public float $conf_xmark_factor;
 
+    private string $group;
+
     public function __construct(array $dataSets, array $config)
     {
         $this->group = \DataSets::groupOf($dataSets);
@@ -29,30 +31,6 @@ final class XMarkLoader implements IXMLLoader
         mapKeyToProperty(fn ($k) => \str_replace('.', '_', $k));
         $oa->updateAndShift($config);
         $oa->checkEmpty($config);
-    }
-
-    private const partitioning = [
-        'colls' => [
-            'regions' => 'site.regions',
-            'categories' => 'site.categories',
-            'catgraph' => 'site.catgraph',
-            'people' => 'site.people',
-            'open_auctions' => 'site.open_auctions',
-            'closed_auctions' => 'site.closed_auctions'
-        ],
-        'Pcolls' => [
-            'site.regions',
-            'site.categories',
-            'site.catgraph',
-            'site.people',
-            'site.open_auctions',
-            'site.closed_auctions'
-        ]
-    ];
-
-    function getPartitioning(string $name = ''): IPartitioning
-    {
-        return Loaders::getPartitioningWithLogical($name, self::partitioning, 'xmark');
     }
 
     private const unwind = [
@@ -125,15 +103,9 @@ final class XMarkLoader implements IXMLLoader
 
     private function getXMLFilePath(): string
     {
-        $xmarkFilePath = $this->XMarkFilePath();
-        $this->generateXMark($xmarkFilePath);
-        return $xmarkFilePath;
-    }
-
-    private function XMarkFilePath(): string
-    {
-        $groupPath = \DataSets::getGroupPath($this->group);
-        return "$groupPath/xmark.xml";
+        $file = "$this->group.xml";
+        $this->generateXMark($file);
+        return $file;
     }
 
     private function generateXMark(string $xmarkFilePath)
@@ -146,8 +118,8 @@ final class XMarkLoader implements IXMLLoader
         $basePath = getBenchmarkBasePath();
         $xmarkCmd = $this->binProgramPath();
         $cmd = "'$xmarkCmd' -f {$this->conf_xmark_factor} -o '$xmarkFilePath'";
-        echo "Execute $cmd";
-        \system($cmd);
+        echo "Execute $cmd\n";
+        \simpleExec($cmd, $out, $err);
     }
 
     public function getLabelReplacerForDataSet(\DataSet $dataSet): ?callable

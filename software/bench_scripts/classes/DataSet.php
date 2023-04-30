@@ -5,7 +5,11 @@ final class DataSet
 
     private \Data\IJsonLoader $loader;
 
+    private string $full_group;
+
     private string $group;
+
+    private string $group_partitioning;
 
     private string $rules;
 
@@ -32,20 +36,24 @@ final class DataSet
     private function __construct()
     {}
 
-    public static function create(string $group, string $partitioning, string $rules, array $qualifiers): DataSet
+    public static function create(string $full_group, string $rules, array $qualifiers): DataSet
     {
+        $gparts = \explode('.', $full_group, 2);
+
         $qualifiers = \array_unique($qualifiers);
         \sort($qualifiers);
         $ret = new DataSet();
-        $ret->group = $group;
+        $ret->full_group = $full_group;
+        $ret->group = $gparts[0];
+        $ret->group_partitioning = $gparts[1] ?? '';
         $ret->rules = $rules;
         $ret->qualifiers = $qualifiers;
-        $ret->partitioning = $ret->getJsonLoader($group, [
-            $ret
-        ])->getPartitioning($partitioning);
+        $ret->partitioning = $ret->getJsonLoader($ret)
+        ->getPartitioningBuilderFor($ret)
+            ->load();
         $ret->processQualifiers($qualifiers);
 
-        $ret->partitions = $ret->partitioning->getPartitionsOf($ret);
+        $ret->partitions = $ret->partitioning->getPartitions();
         return $ret;
     }
 
@@ -91,10 +99,20 @@ final class DataSet
     {
         return DataSets::idOf($this);
     }
+    
+    public function fullGroup(): string
+    {
+        return $this->full_group;
+    }
 
     public function group(): string
     {
         return $this->group;
+    }
+    
+    public function group_partitioning(): string
+    {
+        return $this->group_partitioning;
     }
 
     public function rules(): string
@@ -160,9 +178,7 @@ final class DataSet
         if (isset($this->loader))
             return $this->loader;
 
-        return $this->loader = DataSets::getJsonLoader([
-            $this
-        ]);
+        return $this->loader = DataSets::getJsonLoader($this);
     }
 
     public function getPartitioning(): \Data\IPartitioning
