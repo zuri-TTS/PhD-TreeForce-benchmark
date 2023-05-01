@@ -44,13 +44,6 @@ strPrefSize=0 # In our tests we used 5-prefix with label and path summaries
 [ -z ${nbMeasures+x} ] &&
 nbMeasures=5
 
-
-# Number of measures to forget after all repetitions of a same test.
-# The (ordered) $nbForget first and last values are forget; so at the end $nbForget*2 are unused.
-[ -z ${nbForget+x} ] &&
-nbForget=1
-
-
 # Query execution timeout; empty or 0 for undefined
 [ -z ${timeout+x} ] &&
 timeout=
@@ -88,7 +81,7 @@ moreParams="-skip-existing +clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
-export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id: '[$id]' Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' ${parallel}parallel  Pquerying.timeout='$timeout' bench-measures-nb=$nbMeasures bench-measures-forget=$nbForget Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' Pquerying.config.print=y $moreParams"
+export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id: '[$id]' Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' ${parallel}parallel  Pquerying.timeout='$timeout' bench-measures-nb=$nbMeasures Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' Pquerying.config.print=y $moreParams"
 
 for group in $groups
 do
