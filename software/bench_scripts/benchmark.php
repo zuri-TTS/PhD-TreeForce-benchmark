@@ -52,7 +52,7 @@ while (! empty($argv)) {
                     $partitions = \array_merge($partitions, $logicalPartitioning->getPartitionsOf($dataSet));
             }
         } else
-            $partitions = $dataSet->getPartitions();
+            $partitions = \array_values($dataSet->getPartitions());
 
         $skipped = null;
 
