@@ -4,8 +4,6 @@ namespace Plotter;
 abstract class AbstractFullPlotter implements IFullPlotter
 {
 
-    private array $testsMeasures = [];
-
     protected \Plot $plot;
 
     protected function __construct(\Plot $plot)

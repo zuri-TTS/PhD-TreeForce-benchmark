@@ -121,7 +121,6 @@ final class FullPlotter extends AbstractFullPlotter
 
                         foreach ($tests as $test) {
                             // TODO external parameter for average
-                            $this->testMeasures[$test] = //
                             $testMeasures = $this->getTestMeasuresAverage($test);
                             $dataLine = $this->strategy->getDataLine($testMeasures);
                             $this->testsData[$test] = $dataLine;

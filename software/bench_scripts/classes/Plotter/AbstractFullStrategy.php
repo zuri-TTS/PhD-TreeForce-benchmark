@@ -341,7 +341,7 @@ abstract class AbstractFullStrategy implements IFullPlotterStrategy
         if (isset($data['rules'])) {
             $rules = $data['rules']['queries.nb.intended'] ?? $nbReformulations;
 
-            if ($rules != $nbReformulations)
+            if ($rules >= 0 && $rules != $nbReformulations)
                 $ret[] = "\{$font\ /($rules)}";
         }
         // $nbAnswers = $showNbAnswers ? ",$nbAnswers" : null;

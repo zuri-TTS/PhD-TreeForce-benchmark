@@ -19,6 +19,8 @@ final class Benchmark
 
     private bool $timeout = false;
 
+    private bool $hasMeasures;
+
     function __construct(array $config)
     {
         $this->config = $config;
@@ -38,6 +40,8 @@ final class Benchmark
             2 => STDOUT
         );
         $this->qOutputPath = $config['java.properties']['output.path'];
+
+        $this->hasMeasures = $appCmd === 'querying';
     }
 
     private function createAndWdPushOutputDir(): void
@@ -174,19 +178,22 @@ final class Benchmark
             if (0 !== $cmdReturn)
                 exit($cmdReturn);
 
-            if ($this->config['app.output.display'])
-                \readfile($this->tmpOutFile);
+            if ($this->hasMeasures) {
 
-            $measures = \Measures::parseLinesOfMeasures(\file($outFile));
+                // if ($this->config['app.output.display'])
+                // \readfile($this->tmpOutFile);
 
-            // No query case: we can skip because hirule asks nothing to the document-store
-            if ((int) $measures['queries']['total'] === 0) {
-                echo "Skipped because no queries to send\n";
-                $nbMeasures = 0;
-            } elseif (isset($measures['error.timeout'])) {
-                echo "Skipped because of timeout `{$measures['error.timeout']['value']}ms`\n";
-                $this->timeout = true;
-                $nbMeasures = 0;
+                $measures = \Measures::parseLinesOfMeasures(\file($outFile));
+
+                // No query case: we can skip because hirule asks nothing to the document-store
+                if ((int) $measures['queries']['total'] === 0) {
+                    echo "Skipped because no queries to send\n";
+                    $nbMeasures = 0;
+                } elseif (isset($measures['error.timeout'])) {
+                    echo "Skipped because of timeout `{$measures['error.timeout']['value']}ms`\n";
+                    $this->timeout = true;
+                    $nbMeasures = 0;
+                }
             }
         }
     }

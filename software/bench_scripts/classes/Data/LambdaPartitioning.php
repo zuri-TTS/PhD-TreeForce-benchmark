@@ -66,7 +66,7 @@ final class LambdaPartitioning implements IPartitioning
                 return new LambdaPartitioning($this->dataset, $this->partitions);
             }
 
-            public function load(): ?IPartitioning
+            public function load(): IPartitioning
             {
                 $file = $this->dataset->path() . '/' . self::SAVE_FILE;
 
