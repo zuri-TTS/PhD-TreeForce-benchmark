@@ -1,0 +1,92 @@
+actor.login=?x?$                  --->     user=?x?$
+author.name=?x?$                  --->     user=?x?$
+author.login=?x?$                 --->     user=?x?$
+(type="User",login=?x?)$          --->     user=?x?$
+
+(type="Organization",login=?x?)$  --->     organization=?x?$
+
+(type="Bot",login=?x?)$           --->     bot=?x?$
+
+repo.name=?x?$                    --->     repository=?x?$
+
+
+
+
+(type="CommitCommentEvent"$,payload)                ---> commitCommentEvent
+(type="CreateEvent"$,payload)                       ---> createEvent
+(type="DeleteEvent"$,payload)                       ---> deleteEvent
+(type="ForkEvent"$,payload)                         ---> forkEvent
+(type="GollumEvent"$,payload)                       ---> gollumEvent
+(type="IssueCommentEvent"$,payload)                 ---> issueCommentEvent
+(type="IssuesEvent"$,payload)                       ---> issuesEvent
+(type="MemberEvent"$,payload)                       ---> memberEvent
+(type="PublicEvent"$,payload)                       ---> publicEvent
+(type="PullRequestReviewEvent"$,payload)            ---> pullRequestReviewEvent
+(type="PullRequestReviewCommentEvent"$,payload)     ---> pullRequestReviewCommentEvent
+(type="PullRequestReviewThreadEvent"$,payload)      ---> pullRequestReviewThreadEvent
+(type="PushEvent"$,payload)                         ---> pushEvent
+(type="PushEvent"$,payload)                         ---> commitEvent
+(type="PullRequestEvent"$,payload)                  ---> pullRequestEvent
+(type="ReleaseEvent"$,payload)                      ---> releaseEvent
+(type="SponsorshipEvent"$,payload)                  ---> sponsorshipEvent
+(type="WatchEvent"$,payload)                        ---> watchEvent
+
+
+
+
+(pushEvent,user=?x?$,id=?y?$)                   ---> push.(user=?x?,id=?y?)$
+(createEvent,user=?x?$,id=?y?$)                 ---> create.(user=?x?,id=?y?)$
+(commitEvent,id=?y?$,payload.commits.user=?x?$) ---> commit.(user=?x?,id=?y?)$
+
+
+
+
+commitCommentEvent=?x?                            ---> commentEvent=?x?
+issueCommentEvent=?x?                             ---> commentEvent=?x?
+pullRequestReviewCommentEvent=?x?                 ---> commentEvent=?x?
+
+
+(commentEvent,payload.comments.(user=?x?,id=?y?)$) --->  commentE.(user=?x?,id=?y?)$
+(commentEvent,payload.issue.(user=?x?,id=?y?)$)    --->  issueE.(user=?x?,id=?y?)$
+
+
+
+issueCommentEvent=?x?                             ---> issuesEvent=?x?
+
+(issuesEvent,payload.issue.(user=?x?,id=?y?)$)    --->  issueE.(user=?x?,id=?y?)$
+
+
+
+
+pullRequestReviewCommentEvent=?x?                 ---> pullEvent=?x?
+pullRequestReviewEvent=?x?                        ---> pullEvent=?x?
+pullRequestEvent=?x?                              ---> pullEvent=?x?
+
+(pullEvent,payload.pull_request.base.user=?x?$,id=?y?$)   ---> pull.(user=?x?,id=?y?)$
+(pullEvent,payload.pull_request.head.user=?x?$,id=?y?$)   ---> pull.(user=?x?,id=?y?)$
+
+
+
+
+push=?x?      --->     add=?x?
+create=?x?    --->     add=?x?
+commit=?x?    --->     add=?x?
+add=?x?       --->     event=?x?
+issueE=?x?    --->     event=?x?
+pull=?x?      --->     event=?x?
+commentE=?x?  --->     event=?x?
+
+
+
+
+(pullRequestEvent,payload.pull_request.base.repo.owner.organization=?x?$) ---> organizationInvolved=?x?$
+(pullRequestEvent,payload.pull_request.head.repo.owner.organization=?x?$) ---> organizationInvolved=?x?$
+
+(forkEvent,payload.forkee.owner.login=?x?$) ---> organizationInvolved=?x?$
+
+
+(pullEvent,payload.pull_request.base.repo.owner.login=?x?$) ---> organizationInvolved=?x?$
+
+(pullEvent,payload.pull_request.head.repo.owner.login=?x?$) ---> organizationInvolved=?x?$
+
+(pullRequestEvent,org.login=?x?$) ---> organizationInvolved=?x?$
