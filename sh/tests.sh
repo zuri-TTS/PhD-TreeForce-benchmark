@@ -56,9 +56,6 @@ out=""
 
 #### Nothing usefull to change here
 
-# Partition id field name
-[ -z ${id+x} ] &&
-id=pid
 # Filter the reformulations to process (val: 'noempty', 'empty', '')
 [ -z ${filter+x} ] &&
 filter=
@@ -81,7 +78,7 @@ moreParams="-skip-existing -clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
-export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Ppartition.id: '[$id]' Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' ${parallel}parallel  Pquerying.timeout='$timeout' bench-measures-nb=$nbMeasures Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' Pquerying.config.print=y $moreParams"
+export PARAMS="Psummary.filter.types=y Psummary.filter.stringValuePrefix: '[$strPrefSize]' Pquerying.filter: '[$filter]' Pquery.batches.nbThreads: '[$batchesNbThreads]' ${parallel}parallel  Pquerying.timeout='$timeout' bench-measures-nb=$nbMeasures Pquery.batchSize: '[$qBatchSize]' documentstore: '$docstore' Pquerying.config.print=y $moreParams"
 
 for group in $groups
 do
