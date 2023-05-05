@@ -94,6 +94,7 @@ final class GitHubLoader extends AbstractJsonLoader
             \fclose($jsonfp);
             \touch($endfile);
         }
+        echo "All files downloaded\n";
         \wdPop();
     }
 
