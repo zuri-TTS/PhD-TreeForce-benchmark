@@ -77,7 +77,7 @@ batchesNbThreads=1
 ## +clean-db           Clean the (mongodb) dataset collection before and after the tests using it.
 ## +clean-db-json      Clean the json files used to load the (mongodb) collection after the tests. Usefull for big datasets.
 [ -z ${moreParams+x} ] &&
-moreParams="-skip-existing +clean-db -clean-db-json"
+moreParams="-skip-existing -clean-db -clean-db-json"
 
 
 export SUMMARIES="$summaries"
