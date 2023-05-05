@@ -32,6 +32,10 @@ function makeConfig(\DBImport\IDBImport $dbImport, DataSet $dataSet, array $part
     } elseif (null === $cmdArg['toNative_summary'])
         $cmdArg['toNative_summary'] = $cmdArg['summary'];
 
+    // Force the summary to be at least label for query traduction
+    if ($cmdArg['toNative_summary'] == 'depth')
+        $cmdArg['toNative_summary'] = 'label';
+
     $partitionID = $dataSet->pidKey();
     $filterStrPrefix = $javaProperties['summary.filter.stringValuePrefix'];
 
