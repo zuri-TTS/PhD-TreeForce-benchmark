@@ -41,7 +41,7 @@ final class Benchmark
         );
         $this->qOutputPath = $config['java.properties']['output.path'];
 
-        $this->hasMeasures = $appCmd === 'querying';
+        $this->hasMeasures = $config['app.cmd'] === 'querying';
     }
 
     private function createAndWdPushOutputDir(): void
