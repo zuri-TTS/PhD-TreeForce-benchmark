@@ -1,9 +1,0 @@
-#people 0
-
-
-#closed_auctions 0
-
-
-#africa 0
-
-
